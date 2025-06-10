@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @Table(name= "travelrecord")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class travelRecord {
+public class TravelRecord {
 
     @Id
     @Column(name= "record_no")
