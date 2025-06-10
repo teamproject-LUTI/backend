@@ -217,3 +217,6 @@ out/
 /nbdist/
 /.nb-gradle/
 src/main/resources/no-nangbie-0a842ab6a8f9.json
+
+src/main/resources/
+src/main/resources/application.properties
