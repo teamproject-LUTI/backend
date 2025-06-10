@@ -1,4 +1,4 @@
-package com.luti.luti.payment.antity;
+package com.luti.payment.antity;
 
 import jakarta.persistence.*;
 import lombok.*;

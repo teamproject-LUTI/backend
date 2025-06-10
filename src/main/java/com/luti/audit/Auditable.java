@@ -1,4 +1,4 @@
-package com.luti.luti.audit;
+package com.luti.audit;
 
 import lombok.Getter;
 import lombok.Setter;

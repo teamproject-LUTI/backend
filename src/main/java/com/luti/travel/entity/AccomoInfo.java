@@ -1,4 +1,4 @@
-package com.luti.luti.travel.entity;
+package com.luti.travel.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

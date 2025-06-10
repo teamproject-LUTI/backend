@@ -1,7 +1,7 @@
-package com.luti.luti.payment.antity;
+package com.luti.payment.antity;
 
-import com.luti.luti.auth.entity.User;
-import com.luti.luti.payment.antity.id.PaymentListId;
+import com.luti.auth.entity.User;
+import com.luti.payment.antity.id.PaymentListId;
 import jakarta.persistence.*;
 import lombok.*;
 

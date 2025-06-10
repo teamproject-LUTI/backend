@@ -1,4 +1,4 @@
-package com.luti.luti.utils;
+package com.luti.utils;
 
 import org.springframework.web.util.UriComponentsBuilder;
 
