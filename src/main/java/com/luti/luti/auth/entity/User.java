@@ -1,6 +1,6 @@
-package com.luti.luti.auth.domain;
+package com.luti.luti.auth.entity;
 
-import java.time.LocalDate;
+import com.luti.luti.audit.Auditable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends Auditable {
 
 	@Id
 	@Column(name = "loginId", length = 50)
@@ -42,9 +42,6 @@ public class User {
 
 	@Column(name = "address")
 	private Integer address;
-
-	@Column(name = "create_date")
-	private LocalDate createDate;
 
 	@Column(name = "nickname", length = 30)
 	private String nickname;
