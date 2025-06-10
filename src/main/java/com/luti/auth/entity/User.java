@@ -1,6 +1,6 @@
-package com.luti.luti.auth.entity;
+package com.luti.auth.entity;
 
-import com.luti.luti.audit.Auditable;
+import com.luti.audit.Auditable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

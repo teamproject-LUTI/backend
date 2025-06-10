@@ -1,4 +1,4 @@
-package com.luti.luti.payment.antity.id;
+package com.luti.payment.antity.id;
 
 import java.io.Serializable;
 import java.util.Objects;

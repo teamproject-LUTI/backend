@@ -1,4 +1,4 @@
-package com.luti.luti.dto;
+package com.luti.dto;
 
 import lombok.Getter;
 import org.springframework.data.domain.Page;

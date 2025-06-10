@@ -1,4 +1,4 @@
-package com.luti.luti.dto;
+package com.luti.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

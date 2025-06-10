@@ -1,4 +1,4 @@
-package com.luti.luti.exception;
+package com.luti.exception;
 
 import lombok.Getter;
 

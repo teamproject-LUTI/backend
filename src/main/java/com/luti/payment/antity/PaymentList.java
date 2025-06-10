@@ -1,6 +1,7 @@
-package com.luti.luti.payment.antity;
+package com.luti.payment.antity;
 
-import com.luti.luti.payment.antity.id.PaymentListId;
+import com.luti.auth.entity.User;
+import com.luti.payment.antity.id.PaymentListId;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +16,7 @@ import java.time.LocalDate;
 public class PaymentList {
 
     @Id
-    @Column(name = "login_id", length = 50, nullable = false)
+    @Column(name = "loginId", length = 50, nullable = false)
     private String loginId; // 사용자 ID (외래키, 복합키 구성 요소)
 
     @Id
@@ -46,6 +47,6 @@ public class PaymentList {
     private PaymentMethod paymentMethod; // 결제방식 엔티티와의 연관관계 (payment_cd 기준)
 
     @ManyToOne
-    @JoinColumn(name = "login_id", insertable = false, updatable = false)
-    private UserInfo userInfo; // 사용자 정보 엔티티와의 연관관계 (login_id 기준)
+    @JoinColumn(name = "login_id", referencedColumnName = "loginId", insertable = false, updatable = false)
+    private User user;
 }
