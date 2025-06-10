@@ -1,4 +1,4 @@
-package com.luti.luti;
+package com.luti;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
