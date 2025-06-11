@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 /**
  * 사용자 타입 정보를 관리하는 엔티티
@@ -12,6 +13,7 @@ import jakarta.persistence.Table;
  * @author 박종호
  */
 @Entity
+@Getter
 @Table(name = "user_type")
 public class UserType {
 
