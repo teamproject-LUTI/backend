@@ -11,19 +11,17 @@ import org.springframework.stereotype.Repository;
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
     /**
-     * 특정 작성자가 올린 공지글을 페이지 단위로 조회합니다.
+     * 특정 사용자가 작성한 공지글을 페이지 단위로 조회
      *
-     * @param author   조회할 작성자(User)
-     * @param pageable 페이징 정보(Page 번호, 사이즈, 정렬 등)
-     * @return 작성자별 페이징된 공지글 목록
+     * @param user     조회할 작성자
+     * @param pageable 페이징 정보
      */
-    Page<Notice> findAllByAuthor(User author, Pageable pageable);
+    Page<Notice> findAllByUser(User user, Pageable pageable);
 
     /**
-     * 삭제되지 않은(soft delete=false) 공지글만 페이지 단위로 조회합니다.
+     * 삭제되지 않은 공지글만 페이지 단위로 조회
      *
      * @param pageable 페이징 정보
-     * @return 삭제되지 않은 공지글의 페이징 목록
      */
     Page<Notice> findAllByDeletedFalse(Pageable pageable);
 }
