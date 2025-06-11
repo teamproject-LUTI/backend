@@ -23,19 +23,19 @@ public class AccomoDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_no")
-    public PaymentList paymentNo;
+    private PaymentList paymentNo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accomo_no")
-    public AccomoInfo accomoNo;
+    private AccomoInfo accomoNo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "login_id")
-    public User loginId;
+    private User loginId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_cd")
-    public PaymentList paymentCd;
+    private PaymentList paymentCd;
 
     @Column(name = "price")
     private Long price;
