@@ -32,7 +32,7 @@ public class User extends Auditable {
 	private String loginId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_type")
+	@JoinColumn(name = "user_type", referencedColumnName = "user_type_id")
 	private UserType userType;
 
 	@Column(name = "password", length = 100)
