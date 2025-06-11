@@ -5,6 +5,8 @@ import com.luti.audit.Auditable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -28,12 +30,16 @@ import lombok.Setter;
 public class User extends Auditable {
 
 	@Id
-	@Column(name = "login_Id", length = 50)
-	private String loginId;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "user_Id")
+	private Long userId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_type", referencedColumnName = "user_type_id")
-	private UserType userType;
+	@JoinColumn(name = "user_type")
+	private UserType userTypeId;
+
+	@Column(name = "email", length = 50)
+	private String email;
 
 	@Column(name = "password", length = 100)
 	private String password;

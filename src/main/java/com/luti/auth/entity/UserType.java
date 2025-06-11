@@ -23,8 +23,8 @@ import lombok.Setter;
 public class UserType {
 
 	@Id
-	@Column(name = "user_type_id", length = 1)
-	private String userTypeId;
+	@Column(name = "user_type_id")
+	private Long userTypeId;
 
 	@Column(name = "type_name", length = 50, nullable = false)
 	private String typeName;

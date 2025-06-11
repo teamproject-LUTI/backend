@@ -19,13 +19,13 @@ public interface AccomoDetailRepository extends JpaRepository<AccomoDetail, Long
 
 	// 사용자 기준
 	// 사용자 ID로 전체 예약 목록 조회
-	List<AccomoDetail> findByLoginId(User loginId);
+	List<AccomoDetail> findByUserId(User userId);
 
 	// 사용자 ID로 예약 목록을 숙박 시작일 내림차순 정렬하여 조회
-	List<AccomoDetail> findByLoginIdOrderByAccomoStartDesc(User loginId);
+	List<AccomoDetail> findByuserIdOrderByAccomoStartDesc(User userId);
 
 	// 사용자 ID와 숙박 시작일 범위로 예약 내역 조회
-	List<AccomoDetail> findByLoginIdAndAccomoStartBetween(User loginId, Date start, Date end);
+	List<AccomoDetail> findByuserIdAndAccomoStartBetween(User userId, Date start, Date end);
 
 	// 숙소 기준(필요한가?)
 	// 특정 숙소(accomoNo)로 예약 내역 전체 조회
@@ -82,11 +82,11 @@ public interface AccomoDetailRepository extends JpaRepository<AccomoDetail, Long
 
 	// 복합 조건
 	// 사용자 + 숙소 + 숙박 시작일 범위 조건으로 예약 조회
-	List<AccomoDetail> findByLoginIdAndAccomoNoAndAccomoStartBetween(
-			User loginId, AccomoInfo accomoNo, Date start, Date end);
+	List<AccomoDetail> findByuserIdAndAccomoNoAndAccomoStartBetween(
+			User userId, AccomoInfo accomoNo, Date start, Date end);
 
 	// 사용자 + 방 종류 + 최소 인원 수 조건으로 예약 조회(필요한가?)
-	List<AccomoDetail> findByLoginIdAndRoomTypeAndUserCountGreaterThanEqual(
-			User loginId, String roomType, Long minCount);
+	List<AccomoDetail> findByuserIdAndRoomTypeAndUserCountGreaterThanEqual(
+			User userId, String roomType, Long minCount);
 
 }

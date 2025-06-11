@@ -13,10 +13,10 @@ import com.luti.payment.antity.id.PaymentListId;
 public interface PaymentListRepository extends JpaRepository<PaymentList, PaymentListId> {
 
 	// 사용자별 결제내역 조회
-	List<PaymentList> findByLoginId(String loginId);
+	List<PaymentList> findByuserId(Long userId);
 
 	// 사용자 + 결제방식으로 결제내역 조회
-	List<PaymentList> findByLoginIdAndPaymentCd(String loginId, Integer paymentCd);
+	List<PaymentList> findByuserIdAndPaymentCd(Long userId, Integer paymentCd);
 
 	// 결제일 기준 기간 조회
 	List<PaymentList> findByPaymentDateBetween(LocalDate start, LocalDate end);
@@ -28,10 +28,10 @@ public interface PaymentListRepository extends JpaRepository<PaymentList, Paymen
 	List<PaymentList> findByPaymentCdAndPaymentDateBetween(Integer paymentCd, LocalDate startDate, LocalDate endDate);
 
 	// 특정 사용자의 최신 결제내역 5건 조회
-	List<PaymentList> findTop5ByLoginIdOrderByPaymentDateDesc(String loginId);
+	List<PaymentList> findTop5ByuserIdOrderByPaymentDateDesc(Long userId);
 
 	// 영수증 URL이 존재하는 결제만 조회
-	List<PaymentList> findByLoginIdAndReceiptUrlIsNotNull(String loginId);
+	List<PaymentList> findByuserIdAndReceiptUrlIsNotNull(Long userId);
 
 	// 총 결제금액이 특정 금액 이상인 내역 조회 (ex. 10만원 이상)
 	List<PaymentList> findByTotalPriceGreaterThanEqual(Integer minPrice);
@@ -49,10 +49,10 @@ public interface PaymentListRepository extends JpaRepository<PaymentList, Paymen
 	List<PaymentList> findByCancelDateIsNotNull();
 
 	// 사용자별 결제금액 오름차순 조회
-	List<PaymentList> findByLoginIdOrderByTotalPriceAsc(String loginId);
+	List<PaymentList> findByuserIdOrderByTotalPriceAsc(Long userId);
 
 	// 사용자별 결제금액 내림차순 조회
-	List<PaymentList> findByLoginIdOrderByTotalPriceDesc(String loginId);
+	List<PaymentList> findByuserIdOrderByTotalPriceDesc(Long userId);
 
 	// 상태 + 날짜 필터 조합
 	List<PaymentList> findByPaymentStateAndPaymentDateBetween(Integer paymentState, LocalDate startDate,
