@@ -16,14 +16,14 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AccomoInfo {
 
-    @Id
-    @Column(name = "accomo_no")
-    private Long accomoNo;
+	@Id
+	@Column(name = "accomo_no")
+	private Long accomoNo;
 
-    @Column(name = "accomo_nm")
-    private String accomoNm;
+	@Column(name = "accomo_nm")
+	private String accomoNm;
 
-    @Column(name = "post_no")
-    private Long postNo;
+	@Column(name = "post_no")
+	private Long postNo;
 
 }
