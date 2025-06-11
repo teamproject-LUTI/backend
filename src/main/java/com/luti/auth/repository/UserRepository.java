@@ -1,4 +1,4 @@
-package com.luti.luti.auth.repository;
+package com.luti.auth.repository;
 
 import com.luti.luti.auth.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
-package com.luti.luti.auth.service;
+package com.luti.auth.service;
 
-import com.luti.luti.auth.dto.JoinDto;
-import com.luti.luti.auth.repository.UserRepository;
+import com.luti.auth.dto.JoinDto;
+import com.luti.auth.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

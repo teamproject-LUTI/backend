@@ -1,4 +1,4 @@
-package com.luti.luti.auth.dto;
+package com.luti.auth.dto;
 
 import lombok.Getter;
 

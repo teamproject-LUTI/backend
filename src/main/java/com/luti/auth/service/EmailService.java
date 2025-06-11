@@ -1,13 +1,12 @@
-package com.luti.luti.auth.service;
+package com.luti.auth.service;
 
-import com.luti.luti.auth.dto.EmailRequestDto;
-import com.luti.luti.auth.repository.UserRepository;
+import com.luti.auth.dto.EmailRequestDto;
+import com.luti.auth.repository.UserRepository;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
