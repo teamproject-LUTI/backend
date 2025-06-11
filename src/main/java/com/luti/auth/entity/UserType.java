@@ -4,6 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 사용자 타입 정보를 관리하는 엔티티
@@ -13,6 +17,9 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "user_type")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserType {
 
 	@Id
