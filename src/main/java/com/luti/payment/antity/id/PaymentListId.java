@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class PaymentListId implements Serializable {
 
-	private String loginId;
+	private Long userId;
 
 	private Integer paymentCd;
 
@@ -25,7 +25,7 @@ public class PaymentListId implements Serializable {
 		if (!(o instanceof PaymentListId))
 			return false;
 		PaymentListId that = (PaymentListId)o;
-		return Objects.equals(loginId, that.loginId) &&
+		return Objects.equals(userId, that.userId) &&
 			   Objects.equals(paymentCd, that.paymentCd) &&
 			   Objects.equals(paymentNo, that.paymentNo);
 	}
@@ -36,7 +36,7 @@ public class PaymentListId implements Serializable {
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(loginId, paymentCd, paymentNo);
+		return Objects.hash(userId, paymentCd, paymentNo);
 	}
 
 }

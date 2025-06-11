@@ -12,7 +12,7 @@ import java.util.List;
 public interface TravelRecordRepository extends JpaRepository<TravelRecord, Long> {
 
     // 특정 사용자가 작성한 여행 기록 전체 조회
-    List<TravelRecord> findByLoginId(User loginId);
+    List<TravelRecord> findByUserId(User userId);
 
     // 여행 제목에 특정 키워드가 포함된 기록 조회 (LIKE 검색)
     List<TravelRecord> findByTravelTitleContaining(String keyword);
@@ -21,7 +21,7 @@ public interface TravelRecordRepository extends JpaRepository<TravelRecord, Long
     List<TravelRecord> findByPaymentNo(PaymentList paymentNo);
 
     // 특정 사용자 + 여행 제목 키워드 조합으로 조회
-    List<TravelRecord> findByLoginIdAndTravelTitleContaining(User loginId, String keyword);
+    List<TravelRecord> findByUserIdAndTravelTitleContaining(User userId, String keyword);
 
 
 }

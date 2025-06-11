@@ -27,8 +27,8 @@ public class TravelRecord {
 	private Long recordNo;
 
 	// 개별 복합키 컴포넌트들
-	@Column(name = "login_id")
-	private String loginId;
+	@Column(name = "user_Id")
+	private Long userId;
 
 	@Column(name = "payment_cd")
 	private Integer paymentCd;
@@ -39,7 +39,7 @@ public class TravelRecord {
 	// PaymentList 참조 (복합키로 매핑)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumns({
-			@JoinColumn(name = "login_id", referencedColumnName = "login_Id", insertable = false, updatable = false),
+			@JoinColumn(name = "user_Id", referencedColumnName = "user_Id", insertable = false, updatable = false),
 			@JoinColumn(name = "payment_cd", referencedColumnName = "payment_cd", insertable = false, updatable = false),
 			@JoinColumn(name = "payment_no", referencedColumnName = "payment_no", insertable = false, updatable = false)
 	})

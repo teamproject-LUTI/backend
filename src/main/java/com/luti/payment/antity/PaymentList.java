@@ -26,8 +26,8 @@ import lombok.Setter;
 public class PaymentList {
 
 	@Id
-	@Column(name = "login_Id", length = 50, nullable = false)
-	private String loginId; // 사용자 ID (외래키, 복합키 구성 요소)
+	@Column(name = "user_Id")
+	private Long userId; // 사용자 ID (외래키, 복합키 구성 요소)
 
 	@Id
 	@Column(name = "payment_cd", nullable = false)
@@ -57,7 +57,7 @@ public class PaymentList {
 	private PaymentMethod paymentMethod; // 결제방식 엔티티와의 연관관계 (payment_cd 기준)
 
 	@ManyToOne
-	@JoinColumn(name = "login_Id", referencedColumnName = "login_Id", insertable = false, updatable = false)
+	@JoinColumn(name = "user_Id", referencedColumnName = "user_Id", insertable = false, updatable = false)
 	private User user;
 
 }
