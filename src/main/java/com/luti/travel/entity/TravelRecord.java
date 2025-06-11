@@ -25,7 +25,7 @@ public class TravelRecord {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="login_id")
-    public User loginId;
+    private User loginId;
 
     @Column(name="travel_title",length = 100)
     private String travelTitle;
