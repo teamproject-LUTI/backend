@@ -32,7 +32,7 @@ public class Ask extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false,
             foreignKey = @ForeignKey(name = "FK_ASK_USER"))
-    private User author;
+    private User user;
 
     /** 문의글 제목 (최대 100자, NOT NULL) */
     @Column(name = "qna_title", length = 100, nullable = false)

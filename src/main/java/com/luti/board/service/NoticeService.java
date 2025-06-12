@@ -37,11 +37,11 @@ public class NoticeService {
             throw new EntityNotFoundException("User not found: " + userId);
         }
         // 2) User 엔티티 조회
-        User author = userRepository.findByUserId(userId);
+        User user = userRepository.findByUserId(userId);
 
         // 3) Notice 엔티티 생성 및 저장
         Notice notice = Notice.builder()
-                .user(author)
+                .user(user)
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .build();

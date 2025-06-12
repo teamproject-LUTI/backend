@@ -33,7 +33,7 @@ public class ReviewService {
                     dto.setReviewNo(r.getReviewNo());
                     dto.setTitle(r.getTitle());
                     dto.setCreatedAt(r.getCreatedAt());
-                    dto.setAuthorName(r.getAuthor().getNickname());
+                    dto.setUserName(r.getUser().getNickname());
                     dto.setLikeCount(r.getLikeCount());
                     dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(r.getReviewNo(), userId));
 
@@ -50,7 +50,7 @@ public class ReviewService {
 
         /** 빌더로 Review 객체 생성 */
         Review review = Review.builder()
-                .author(user)
+                .user(user)
                 .title(req.getTitle())
                 .content(req.getContent())
                 .travelRegion(req.getTravelRegion())
@@ -104,7 +104,7 @@ public class ReviewService {
         dto.setCreatedAt(r.getCreatedAt());
         dto.setTravelRegion(r.getTravelRegion());
         dto.setTravelPeriod(r.getTravelPeriod());
-        dto.setAuthorName(r.getAuthor().getNickname());
+        dto.setUserName(r.getUser().getNickname());
         dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(reviewNo, currentUserId)); //currentUserId 변수명 수정해야함
         return dto;
     }
