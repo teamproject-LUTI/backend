@@ -1,37 +1,33 @@
 package com.luti.board.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.Size;
+import lombok.*;
 
+/**
+ * 후기 생성/수정 요청용 DTO
+ */
 @Getter
 @Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class ReviewRequestDto {
-    /** 글쓰기 및 수정할 때 입력해야하는 값 */
 
-    /** 제목 */
+    /** 후기 제목 (1~50자) */
     @NotBlank
+    @Size(min = 1, max = 50)
     private String title;
 
-    /** 내용 */
+    /** 후기 본문 (최소 1자) */
     @NotBlank
     private String content;
 
-    /** 여행지역 */
+    /** 여행 지역 (최대 255자) */
+    @Size(max = 255)
     private String travelRegion;
 
-    /** 여행기간 */
+    /** 여행 기간 (최대 255자) */
+    @Size(max = 255)
     private String travelPeriod;
-
-    /** 장소명 */
-    private String spot;
-
-    /** 소요 시간 */
-    private String duration;
-
-    /** 예상 비용 */
-    private String budget;
-    
-    /** 이동 방법 */
-    private String route;
 }

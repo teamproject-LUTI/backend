@@ -20,6 +20,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      */
     Optional<Review> findByReviewNo(Long reviewNo);
 
-    /** 관리자용: 삭제된 후기만 조회 */
-    List<Review> findAllDeletedTrueReview();
+    // 관리자 용: 삭제된 글만 보고 싶다면
+    //soft-delete 자동 필터링(@Where) 적용 시에는 굳이 findAllByIsDeletedFalse가 필요 없슴
+    List<Review> findAllByIsDeletedTrue();
 }

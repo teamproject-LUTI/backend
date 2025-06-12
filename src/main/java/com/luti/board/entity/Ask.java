@@ -112,23 +112,4 @@ public class Ask extends Auditable {
         attachment.setAsk(null);
     }
 
-    /**
-     * 댓글을 추가하고, 양방향 연관관계를 설정
-     *
-     * @param comment 추가할 Comment 엔티티
-     */
-    public void addComment(Comment comment) {
-        comments.add(comment);
-        comment.setAsk(this);
-    }
-
-    /**
-     * 댓글을 제거하고, 양방향 연관관계를 해제
-     *
-     * @param comment 제거할 Comment 엔티티
-     */
-    public void removeComment(Comment comment) {
-        comments.remove(comment);
-        comment.setAsk(null);
-    }
 }
