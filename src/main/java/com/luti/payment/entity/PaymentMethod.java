@@ -1,4 +1,4 @@
-package com.luti.payment.antity;
+package com.luti.payment.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,5 +29,7 @@ public class PaymentMethod {
 
 	@OneToMany(mappedBy = "paymentMethod")
 	private List<PaymentList> paymentLists = new ArrayList<>();  // 이 결제방식을 참조하는 모든 결제내역들
+
+
 
 }
