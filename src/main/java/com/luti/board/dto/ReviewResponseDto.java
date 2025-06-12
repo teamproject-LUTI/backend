@@ -1,31 +1,43 @@
 package com.luti.board.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.*;
 import java.time.LocalDateTime;
 
+/**
+ * 후기 상세 조회용 DTO
+ */
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class ReviewResponseDto {
-    /** 게시물 상세 조회 */
+    /** 후기 고유번호 */
+    private final Long reviewNo;
 
+    /** 후기 제목 */
+    private final String title;
 
-    private Long reviewNo;
-    private String title;
-    private String content;
-    private int viewCount;
-    private int likeCount;
-    private LocalDateTime createdAt;
+    /** 후기 본문 */
+    private final String content;
 
-    private String travelRegion;
-    private String travelPeriod;
-    private String spot;
-    private String duration;
-    private String budget;
-    private String route;
+    /** 조회수 */
+    private final int viewCount;
 
-    private String userName;
-    private boolean liked;
+    /** 전체 좋아요 수 */
+    private final int likeCount;
 
+    /** 생성일 */
+    private final LocalDateTime createdAt;
+
+    /** 여행 지역 */
+    private final String travelRegion;
+
+    /** 여행 기간 */
+    private final String travelPeriod;
+
+    /** 작성자 이름 */
+    private final String userName;
+
+    /** 현재 로그인 사용자가 좋아요했는지 여부 */
+    private final boolean liked;
 }

@@ -1,6 +1,6 @@
 package com.luti.travel.entity;
 
-import com.luti.payment.antity.PaymentList;
+import com.luti.payment.entity.PaymentList;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

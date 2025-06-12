@@ -47,13 +47,6 @@ public class Notice extends Auditable {
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
-    /**
-     * 삭제 여부 플래그 (soft delete)
-     * <p>
-     * - true: 삭제된 상태
-     * - false: 정상 상태
-     * </p>
-     */
     @Column(name = "is_deleted", nullable = false)
     private Boolean deleted = false;
 
@@ -70,10 +63,6 @@ public class Notice extends Auditable {
             orphanRemoval = true
     )
     private List<NoticeAttachment> attachments = new ArrayList<>();
-
-    // ========================================================
-    // 편의 메서드 (비즈니스 로직 캡슐화)
-    // ========================================================
 
     /**
      * 조회수를 1 증가

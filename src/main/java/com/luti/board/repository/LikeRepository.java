@@ -7,11 +7,20 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
 
-    /**  특정 게시물과 유저로 좋아요 여부 확인*/
-    boolean existsByReview_ReviewNoAndUser_UserId(Long reviewNo, Long userId);
+    /**
+     * 특정 사용자가 특정 후기글에 좋아요를 눌렀는지 여부를 조회
+     *
+     * @param reviewNo 후기글 식별자
+     * @param userId   사용자 식별자
+     * @return 존재 여부(true: 좋아요 O, false: 좋아요 X)
+     */
+    boolean existsByReviewReviewNoAndUserUserId(Long reviewNo, Long userId);
 
-    /** 특정 게시물의 좋아요 수*/
-    long countByReviewId(Long reviewNo);
-
-
+    /**
+     * 특정 후기글의 전체 좋아요 개수를 조회
+     *
+     * @param reviewNo 후기글 식별자
+     * @return 좋아요 개수
+     */
+    long countByReviewReviewNo(Long reviewNo);
 }
