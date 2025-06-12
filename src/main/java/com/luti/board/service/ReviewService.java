@@ -1,6 +1,7 @@
 package com.luti.board.service;
 
 import com.luti.auth.entity.User;
+import com.luti.auth.repository.UserRepository;
 import com.luti.board.dto.ReviewListDto;
 import com.luti.board.dto.ReviewRequestDto;
 import com.luti.board.dto.ReviewResponseDto;
@@ -10,8 +11,6 @@ import com.luti.board.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +21,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final LikeRepository likeRepository;
+    private final UserRepository userRepository;
 
 
     /** 게시물 목록 조회 */
@@ -33,7 +33,7 @@ public class ReviewService {
                     dto.setReviewNo(r.getReviewNo());
                     dto.setTitle(r.getTitle());
                     dto.setCreatedAt(r.getCreatedAt());
-                    dto.setAuthorName(r.getUser().getNickname());
+                    dto.setAuthorName(r.getAuthor().getNickname());
                     dto.setLikeCount(r.getLikeCount());
                     dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(r.getReviewNo(), userId));
 
@@ -44,20 +44,17 @@ public class ReviewService {
     /** 게시물 등록 */
     @Transactional
     public Long createReview(ReviewRequestDto req, Long userId) {
-        User user = new User(); //userRepository.findById(userId)로 수정?
-        user.setUserId(userId);
+        /** userId로 User조회, 없으면 예외 */
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. id=" + userId));
 
-        Review review = new Review();
-        review.setUser(user);
-        review.setTitle(req.getTitle());
-        review.setContent(req.getContent());
-        review.setTravelRegion(req.getTravelRegion());
-        review.setTravelPeriod(req.getTravelPeriod());
-        review.setSpot(req.getSpot());
-        review.setDuration(req.getDuration());
-        review.setBudget(req.getBudget());
-        review.setRoute(req.getRoute());
-        review.setCreatedAt(LocalDateTime.now());
+        /** 빌더로 Review 객체 생성 */
+        Review review = Review.builder()
+                .author(user)
+                .title(req.getTitle())
+                .content(req.getContent())
+                .travelRegion(req.getTravelRegion())
+                .build();
 
         reviewRepository.save(review);
         return review.getReviewNo();
@@ -75,11 +72,6 @@ public class ReviewService {
         review.setContent(req.getContent());
         review.setTravelRegion(req.getTravelRegion());
         review.setTravelPeriod(req.getTravelPeriod());
-        review.setSpot(req.getSpot());
-        review.setDuration(req.getDuration());
-        review.setBudget(req.getBudget());
-        review.setRoute(req.getRoute());
-
     }
 
     /** 게시물 삭제 */
@@ -112,11 +104,7 @@ public class ReviewService {
         dto.setCreatedAt(r.getCreatedAt());
         dto.setTravelRegion(r.getTravelRegion());
         dto.setTravelPeriod(r.getTravelPeriod());
-        dto.setSpot(r.getSpot());
-        dto.setDuration(r.getDuration());
-        dto.setBudget(r.getBudget());
-        dto.setRoute(r.getRoute());
-        dto.setAuthorName(r.getUser().getNickname());
+        dto.setAuthorName(r.getAuthor().getNickname());
         dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(reviewNo, currentUserId)); //currentUserId 변수명 수정해야함
         return dto;
     }

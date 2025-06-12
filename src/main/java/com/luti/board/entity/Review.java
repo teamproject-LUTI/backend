@@ -4,7 +4,7 @@ import com.luti.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import com.luti.audit.Auditable;
 
 import java.time.LocalDateTime;
 
@@ -13,51 +13,48 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@SQLDelete(sql = "UPDATE review SET del_yn = 'Y' WHERE review_no = ?")
-public class Review {
+@SQLDelete(sql = "UPDATE review SET is_deleted = true WHERE review_no = ?")
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+public class Review extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_no")
     private Long reviewNo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /** 작성자 정보 */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User author;
 
-    @Column(length = 50, nullable = false)
+    /** 후기 게시글 제목 */
+    @Column(name = "title", length = 50, nullable = false)
     private String title;
 
-    @Column(length = 5000, nullable = false)
+    /** 후기 게시글 내용 */
+    @Column(name = "content", length = 5000, nullable = false)
     private String content;
 
+    /** 조회수 */
     @Column(name = "view_count")
     private int viewCount = 0;
 
+    /** 좋아요  */
     @Column(name = "like_count")
     private int likeCount = 0;
 
-    @Column(name = "createdAt")
-    private LocalDateTime createdAt;
 
-    @Column(name = "del_yn", length = 1)
-    private String delYn = "N";
+    /** 삭제 여부 플래그 - soft delete */
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 
+    /** 여행 지역 */
     @Column(name = "travel_region", length = 255)
     private String travelRegion;
 
+    /** 여행 기간 */
     @Column(name = "travel_period", length = 255)
     private String travelPeriod;
 
-    @Column(name = "spot", length = 255)
-    private String spot;
-
-    @Column(name = "duration" ,length = 255)
-    private String duration;
-
-    @Column(name = "budget", length = 255)
-    private String budget;
-
-    @Column(name = "route",length = 255)
-    private String route;
 }
