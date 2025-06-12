@@ -1,7 +1,7 @@
 package com.luti.travel.entity;
 
 import com.luti.auth.entity.User;
-import com.luti.payment.antity.PaymentList;
+import com.luti.payment.entity.PaymentList;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

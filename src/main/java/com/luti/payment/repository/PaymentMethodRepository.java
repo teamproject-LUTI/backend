@@ -1,6 +1,6 @@
 package com.luti.payment.repository;
 
-import com.luti.payment.antity.PaymentMethod;
+import com.luti.payment.entity.PaymentMethod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
