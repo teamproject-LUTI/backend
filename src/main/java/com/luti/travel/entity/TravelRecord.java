@@ -1,7 +1,5 @@
 package com.luti.travel.entity;
 
-import java.util.Date;
-
 import com.luti.payment.antity.PaymentList;
 
 import jakarta.persistence.Column;
@@ -20,13 +18,13 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "accomodetail")
+@Table(name = "travelrecord")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AccomoDetail {
+public class TravelRecord {
 
 	@Id
-	@Column(name = "payment_ownno")
-	private Long paymentOwnno;
+	@Column(name = "record_no")
+	private Long recordNo;
 
 	// 개별 복합키 컴포넌트들
 	@Column(name = "user_Id")
@@ -47,23 +45,10 @@ public class AccomoDetail {
 	})
 	private PaymentList paymentList;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "accomo_no")
-	private AccomoInfo accomoNo;
+	@Column(name = "travel_title", length = 100)
+	private String travelTitle;
 
-	@Column(name = "price")
-	private Long price;
-
-	@Column(name = "accomo_start")
-	private Date accomoStart;
-
-	@Column(name = "accomo_end")
-	private Date accomoEnd;
-
-	@Column(name = "user_count")
-	private Long userCount;
-
-	@Column(name = "room_type")
-	private String roomType;
+	@Column(name = "travel_content", columnDefinition = "TEXT")
+	private String travelContent;
 
 }
