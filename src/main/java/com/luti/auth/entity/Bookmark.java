@@ -19,8 +19,8 @@ public class Bookmark {
     private long planNo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "login_id", referencedColumnName = "login_id", insertable = false, updatable = false)
-    private User loginId;
+    @JoinColumn(name = "user_Id", referencedColumnName = "user_Id", insertable = false, updatable = false)
+    private User userId;
 
     @Column(name = "route_title")
     private String routeTitle;
