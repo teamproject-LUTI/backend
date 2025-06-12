@@ -2,10 +2,9 @@ package com.luti.board.entity;
 
 import com.luti.auth.entity.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +12,8 @@ import java.time.LocalDateTime;
 @Table(name = "review")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
+@SQLDelete(sql = "UPDATE review SET del_yn = 'Y' WHERE review_no = ?")
 public class Review {
 
     @Id
@@ -41,7 +41,7 @@ public class Review {
     private LocalDateTime createdAt;
 
     @Column(name = "del_yn", length = 1)
-    private String delYn; // "Y", "N"
+    private String delYn = "N";
 
     @Column(name = "travel_region", length = 255)
     private String travelRegion;
