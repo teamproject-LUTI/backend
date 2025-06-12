@@ -11,7 +11,7 @@ public class ReviewListDto {
     private Long reviewNo;
     private String title;
     private LocalDateTime createdAt;
-    private String authorName;
+    private String userName;
     private boolean liked;
     private int likeCount;
     private String thumbnailPath;

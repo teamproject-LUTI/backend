@@ -39,7 +39,7 @@ public class AskResponseDto {
     public static AskResponseDto of(Ask ask) {
         return new AskResponseDto(
                 ask.getId(),                          // Ask 엔티티 PK
-                ask.getAuthor().getUserId(),          // User 엔티티의 userId
+                ask.getUser().getUserId(),          // User 엔티티의 userId
                 ask.getTitle(),                       // 문의 제목
                 ask.getContent(),                     // 문의 내용
                 ask.getAnswered(),                    // 답변 여부

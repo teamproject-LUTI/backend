@@ -25,7 +25,7 @@ public class ReviewResponseDto {
     private String budget;
     private String route;
 
-    private String authorName;
+    private String userName;
     private boolean liked;
 
 }
