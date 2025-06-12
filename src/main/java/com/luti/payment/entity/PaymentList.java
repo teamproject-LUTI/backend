@@ -47,6 +47,6 @@ public class PaymentList {
     private PaymentMethod paymentMethod;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userId", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_Id", insertable = false, updatable = false)
     private User user;
 }
