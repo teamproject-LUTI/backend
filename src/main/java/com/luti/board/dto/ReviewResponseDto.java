@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ReviewResponseDto {
+    /** 게시물 상세 조회 */
+
+
     private Long reviewNo;
     private String title;
     private String content;

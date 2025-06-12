@@ -24,7 +24,7 @@ public class ReviewService {
     private final LikeRepository likeRepository;
 
 
-    // 게시물 목록 조회
+    /** 게시물 목록 조회 */
     public List<ReviewListDto> getAllReviews(Long userId){
         return reviewRepository.findAll()
                 .stream()
@@ -41,10 +41,10 @@ public class ReviewService {
                 }).collect(Collectors.toList());
     }
 
-    // 새 글 등록
+    /** 게시물 등록 */
     @Transactional
     public Long createReview(ReviewRequestDto req, Long userId) {
-        User user = new User();
+        User user = new User(); //userRepository.findById(userId)로 수정?
         user.setUserId(userId);
 
         Review review = new Review();
@@ -63,13 +63,43 @@ public class ReviewService {
         return review.getReviewNo();
     }
 
-    // 상세 조회 (+조회수 증가)
+    /** 게시물 수정 */
+    @Transactional
+    public void updateReview(Long reviewNo, ReviewRequestDto req, Long userId) {
+        /** 기존글 조회 */
+        Review review = reviewRepository.findById(reviewNo)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. reviewNo=" + reviewNo));
+
+        /** 변경할 값 세팅 */
+        review.setTitle(req.getTitle());
+        review.setContent(req.getContent());
+        review.setTravelRegion(req.getTravelRegion());
+        review.setTravelPeriod(req.getTravelPeriod());
+        review.setSpot(req.getSpot());
+        review.setDuration(req.getDuration());
+        review.setBudget(req.getBudget());
+        review.setRoute(req.getRoute());
+
+    }
+
+    /** 게시물 삭제 */
+    @Transactional
+    public void deleteReview(Long reviewNo, Long userId) {
+        /** 기존 게시물 조회 */
+        Review review = reviewRepository.findById(reviewNo)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. reviewNo=" + reviewNo));
+
+        reviewRepository.delete(review);
+    }
+
+
+    /** 게시물 상세 조회 */
     @Transactional
     public ReviewResponseDto getReviewDetail(Long reviewNo, Long currentUserId) {
         Review r = reviewRepository.findById(reviewNo)
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. reviewNo=" + reviewNo));
 
-        // 조회수 증가
+        /** 조회수 증가 */
         r.setViewCount(r.getViewCount() + 1);
         reviewRepository.save(r);
 
@@ -86,8 +116,8 @@ public class ReviewService {
         dto.setDuration(r.getDuration());
         dto.setBudget(r.getBudget());
         dto.setRoute(r.getRoute());
-        dto.setAuthorName(r.getUser().getName());
-        dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(reviewNo, currentUserId));
+        dto.setAuthorName(r.getUser().getNickname());
+        dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(reviewNo, currentUserId)); //currentUserId 변수명 수정해야함
         return dto;
     }
 }
