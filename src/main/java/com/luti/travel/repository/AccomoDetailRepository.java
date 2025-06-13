@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.luti.auth.entity.User;
-import com.luti.payment.antity.PaymentList;
+import com.luti.payment.entity.PaymentList;
 import com.luti.travel.entity.AccomoDetail;
 import com.luti.travel.entity.AccomoInfo;
 
