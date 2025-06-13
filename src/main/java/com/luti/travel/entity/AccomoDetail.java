@@ -30,8 +30,8 @@ public class AccomoDetail {
     public AccomoInfo accomoNo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "login_id")
-    public User loginId;
+    @JoinColumn(name = "user_id")
+    public User userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_cd")
