@@ -1,5 +1,6 @@
 package com.luti.board.entity;
 
+import com.luti.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class NoticeAttachment extends com.luti.audit.Auditable {
+public class NoticeAttachment extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,18 +22,13 @@ public class NoticeAttachment extends com.luti.audit.Auditable {
 
     /**
      * 소속된 공지글 정보 (Notice 엔티티와 다대일 연관관계)
-     * <p>
-     * - fetch = LAZY: 실제로 접근할 때만 Notice를 로딩
-     * - optional = false: 항상 Notice에 속해야 함
-     * - ON DELETE CASCADE: 공지글 삭제 시 첨부파일도 함께 삭제
-     * </p>
+     * - notice 테이블의 PK 컬럼은 notice_no 입니다.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "notice_id",
+            name = "notice_no",                 // ← DB 컬럼명에 맞춰 변경
             nullable = false,
-            foreignKey = @ForeignKey(name = "FK_NOTICE_ATTACHMENT_NOTICE",
-                    foreignKeyDefinition = "FOREIGN KEY (notice_id) REFERENCES notice(notice_id) ON DELETE CASCADE")
+            foreignKey = @ForeignKey(name = "FK_NOTICE_ATTACHMENT_NOTICE")
     )
     private Notice notice;
 
@@ -60,11 +56,6 @@ public class NoticeAttachment extends com.luti.audit.Auditable {
     // 편의 메서드
     // ========================================================
 
-    /**
-     * 이 첨부파일을 특정 Notice에 연결하고, 연관관계를 양쪽으로 설정
-     *
-     * @param notice 연결할 Notice 엔티티
-     */
     public void linkToNotice(Notice notice) {
         this.notice = notice;
         if (!notice.getAttachments().contains(this)) {
@@ -72,14 +63,9 @@ public class NoticeAttachment extends com.luti.audit.Auditable {
         }
     }
 
-    /**
-     * 이 첨부파일을 현재 Notice와의 연관관계를 해제하고
-     * Notice 측 리스트에서도 제거
-     */
     public void unlinkFromNotice() {
-        if (this.notice != null) {
-            List<NoticeAttachment> attachments = this.notice.getAttachments();
-            attachments.remove(this);
+        if (notice != null) {
+            notice.getAttachments().remove(this);
             this.notice = null;
         }
     }
