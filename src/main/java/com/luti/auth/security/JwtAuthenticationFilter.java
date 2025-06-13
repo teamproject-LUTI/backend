@@ -57,23 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		// 1. 쿠키에서 Access Token 추출
 		String token = extractTokenFromCookie(request, "accessToken");
 
-		// 디버깅을 위한 토큰 존재 여부 및 정보 로그
+		// 디버깅을 위한 토큰 존재 여부 로그
 		log.debug("추출된 토큰 존재 여부: {}", token != null);
-		if (token != null) {
-			log.debug("토큰 길이: {}", token.length());
-			log.debug("토큰 앞 10자리: {}", token.substring(0, Math.min(token.length(), 10)));
-		}
 
-		// 디버깅을 위한 모든 쿠키 출력
-		if (request.getCookies() != null) {
-			log.debug("요청에 포함된 쿠키 개수: {}", request.getCookies().length);
-			for (Cookie cookie : request.getCookies()) {
-				log.debug("쿠키: {} = {}", cookie.getName(),
-						cookie.getValue().length() > 10 ?
-								cookie.getValue().substring(0, 10) + "..." :
-								cookie.getValue());
-			}
-		} else {
+		// 디버깅을 위한 쿠키 없음 확인
+		if (request.getCookies() == null) {
 			log.debug("요청에 쿠키가 없음");
 		}
 
@@ -99,8 +87,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				String profileImageUrl = claims.get("profileImageUrl", String.class);
 				String socialProvider = claims.get("socialProvider", String.class);
 				Long userTypeId = claims.get("userTypeId", Long.class);
-
-				log.debug("JWT 토큰에서 사용자 정보 추출 성공 - 사용자 ID: {}, 이메일: {}", userId, email);
 
 				// 5. 사용자 타입에 따른 역할 결정
 				String role = determineRole(userTypeId);
@@ -154,7 +140,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (request.getCookies() != null) {
 			for (Cookie cookie : request.getCookies()) {
 				if (cookieName.equals(cookie.getName())) {
-					log.debug("{} 쿠키에서 토큰 추출 성공", cookieName);
 					return cookie.getValue();
 				}
 			}

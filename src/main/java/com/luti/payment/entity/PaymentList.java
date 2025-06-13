@@ -21,7 +21,7 @@ public class PaymentList {
     private Integer paymentCd; // 결제방식 코드 (외래키)
 
     @Column(name = "user_id")
-    private Integer userId; // 사용자 ID (외래키)
+    private Long userId; // 사용자 ID (외래키)
 
     @Column(name = "totalprice")
     private Integer totalPrice; // 총 결제 금액
@@ -47,6 +47,6 @@ public class PaymentList {
     private PaymentMethod paymentMethod;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "user_Id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
     private User user;
 }
