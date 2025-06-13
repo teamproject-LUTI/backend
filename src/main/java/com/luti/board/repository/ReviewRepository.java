@@ -10,8 +10,11 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    /** 삭제되지않은 모든 후기글 조회 */
-    List<Review> findAllDeletedFalseReview();
+    /** soft-delete=false 인 후기만 조회 */
+    List<Review> findAllByIsDeletedFalse();
+
+    /** soft-delete=true 인 후기만 조회 (관리자용) */
+    List<Review> findAllByIsDeletedTrue();
 
     /**
      * 주어진 reviewNo에 해당하는 후기글을 조회합니다.
@@ -19,8 +22,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @return Optional로 감싼 후기글 (없으면 빈 Optional)
      */
     Optional<Review> findByReviewNo(Long reviewNo);
-
-    // 관리자 용: 삭제된 글만 보고 싶다면
-    //soft-delete 자동 필터링(@Where) 적용 시에는 굳이 findAllByIsDeletedFalse가 필요 없슴
-    List<Review> findAllByIsDeletedTrue();
 }
+

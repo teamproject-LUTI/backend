@@ -68,24 +68,6 @@ public class Ask extends Auditable {
     private List<AskAttachment> attachments = new ArrayList<>();
 
     /**
-     * 댓글 목록 (OneToMany 연관관계)
-     * <p>
-     * - cascade = ALL: Ask 변경 시 Comment로 전파
-     * - orphanRemoval = true: Ask에서 분리된 Comment는 자동 삭제
-     * </p>
-     */
-    @OneToMany(
-            mappedBy = "ask",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<Comment> comments = new ArrayList<>();
-
-    // ========================================================
-    // 편의 메서드 (비즈니스 로직 캡슐화)
-    // ========================================================
-
-    /**
      * 답변 상태를 “답변 완료”로 변경
      */
     public void markAnswered() {

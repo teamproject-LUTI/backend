@@ -30,7 +30,7 @@ public class User extends Auditable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_Id")
+	@Column(name = "user_id")
 	private Long userId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
