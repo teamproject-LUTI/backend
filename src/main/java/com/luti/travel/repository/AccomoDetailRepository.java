@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.luti.auth.entity.User;
-import com.luti.payment.antity.PaymentList;
+import com.luti.payment.entity.PaymentList;
 import com.luti.travel.entity.AccomoDetail;
 import com.luti.travel.entity.AccomoInfo;
 
@@ -22,10 +22,10 @@ public interface AccomoDetailRepository extends JpaRepository<AccomoDetail, Long
 	List<AccomoDetail> findByUserId(User userId);
 
 	// 사용자 ID로 예약 목록을 숙박 시작일 내림차순 정렬하여 조회
-	List<AccomoDetail> findByuserIdOrderByAccomoStartDesc(User userId);
+	List<AccomoDetail> findByUserIdOrderByAccomoStartDesc(User userId);
 
 	// 사용자 ID와 숙박 시작일 범위로 예약 내역 조회
-	List<AccomoDetail> findByuserIdAndAccomoStartBetween(User userId, Date start, Date end);
+	List<AccomoDetail> findByUserIdAndAccomoStartBetween(User userId, Date start, Date end);
 
 	// 숙소 기준(필요한가?)
 	// 특정 숙소(accomoNo)로 예약 내역 전체 조회
@@ -82,11 +82,11 @@ public interface AccomoDetailRepository extends JpaRepository<AccomoDetail, Long
 
 	// 복합 조건
 	// 사용자 + 숙소 + 숙박 시작일 범위 조건으로 예약 조회
-	List<AccomoDetail> findByuserIdAndAccomoNoAndAccomoStartBetween(
+	List<AccomoDetail> findByUserIdAndAccomoNoAndAccomoStartBetween(
 			User userId, AccomoInfo accomoNo, Date start, Date end);
 
 	// 사용자 + 방 종류 + 최소 인원 수 조건으로 예약 조회(필요한가?)
-	List<AccomoDetail> findByuserIdAndRoomTypeAndUserCountGreaterThanEqual(
+	List<AccomoDetail> findByUserIdAndRoomTypeAndUserCountGreaterThanEqual(
 			User userId, String roomType, Long minCount);
 
 }
