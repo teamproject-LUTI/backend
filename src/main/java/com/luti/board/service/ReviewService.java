@@ -32,12 +32,12 @@ public class ReviewService {
         Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size));
         List<ReviewListDto> dtos = reviews.stream()
                 .map(r -> ReviewListDto.builder()
-                        .reviewNo(r.getReviewNo())
+                        .reviewId(r.getReviewId())
                         .title(r.getTitle())
                         .userName(r.getUser().getNickname())
                         .createdAt(r.getCreatedAt())
                         .likeCount(r.getLikeCount())
-                        .liked(likeRepo.existsByReviewReviewNoAndUserUserId(r.getReviewNo(), currentUserId))
+                        .liked(likeRepo.existsByReviewReviewIdAndUserUserId(r.getReviewId(), currentUserId))
                         // thumbnailPath에 값을 꼭 넘겨야 합니다!
                         .thumbnailPath(
                                 r.getAttachments().isEmpty()
@@ -64,14 +64,14 @@ public class ReviewService {
                 .travelPeriod(req.getTravelPeriod())  // 누락 보완
                 .build();
         reviewRepo.save(r);
-        return r.getReviewNo();
+        return r.getReviewId();
     }
 
     /** 3. 수정 (작성자만) */
     @Transactional
-    public void updateReview(Long reviewNo, ReviewRequestDto req, Long userId) {
-        Review r = reviewRepo.findById(reviewNo)
-                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewNo));
+    public void updateReview(Long reviewId, ReviewRequestDto req, Long userId) {
+        Review r = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
         if (!r.getUser().getUserId().equals(userId)) {
             throw new AccessDeniedException("Not author");
         }
@@ -83,9 +83,9 @@ public class ReviewService {
 
     /** 4. 삭제 (soft-delete, 작성자만) */
     @Transactional
-    public void deleteReview(Long reviewNo, Long userId) {
-        Review r = reviewRepo.findById(reviewNo)
-                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewNo));
+    public void deleteReview(Long reviewId, Long userId) {
+        Review r = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
         if (!r.getUser().getUserId().equals(userId)) {
             throw new AccessDeniedException("Not author");
         }
@@ -94,14 +94,14 @@ public class ReviewService {
 
     /** 5. 상세조회 */
     @Transactional
-    public ReviewResponseDto getReviewDetail(Long reviewNo, Long currentUserId) {
-        Review r = reviewRepo.findById(reviewNo)
-                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewNo));
+    public ReviewResponseDto getReviewDetail(Long reviewId, Long currentUserId) {
+        Review r = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
         r.incrementViewCount();  // 편의 메서드
         // (dirty-checking으로 자동 반영)
 
         return ReviewResponseDto.builder()
-                .reviewNo(r.getReviewNo())
+                .reviewId(r.getReviewId())
                 .title(r.getTitle())
                 .content(r.getContent())
                 .viewCount(r.getViewCount())
@@ -110,7 +110,7 @@ public class ReviewService {
                 .travelRegion(r.getTravelRegion())
                 .travelPeriod(r.getTravelPeriod())
                 .userName(r.getUser().getNickname())
-                .liked(likeRepo.existsByReviewReviewNoAndUserUserId(reviewNo, currentUserId))
+                .liked(likeRepo.existsByReviewReviewIdAndUserUserId(reviewId, currentUserId))
                 .build();
     }
 }

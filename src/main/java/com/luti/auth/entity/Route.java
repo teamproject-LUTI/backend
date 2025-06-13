@@ -10,13 +10,14 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "bookmark")
+@Table(name = "Route")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Bookmark {
+public class Route {
 
     @Id
-    @Column(name="plan_no")
-    private long planNo;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="route_id", updatable = false, nullable = false)
+    private Long routeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)

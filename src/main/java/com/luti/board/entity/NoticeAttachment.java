@@ -17,8 +17,8 @@ public class NoticeAttachment extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "file_no", updatable = false, nullable = false)
-    private Long id;
+    @Column(name = "notice_attachment_id", updatable = false, nullable = false)
+    private Long noticeAttachmentId;
 
     /**
      * 소속된 공지글 정보 (Notice 엔티티와 다대일 연관관계)

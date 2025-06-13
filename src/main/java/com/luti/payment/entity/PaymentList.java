@@ -10,12 +10,13 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "paymentlist")
+@Table(name = "paymentList")
 public class PaymentList {
 
     @Id
-    @Column(name = "payment_no", nullable = false)
-    private Integer paymentNo; // 단일 기본키
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "payment_id", nullable = false)
+    private Long paymentId; // 단일 기본키
 
     @Column(name = "payment_cd", nullable = false)
     private Integer paymentCd; // 결제방식 코드 (외래키)
@@ -43,7 +44,7 @@ public class PaymentList {
 
     // 연관관계 매핑
     @ManyToOne
-    @JoinColumn(name = "payment_cd", insertable = false, updatable = false)
+    @JoinColumn(name = "payment_id", insertable = false, updatable = false)
     private PaymentMethod paymentMethod;
 
     @ManyToOne

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class CommentResponseDto {
-    private Long commentNo;
+    private Long commentId;
     private Long userId;
     private String content;
     private LocalDateTime createdAt;
@@ -23,7 +23,7 @@ public class CommentResponseDto {
      */
     public static CommentResponseDto of(Comment c) {
         return new CommentResponseDto(
-                c.getCommentNo(),
+                c.getCommentId(),
                 c.getUser().getUserId(),
                 c.getContent(),
                 c.getCreatedAt(),

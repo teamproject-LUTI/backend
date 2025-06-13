@@ -3,11 +3,7 @@ package com.luti.payment.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,10 +13,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "paymentmethod")
+@Table(name = "paymentMethod")
 public class PaymentMethod {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "payment_method_id",updatable = false, nullable = false)
+	private Long paymentMethodId; // 결제방식 ID (기본키)
+
 	@Column(name = "payment_cd")
 	private Integer paymentCd; // 결제방식코드 (예: 1=카드, 2=현금 등)
 

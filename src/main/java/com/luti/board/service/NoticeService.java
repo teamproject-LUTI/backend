@@ -70,12 +70,12 @@ public class NoticeService {
     /**
      * 특정 공지사항을 조회
      *
-     * @param noticeNo 공지사항 고유번호
+     * @param noticeId 공지사항 고유번호
      * @return 조회된 공지사항을 래핑한 SingleResponseDto
      */
-    public SingleResponseDto<NoticeResponseDto> getNotice(Long noticeNo) {
-        Notice notice = noticeRepository.findById(noticeNo)
-                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeNo));
+    public SingleResponseDto<NoticeResponseDto> getNotice(Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
 
         return new SingleResponseDto<>(NoticeResponseDto.of(notice));
     }
@@ -83,14 +83,14 @@ public class NoticeService {
     /**
      * 공지사항을 수정
      *
-     * @param noticeNo 수정할 공지사항 고유번호
+     * @param noticeId 수정할 공지사항 고유번호
      * @param dto      변경할 제목과 본문을 담은 요청 DTO
      * @return 수정된 공지사항을 래핑한 SingleResponseDto
      */
     @Transactional
-    public SingleResponseDto<NoticeResponseDto> updateNotice(Long noticeNo, NoticeRequestDto dto) {
-        Notice notice = noticeRepository.findById(noticeNo)
-                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeNo));
+    public SingleResponseDto<NoticeResponseDto> updateNotice(Long noticeId, NoticeRequestDto dto) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
 
         // 변경 가능한 필드 업데이트 (Dirty Checking)
         notice.setTitle(dto.getTitle());
@@ -102,12 +102,12 @@ public class NoticeService {
     /**
      * 공지사항을 soft-delete 처리
      *
-     * @param noticeNo 삭제(soft) 처리할 공지사항 고유번호
+     * @param noticeId 삭제(soft) 처리할 공지사항 고유번호
      */
     @Transactional
-    public void deleteNotice(Long noticeNo) {
-        Notice notice = noticeRepository.findById(noticeNo)
-                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeNo));
+    public void deleteNotice(Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
 
         // deleted 플래그를 true 로 설정하여 soft delete
         notice.markDeleted();
