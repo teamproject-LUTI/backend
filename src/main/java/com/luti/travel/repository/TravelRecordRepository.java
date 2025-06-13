@@ -1,7 +1,7 @@
 package com.luti.travel.repository;
 
 import com.luti.auth.entity.User;
-import com.luti.payment.antity.PaymentList;
+import com.luti.payment.entity.PaymentList;
 import com.luti.travel.entity.TravelRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
