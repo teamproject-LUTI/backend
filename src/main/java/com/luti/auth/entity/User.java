@@ -2,6 +2,7 @@ package com.luti.auth.entity;
 
 import com.luti.audit.Auditable;
 
+import com.luti.auth.dto.SignupRequestDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -129,15 +130,16 @@ public class User extends Auditable {
 	/**
 	 * 일반 회원가입용 정적 팩토리 메서드
 	 */
-	public static User createRegularUser(String email, String password, String name,
-			String phoneNumber, String address, UserType userType) {
+	public static User createRegularUser(SignupRequestDto dto, String encodedPassword, UserType userType) {
 		return User.builder()
-				.email(email)
-				.password(password)
-				.name(name)
-				.phoneNumber(phoneNumber)
-				.address(address)
-				.provider("LOCAL")
+				.email(dto.getEmail())
+				.password(encodedPassword)
+				.name(dto.getName())
+				.birthday(dto.getFullBirthday())
+				.phoneNumber(dto.getFullPhoneNumber())
+				.gender(dto.getGender())
+				.address(dto.getAddress())
+				.nickname(dto.getNickname())
 				.withdrawYn("N")
 				.userTypeId(userType)
 				.build();
