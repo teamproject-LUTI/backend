@@ -93,13 +93,7 @@ public class MyPageService {
 
 		// 주소
 		if (StringUtils.hasText(requestDto.getAddress())) {
-			try {
-				// TODO: 주소 코드 또는 문자열 처리 로직 필요 (현재 User 엔티티 address 필드가 Integer 이므로 변환 필요)
-				user.setAddress(Integer.parseInt(requestDto.getAddress()));
-			} catch (NumberFormatException e) {
-				log.warn("주소 형식이 숫자가 아닙니다: {}", requestDto.getAddress());
-				throw new RuntimeException("잘못된 주소 형식입니다. (숫자 코드 필요)");
-			}
+			user.setAddress(requestDto.getAddress());
 		}
 
 		// 3. 변경된 엔티티 저장
@@ -210,12 +204,11 @@ public class MyPageService {
 	/**
 	 * 주소 정보 포맷팅
 	 */
-	private String formatAddress(Integer address) {
-		if (address == null) {
+	private String formatAddress(String address) {
+		if (address == null || address.trim().isEmpty()) {
 			return "주소를 입력하세요...";
 		}
 
-		// TODO: 주소 코드에 따른 실제 주소명 매핑 구현 필요
-		return address.toString();
+		return address;
 	}
 }

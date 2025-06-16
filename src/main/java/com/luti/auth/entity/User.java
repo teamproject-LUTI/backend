@@ -56,7 +56,7 @@ public class User extends Auditable {
 	private String gender;
 
 	@Column(name = "address")
-	private Integer address;
+	private String address;
 
 	@Column(name = "nickname", length = 30)
 	private String nickname;
@@ -81,7 +81,7 @@ public class User extends Auditable {
 
 	@Builder
 	private User(String email, String password, String name, String birthday,
-			String phoneNumber, String gender, Integer address, String nickname,
+			String phoneNumber, String gender, String address, String nickname,
 			String profileFileName, String profilePhysicalPath, String profileLogicalPath,
 			String profileExtension, Integer profileSize, String withdrawYn, UserType userTypeId) {
 		this.email = email;
@@ -125,12 +125,13 @@ public class User extends Auditable {
 	 * 일반 회원가입용 정적 팩토리 메서드
 	 */
 	public static User createRegularUser(String email, String password, String name,
-			String phoneNumber, UserType userType) {
+			String phoneNumber, String address, UserType userType) {
 		return User.builder()
 				.email(email)
 				.password(password)
 				.name(name)
 				.phoneNumber(phoneNumber)
+				.address(address)
 				.withdrawYn("N")
 				.userTypeId(userType)
 				.build();
