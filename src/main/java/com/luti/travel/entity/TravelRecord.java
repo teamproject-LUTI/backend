@@ -33,15 +33,15 @@ public class TravelRecord {
 	@Column(name = "payment_cd")
 	private Integer paymentCd;
 
-	@Column(name = "payment_no")
-	private Integer paymentNo;
+	@Column(name = "payment_id")
+	private Integer paymentId;
 
 	// PaymentList 참조 (복합키로 매핑)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumns({
 			@JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false),
 			@JoinColumn(name = "payment_cd", referencedColumnName = "payment_cd", insertable = false, updatable = false),
-			@JoinColumn(name = "payment_no", referencedColumnName = "payment_no", insertable = false, updatable = false)
+			@JoinColumn(name = "payment_id", referencedColumnName = "payment_id", insertable = false, updatable = false)
 	})
 	private PaymentList paymentList;
 

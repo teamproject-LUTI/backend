@@ -19,7 +19,7 @@ public interface TravelRecordRepository extends JpaRepository<TravelRecord, Long
 	List<TravelRecord> findByTravelTitleContaining(String keyword);
 
 	// 특정 결제 번호(PaymentList)로 여행 기록 조회
-	List<TravelRecord> findByPaymentNo(PaymentList paymentNo);
+	List<TravelRecord> findByPaymentList(PaymentList paymentList);
 
 	// 특정 사용자 + 여행 제목 키워드 조합으로 조회
 	List<TravelRecord> findByUserIdAndTravelTitleContaining(User userId, String keyword);
