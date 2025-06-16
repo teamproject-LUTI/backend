@@ -19,10 +19,24 @@ public class TravelRecord {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "travel_record_id", updatable = false, nullable = false)
 	private Long travelRecordId;
+  // 개별 복합키 컴포넌트들
+	@Column(name = "user_id")
+	private Long userId;
 
-	// PaymentList 참조 - payment_id로만 연결
+	@Column(name = "payment_cd")
+	private Integer paymentCd;
+
+	@Column(name = "payment_id")
+	private Integer paymentId;
+
+	// PaymentList 참조 (복합키로 매핑)
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "payment_id")
+	@JoinColumns({
+			@JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false),
+			@JoinColumn(name = "payment_cd", referencedColumnName = "payment_cd", insertable = false, updatable = false),
+			@JoinColumn(name = "payment_id", referencedColumnName = "payment_id", insertable = false, updatable = false)
+	})
+  
 	private PaymentList paymentList;
 
 	@Column(name = "travel_title", length = 100)
