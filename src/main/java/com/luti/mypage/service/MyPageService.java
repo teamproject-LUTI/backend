@@ -1,5 +1,13 @@
 package com.luti.mypage.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.luti.auth.entity.User;
 import com.luti.auth.repository.UserRepository;
 import com.luti.mypage.dto.MyPageProfileResponseDto;
@@ -7,13 +15,6 @@ import com.luti.mypage.dto.request.MyPageProfileUpdateRequestDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 /**
  * 마이페이지 관련 비즈니스 로직을 처리하는 서비스
@@ -62,7 +63,8 @@ public class MyPageService {
 		// 닉네임
 		if (StringUtils.hasText(requestDto.getNickname())) {
 			// 닉네임 중복 검사 (옵션)
-			if (userRepository.existsByNickname(requestDto.getNickname()) && !user.getNickname().equals(requestDto.getNickname())) {
+			if (userRepository.existsByNickname(requestDto.getNickname()) && !user.getNickname()
+					.equals(requestDto.getNickname())) {
 				throw new RuntimeException("이미 사용 중인 닉네임입니다.");
 			}
 			user.setNickname(requestDto.getNickname());
@@ -128,11 +130,6 @@ public class MyPageService {
 	 */
 	private String formatBirthday(String birthday) {
 		if (!StringUtils.hasText(birthday)) {
-			return null;
-		}
-
-		// 소셜 로그인 제공자 정보인 경우
-		if ("google".equals(birthday) || "kakao".equals(birthday) || "naver".equals(birthday)) {
 			return null;
 		}
 
@@ -211,4 +208,5 @@ public class MyPageService {
 
 		return address;
 	}
+
 }
