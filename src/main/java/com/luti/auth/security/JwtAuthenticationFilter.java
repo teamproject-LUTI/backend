@@ -3,6 +3,7 @@ package com.luti.auth.security;
 import java.io.IOException;
 import java.util.Collections;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.luti.auth.entity.User;
+import com.luti.auth.repository.UserRepository;
 import com.luti.auth.util.JwtUtil;
 
 import io.jsonwebtoken.Claims;
@@ -35,6 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 
+	private final UserRepository userRepository;
+
 	/**
 	 * 설명: HTTP 요청이 들어올 때마다 실행되는 필터의 핵심 로직입니다.
 	 * 쿠키에서 Access Token을 추출하고, 유효성을 검증한 후, 사용자 정보를 바탕으로 인증 객체를 생성하여
@@ -57,13 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		// 1. 쿠키에서 Access Token 추출
 		String token = extractTokenFromCookie(request, "accessToken");
 
-		// 디버깅을 위한 토큰 존재 여부 로그
 		log.debug("추출된 토큰 존재 여부: {}", token != null);
-
-		// 디버깅을 위한 쿠키 없음 확인
-		if (request.getCookies() == null) {
-			log.debug("요청에 쿠키가 없음");
-		}
 
 		try {
 			// 2. 토큰 존재 및 유효성 검증
@@ -74,57 +73,69 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				String tokenType = jwtUtil.getTokenType(token);
 				if (!"ACCESS".equals(tokenType)) {
 					log.warn("유효하지 않은 토큰 타입: {}", tokenType);
-					filterChain.doFilter(request, response); // 다음 필터로 전달
+					filterChain.doFilter(request, response);
 					return;
 				}
 
 				// 4. 토큰에서 사용자 정보(클레임) 추출
 				Claims claims = jwtUtil.getClaimsFromToken(token);
-				Long userId = Long.parseLong(claims.getSubject()); // 'sub' 클레임에서 userId 추출
+				Long userId = Long.parseLong(claims.getSubject());
+
+				// *** 5. 사용자 존재 여부 및 탈퇴 상태 확인 (새로 추가) ***
+				User user = userRepository.findById(userId).orElse(null);
+				if (user == null) {
+					log.warn("삭제된 사용자의 토큰 사용 시도 - 사용자 ID: {}", userId);
+					sendDeletedUserResponse(response, "삭제된 계정입니다. 다시 로그인해주세요.");
+					return;
+				}
+
+				// 탈퇴한 사용자인 경우 특별 응답 (복구 가능)
+				if ("Y".equals(user.getWithdrawYn())) {
+					log.info("탈퇴한 사용자 로그인 시도 감지 - 사용자 ID: {}", userId);
+					sendWithdrawResponse(response, "탈퇴한 계정입니다. 복구하시겠습니까?");
+					return;
+				}
+
+				// 6. 나머지 토큰 정보 추출
 				String email = claims.get("email", String.class);
 				String name = claims.get("name", String.class);
 				String nickname = claims.get("nickname", String.class);
 				String profileImageUrl = claims.get("profileImageUrl", String.class);
-				String socialProvider = claims.get("socialProvider", String.class);
+				String provider = claims.get("provider", String.class);
 				Long userTypeId = claims.get("userTypeId", Long.class);
 
-				// 5. 사용자 타입에 따른 역할 결정
+				// 7. 사용자 타입에 따른 역할 결정
 				String role = determineRole(userTypeId);
 
-				// 6. Spring Security 인증 객체 생성
+				// 8. Spring Security 인증 객체 생성
 				JwtAuthenticationToken authentication = new JwtAuthenticationToken(
 						userId,
 						email,
 						name,
 						nickname,
 						profileImageUrl,
-						socialProvider,
 						userTypeId,
-						Collections.singletonList(new SimpleGrantedAuthority(role)) // 결정된 역할로 권한 부여
+						provider,
+						Collections.singletonList(new SimpleGrantedAuthority(role))
 				);
 
-				// 7. 인증 상세 정보 설정 (웹 요청 정보)
+				// 9. 인증 상세 정보 설정 및 SecurityContext 설정
 				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				// 8. SecurityContextHolder에 인증 객체 설정
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 
 				log.debug("JWT 인증 성공 - SecurityContext에 인증 정보 설정 완료");
 
 			} else if (StringUtils.hasText(token)) {
-				// 토큰은 있으나 유효하지 않은 경우
 				log.warn("유효하지 않은 JWT 토큰");
 			} else {
-				// 토큰이 없는 경우 (인증이 필요 없는 경로이거나 익명 사용자로 처리)
 				log.debug("JWT 토큰이 없음 - 익명 사용자로 처리");
 			}
 
 		} catch (Exception e) {
-			// 토큰 처리 중 예외 발생 시 (예: 토큰 변조, 파싱 오류 등)
 			log.error("JWT 토큰 처리 중 오류 발생: {}", e.getMessage(), e);
-			SecurityContextHolder.clearContext(); // Security Context 초기화 (인증 정보 제거)
+			SecurityContextHolder.clearContext();
 		}
 
-		// 다음 필터로 요청 전달
 		filterChain.doFilter(request, response);
 	}
 
@@ -193,7 +204,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		// JWT 필터를 스킵할 경로들 (인증이 필요 없거나 다른 방식으로 처리되는 경로)
-		boolean shouldNotFilter = path.startsWith("/api/auth/") || // /api/auth/refresh 등
+		boolean shouldNotFilter = path.equals("/api/auth/refresh") ||
 								  path.startsWith("/oauth2/") ||
 								  path.startsWith("/login/oauth2/") ||
 								  path.equals("/") ||
@@ -206,6 +217,83 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		return shouldNotFilter;
+	}
+
+	/**
+	 * 삭제된 사용자에 대한 특별 응답 전송
+	 *
+	 * @param response HTTP 응답 객체
+	 * @param message 응답 메시지
+	 */
+	private void sendDeletedUserResponse(HttpServletResponse response, String message) throws IOException {
+		// 쿠키 삭제 (삭제된 사용자의 토큰 정리)
+		clearAccessTokenCookie(response);
+		clearRefreshTokenCookie(response);
+		clearJSessionIdCookie(response);
+
+		response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 상태코드
+		response.setContentType("application/json;charset=UTF-8");
+
+		String jsonResponse = String.format(
+				"{\"success\": false, \"error\": \"%s\", \"errorCode\": \"USER_DELETED\", \"needsLogin\": true}",
+				message
+		);
+
+		response.getWriter().write(jsonResponse);
+	}
+
+	/**
+	 * 탈퇴한 사용자에 대한 특별 응답 전송
+	 *
+	 * @param response HTTP 응답 객체
+	 * @param message 응답 메시지
+	 */
+	private void sendWithdrawResponse(HttpServletResponse response, String message) throws IOException {
+		response.setStatus(HttpStatus.FORBIDDEN.value()); // 403 상태코드
+		response.setContentType("application/json;charset=UTF-8");
+
+		String jsonResponse = String.format(
+				"{\"success\": false, \"error\": \"%s\", \"errorCode\": \"ACCOUNT_WITHDRAWN\", \"needsRestore\": true}",
+				message
+		);
+
+		response.getWriter().write(jsonResponse);
+	}
+
+	/**
+	 * Access Token 쿠키 삭제
+	 */
+	private void clearAccessTokenCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("accessToken", "");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(0); // 즉시 만료
+		response.addCookie(cookie);
+	}
+
+	/**
+	 * Refresh Token 쿠키 삭제
+	 */
+	private void clearRefreshTokenCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("refreshToken", "");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(0); // 즉시 만료
+		response.addCookie(cookie);
+	}
+
+	/**
+	 * JSESSIONID 쿠키 삭제
+	 */
+	private void clearJSessionIdCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("JSESSIONID", "");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(0); // 즉시 만료
+		response.addCookie(cookie);
 	}
 
 }
