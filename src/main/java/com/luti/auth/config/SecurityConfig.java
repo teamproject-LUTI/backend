@@ -74,7 +74,6 @@ public class SecurityConfig {
 					auth
 							.requestMatchers(
 									"/api/auth/refresh",       // 토큰 갱신
-									"/api/auth/validate",      // 토큰 유효성 검증
 									"/oauth2/**",              // OAuth2 관련 엔드포인트
 									"/login/oauth2/**",        // OAuth2 로그인 리다이렉션
 									"/",                       // 루트 경로
@@ -86,8 +85,20 @@ public class SecurityConfig {
 									"/error"                   // 에러 페이지
 							).permitAll()
 
-							// 관리자 역할이 필요한 경로 설정 (향후 확장용)
+							// 관리자 역할이 필요한 경로 설정
 							.requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+							.requestMatchers(
+									"/api/auth/validate",
+									"/api/auth/me",
+									"/api/auth/logout",
+									"/api/auth/logout-all",
+									"/api/auth/withdraw",      // 회원탈퇴 추가
+									"/api/auth/restore",       // 계정복구 추가
+									"/api/auth/withdraw/status", // 탈퇴 상태 확인 추가
+									"/api/mypage/**",
+									"/api/user/**"
+							).authenticated()
 
 							.anyRequest().authenticated();
 				})
@@ -112,7 +123,7 @@ public class SecurityConfig {
 				.logout(logout -> logout
 						.logoutUrl("/api/auth/logout") // 로그아웃을 처리할 URL
 						.logoutSuccessUrl("/") // 로그아웃 성공 시 리다이렉션될 URL
-						.deleteCookies("accessToken", "refreshToken") // 로그아웃 시 삭제할 쿠키
+						.deleteCookies("accessToken", "refreshToken", "JSESSIONID") // 로그아웃 시 삭제할 쿠키
 						.invalidateHttpSession(true) // HTTP 세션 무효화
 						.clearAuthentication(true) // SecurityContextHolder의 인증 정보 삭제
 				)
