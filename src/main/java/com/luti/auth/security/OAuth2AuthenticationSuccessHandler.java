@@ -20,6 +20,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,6 +55,22 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 			log.info("OAuth2 로그인 성공 - 사용자 ID: {}, 이메일: {}", user.getUserId(), user.getEmail());
 
+			// *** 탈퇴한 사용자 확인 (새로 추가) ***
+			if ("Y".equals(user.getWithdrawYn())) {
+				log.info("탈퇴한 사용자 OAuth2 로그인 시도 감지 - 사용자 ID: {}", user.getUserId());
+
+				// 복구 페이지로 리다이렉트
+				String restoreUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/restore")
+						.queryParam("type", "oauth2")
+						.queryParam("message", "탈퇴한 계정입니다. 복구하시겠습니까?")
+						.build().toUriString();
+
+				log.info("탈퇴한 사용자 복구 페이지로 리다이렉트: {}", restoreUrl);
+				getRedirectStrategy().sendRedirect(request, response, restoreUrl);
+				return;
+			}
+
+			// 정상 사용자인 경우 기존 로직 수행
 			// JWT 토큰 생성
 			String accessToken = jwtUtil.generateAccessToken(
 					user.getUserId(),
@@ -61,8 +78,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 					user.getDisplayName(),
 					user.getNickname(),
 					user.getDisplayProfileImage(),
-					user.getSocialProvider(),
-					user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L
+					user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L,
+					user.getProvider()
 			);
 
 			String refreshToken = jwtUtil.generateRefreshToken(user.getUserId());
@@ -76,7 +93,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 			// Refresh Token을 HttpOnly 쿠키로 설정
 			setRefreshTokenCookie(response, refreshToken);
 
-			// 메인 페이지로 직접 리다이렉트 (중간 페이지 없이)
+			// OAuth2 인증 완료 후 세션 무효화 및 JSESSIONID 쿠키 삭제
+			invalidateSessionAndClearCookie(request, response);
+
+			// 메인 페이지로 직접 리다이렉트
 			String redirectUrl = frontendUrl + successRedirectPath;
 
 			log.info("OAuth2 로그인 성공 - 메인 페이지로 직접 리다이렉트: {}", redirectUrl);
@@ -91,6 +111,41 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 			getRedirectStrategy().sendRedirect(request, response, errorUrl);
 		}
+	}
+
+	/**
+	 * OAuth2 인증 완료 후 세션 무효화 및 JSESSIONID 쿠키 삭제
+	 * JWT 토큰 기반 인증으로 전환하므로 OAuth2 과정에서 생성된 세션을 정리
+	 */
+	private void invalidateSessionAndClearCookie(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			// 현재 세션이 존재하는지 확인 (새 세션 생성하지 않음)
+			HttpSession session = request.getSession(false);
+			if (session != null) {
+				String sessionId = session.getId();
+				session.invalidate(); // 세션 무효화
+				log.debug("OAuth2 인증 완료 후 세션 무효화 완료 - Session ID: {}", sessionId);
+			}
+
+			// JSESSIONID 쿠키 삭제
+			clearJSessionIdCookie(response);
+			log.debug("JSESSIONID 쿠키 삭제 완료");
+
+		} catch (Exception e) {
+			log.warn("세션 무효화 중 오류 발생 (JWT 인증에는 영향 없음): {}", e.getMessage());
+		}
+	}
+
+	/**
+	 * JSESSIONID 쿠키를 삭제
+	 */
+	private void clearJSessionIdCookie(HttpServletResponse response) {
+		Cookie jSessionCookie = new Cookie("JSESSIONID", "");
+		jSessionCookie.setHttpOnly(true);
+		jSessionCookie.setSecure(true);
+		jSessionCookie.setPath("/");
+		jSessionCookie.setMaxAge(0); // 즉시 만료
+		response.addCookie(jSessionCookie);
 	}
 
 	/**
