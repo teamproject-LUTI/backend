@@ -100,8 +100,8 @@ public class AuthService {
 					user.getDisplayName(),
 					user.getNickname(),
 					user.getDisplayProfileImage(),
-					user.getSocialProvider(),
-					user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L // 사용자 타입 ID 전달
+					user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L, // 사용자 타입 ID 전달
+					user.getProvider()
 			);
 
 			// 9. 새로운 Refresh Token 생성 (토큰 로테이션 적용)
