@@ -21,7 +21,7 @@ public class PaymentListService {
      */
     private PaymentListResponseDTO toDto(PaymentList entity) {
         return PaymentListResponseDTO.builder()
-                .paymentNo(entity.getPaymentNo())
+                .paymentId(entity.getPaymentId())
                 .paymentCd(entity.getPaymentCd())
                 .userId(entity.getUserId())
                 .totalPrice(entity.getTotalPrice())

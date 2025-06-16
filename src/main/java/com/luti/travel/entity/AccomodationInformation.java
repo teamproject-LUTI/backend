@@ -1,9 +1,6 @@
 package com.luti.travel.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,13 +9,14 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "accomoinfo")
+@Table(name = "accomodationInformation")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AccomoInfo {
+public class AccomodationInformation {
 
 	@Id
-	@Column(name = "accomo_no")
-	private Long accomoNo;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "accomodation_information_id", updatable = false, nullable = false)
+	private Long accomodationInformationId;
 
 	@Column(name = "accomo_nm")
 	private String accomoNm;

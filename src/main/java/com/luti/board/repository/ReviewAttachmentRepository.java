@@ -11,11 +11,11 @@ public interface ReviewAttachmentRepository
         extends JpaRepository<ReviewAttachment, Long> {
 
     /**
-     * 특정 후기(reviewNo)에 속한 첨부파일들을 모두 조회
-     * -> ReviewAttachment.review.reviewNo 프로퍼티 기준
+     * 특정 후기(reviewId)에 속한 첨부파일들을 모두 조회
+     * -> ReviewAttachment.review.reviewId 프로퍼티 기준
      */
-    List<ReviewAttachment> findAllByReviewReviewNo(Long reviewNo);
+    List<ReviewAttachment> findAllByReviewReviewId(Long reviewId);
 
     // 아래 형태도 가능 (언더스코어 구분자)
-    // List<ReviewAttachment> findAllByReview_ReviewNo(Long reviewNo);
+    // List<ReviewAttachment> findAllByReview_reviewId(Long reviewId);
 }

@@ -30,7 +30,7 @@ public class Like {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "review_no",
+            name = "review_id",
             nullable = false,
             foreignKey = @ForeignKey(name = "FK_LIKE_REVIEW")
     )
