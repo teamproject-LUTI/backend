@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
  *
  */
 @Entity
-@Table(name = "refresh_token")
+@Table(name = "refreshToken")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 엔티티 요구사항: 기본 생성자 (접근 레벨 보호)
 public class RefreshToken extends Auditable {

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class ReviewResponseDto {
     /** 후기 고유번호 */
-    private final Long reviewNo;
+    private final Long reviewId;
 
     /** 후기 제목 */
     private final String title;

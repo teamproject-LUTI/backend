@@ -2,14 +2,7 @@ package com.luti.travel.entity;
 
 import com.luti.payment.entity.PaymentList;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,31 +11,18 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "travelrecord")
+@Table(name = "travelRecord")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelRecord {
 
 	@Id
-	@Column(name = "record_no")
-	private Long recordNo;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "travel_record_id", updatable = false, nullable = false)
+	private Long travelRecordId;
 
-	// 개별 복합키 컴포넌트들
-	@Column(name = "user_id")
-	private Long userId;
-
-	@Column(name = "payment_cd")
-	private Integer paymentCd;
-
-	@Column(name = "payment_no")
-	private Integer paymentNo;
-
-	// PaymentList 참조 (복합키로 매핑)
+	// PaymentList 참조 - payment_id로만 연결
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-			@JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false),
-			@JoinColumn(name = "payment_cd", referencedColumnName = "payment_cd", insertable = false, updatable = false),
-			@JoinColumn(name = "payment_no", referencedColumnName = "payment_no", insertable = false, updatable = false)
-	})
+	@JoinColumn(name = "payment_id")
 	private PaymentList paymentList;
 
 	@Column(name = "travel_title", length = 100)
@@ -51,4 +31,16 @@ public class TravelRecord {
 	@Column(name = "travel_content", columnDefinition = "TEXT")
 	private String travelContent;
 
+	// 편의 메서드들 (필요시)
+	public Long getUserId() {
+		return paymentList != null ? paymentList.getUserId() : null;
+	}
+
+	public Integer getPaymentCd() {
+		return paymentList != null ? paymentList.getPaymentCd() : null;
+	}
+
+	public Long getPaymentId() {
+		return paymentList != null ? paymentList.getPaymentId() : null;
+	}
 }

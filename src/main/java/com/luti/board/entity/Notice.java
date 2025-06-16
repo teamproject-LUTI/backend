@@ -20,8 +20,8 @@ public class Notice extends Auditable {
     /** 공지글 고유번호 (PK, AUTO_INCREMENT) */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notice_no", updatable = false, nullable = false)
-    private Long noticeNo;
+    @Column(name = "notice_id", updatable = false, nullable = false)
+    private Long noticeId;
 
     /**
      * 게시글 작성자 정보 (User 엔티티와 다대일 연관관계)

@@ -24,8 +24,8 @@ public class Review extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "review_no")
-    private Long reviewNo;
+    @Column(name = "review_id")
+    private Long reviewId;
 
     /** 작성자 정보 */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
