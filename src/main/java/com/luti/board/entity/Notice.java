@@ -44,9 +44,11 @@ public class Notice extends Auditable {
     private String content;
 
     /** 조회수 (기본값 0) */
+    @Builder.Default
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
+    @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private Boolean deleted = false;
 
