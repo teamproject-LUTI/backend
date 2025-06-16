@@ -85,51 +85,37 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	 */
 	@Transactional
 	public User saveOrUpdateUser(OAuth2UserInfoDto userInfo) {
-		// 1. 소셜 제공자(provider)와 소셜 ID(providerId)를 이용하여 데이터베이스에서 기존 사용자를 검색합니다.
-		// 이는 동일한 소셜 계정으로 재로그인하는 경우를 처리합니다.
+		// 소셜 제공자와 소셜 ID로 기존 사용자 검색
 		User user = userRepository.findBySocialProviderAndSocialId(
-				userInfo.getProvider(),
+				userInfo.getProvider().toUpperCase(), // "google" -> "GOOGLE"
 				userInfo.getProviderId()
 		).orElse(null);
 
 		if (user != null) {
-			// 1-1. 기존 소셜 사용자가 존재하는 경우, 프로필 정보(이름, 프로필 이미지)를 업데이트합니다.
-			log.info("기존 소셜 사용자 정보 업데이트: {}", userInfo.getEmail());
+			// 기존 소셜 사용자 정보 업데이트
 			user.updateSocialInfo(userInfo.getName(), userInfo.getProfileImageUrl());
-			return userRepository.save(user); // 변경된 사용자 정보 저장
+			return userRepository.save(user);
 		}
 
-		// 2. 소셜 ID로 사용자를 찾지 못했다면, 이메일 주소를 이용하여 기존 사용자를 검색합니다.
+		// 이메일로 기존 사용자 검색
 		user = userRepository.findByEmail(userInfo.getEmail()).orElse(null);
 
 		if (user != null) {
-			// 2-1. 이메일로 기존 사용자를 찾았을 경우
 			if (user.isSocialUser()) {
-				// 2-1-1. 이미 소셜 로그인 사용자이고, 다른 소셜 제공자로 로그인 시도하는 경우
-				// 기존 소셜 계정에 새로운 소셜 제공자 정보를 연동합니다.
-				log.info("기존 소셜 사용자에 다른 제공자 연동: {}", userInfo.getEmail());
+				// 다른 소셜 제공자로 로그인 시도 - 새 제공자로 업데이트
 				user.setSocialProvider(userInfo.getProvider(), userInfo.getProviderId());
 				user.updateSocialInfo(userInfo.getName(), userInfo.getProfileImageUrl());
 			} else {
-				// 2-1-2. 이메일이 일반 로그인(로컬 계정) 사용자와 중복되는 경우
-				log.warn("일반 로그인 사용자와 동일한 이메일로 소셜 로그인 시도: {}", userInfo.getEmail());
-				throw new OAuth2AuthenticationException(
-						"이미 해당 이메일로 가입된 계정이 있습니다. 기존 계정으로 로그인해주세요."
-				);
+				// 일반 계정과 이메일 중복
+				throw new OAuth2AuthenticationException("이미 해당 이메일로 가입된 계정이 있습니다.");
 			}
 			return userRepository.save(user);
 		}
 
-		// 3. 위의 모든 조건에 해당하지 않는 경우, 새로운 소셜 사용자를 생성합니다.
-		log.info("새로운 소셜 사용자 생성: {}", userInfo.getEmail());
-
-		// 3-1. 시스템에 정의된 기본 사용자 타입(ROLE)을 조회합니다.
+		// 새로운 소셜 사용자 생성
 		UserType defaultUserType = userTypeRepository.findDefaultUserType()
-				.orElseThrow(() -> new OAuth2AuthenticationException(
-						"기본 사용자 타입을 찾을 수 없습니다." // 이 메시지는 OAuth2AuthenticationFailureHandler에서 처리됩니다.
-				));
+				.orElseThrow(() -> new OAuth2AuthenticationException("기본 사용자 타입을 찾을 수 없습니다."));
 
-		// 3-2. OAuth2UserInfoDto의 정보와 기본 사용자 타입을 사용하여 새로운 User 엔티티를 생성합니다.
 		user = User.createSocialUser(
 				userInfo.getEmail(),
 				userInfo.getName(),
@@ -137,7 +123,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 				defaultUserType
 		);
 
-		// 3-3. 생성된 사용자 엔티티에 소셜 제공자 정보를 설정합니다.
 		user.setSocialProvider(userInfo.getProvider(), userInfo.getProviderId());
 
 		return userRepository.save(user);
