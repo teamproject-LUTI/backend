@@ -19,8 +19,8 @@ public class Ask extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ask_no", updatable = false, nullable = false)
-    private Long id;
+    @Column(name = "ask_id", updatable = false, nullable = false)
+    private Long askId;
 
     /**
      * 작성자 정보 (User 엔티티와 N:1 연관관계)

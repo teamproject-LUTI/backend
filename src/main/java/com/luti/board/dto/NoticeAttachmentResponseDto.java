@@ -26,7 +26,7 @@ public class NoticeAttachmentResponseDto {
      */
     public static NoticeAttachmentResponseDto of(NoticeAttachment a) {
         return new NoticeAttachmentResponseDto(
-                a.getId(),
+                a.getNoticeAttachmentId(),
                 a.getFileName(),
                 a.getPhysicalPath(),
                 a.getLogicalPath(),

@@ -27,11 +27,11 @@ public class NoticeAttachmentService {
     /**
      * 특정 공지사항의 첨부파일 목록을 조회합니다.
      *
-     * @param noticeNo 공지사항 고유번호
+     * @param noticeId 공지사항 고유번호
      */
-    public MultiResponseDto<NoticeAttachmentResponseDto> getAttachments(Long noticeNo) {
-        Notice notice = noticeRepository.findById(noticeNo)
-                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeNo));
+    public MultiResponseDto<NoticeAttachmentResponseDto> getAttachments(Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
 
         List<NoticeAttachmentResponseDto> dtos = attachmentRepository
                 .findAllByNotice(notice)
@@ -46,16 +46,16 @@ public class NoticeAttachmentService {
     /**
      * 공지사항에 첨부파일을 추가합니다.
      *
-     * @param noticeNo 공지사항 고유번호
+     * @param noticeId 공지사항 고유번호
      * @param dto      첨부파일 메타데이터 DTO
      */
     @Transactional
     public SingleResponseDto<NoticeAttachmentResponseDto> addAttachment(
-            Long noticeNo,
+            Long noticeId,
             NoticeAttachmentRequestDto dto) {
 
-        Notice notice = noticeRepository.findById(noticeNo)
-                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeNo));
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
 
         // 엔티티 생성 및 양방향 연관관계 설정
         NoticeAttachment attachment = NoticeAttachment.builder()
