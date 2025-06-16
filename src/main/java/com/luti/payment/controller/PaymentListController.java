@@ -1,12 +1,14 @@
 package com.luti.payment.controller;
 
+import com.luti.auth.entity.User;
+import com.luti.payment.dto.PaymentListRequestDTO;
 import com.luti.payment.dto.PaymentListResponseDTO;
 import com.luti.payment.service.PaymentListService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -17,70 +19,26 @@ public class PaymentListController {
     private final PaymentListService paymentListService;
 
     /**
-     * 사용자 ID로 결제내역 전체 조회
+     * 1. 결제 정보 저장
+     * HttpOnly 쿠키 기반 인증을 사용하므로 @AuthenticationPrincipal 사용
      */
+    @PostMapping("/save")
+    public ResponseEntity<PaymentListResponseDTO> savePayment(@RequestBody PaymentListRequestDTO dto) {
+        PaymentListResponseDTO saved = paymentListService.savePayment(dto);
+        return ResponseEntity.ok(saved);
+    }
+
+    // 2. 사용자 ID로 결제 내역 조회
     @GetMapping("/user/{userId}")
-    public List<PaymentListResponseDTO> getByUserId(@PathVariable Integer userId) {
-        return paymentListService.findByUserId(userId);
+    public ResponseEntity<List<PaymentListResponseDTO>> getByUserId(@PathVariable Long userId) {
+        List<PaymentListResponseDTO> payments = paymentListService.findByUserId(userId);
+        return ResponseEntity.ok(payments);
     }
 
-    /**
-     * 결제 방식 코드로 결제내역 조회
-     */
-    @GetMapping("/method/{paymentCd}")
-    public List<PaymentListResponseDTO> getByPaymentCd(@PathVariable Integer paymentCd) {
-        return paymentListService.findByPaymentCd(paymentCd);
-    }
-
-    /**
-     * 결제일 범위 조회
-     */
-    @GetMapping("/date")
-    public List<PaymentListResponseDTO> getByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-        return paymentListService.findByPaymentDateBetween(start, end);
-    }
-
-    /**
-     * 결제방식 기준 최신 결제 1건
-     */
-    @GetMapping("/latest/{paymentCd}")
-    public PaymentListResponseDTO getLatestByPaymentCd(@PathVariable Integer paymentCd) {
-        return paymentListService.findLatestByPaymentCd(paymentCd);
-    }
-
-    /**
-     * 총 결제금액 범위 조회
-     */
-    @GetMapping("/price")
-    public List<PaymentListResponseDTO> getByPriceRange(
-            @RequestParam Integer min,
-            @RequestParam Integer max) {
-        return paymentListService.findByTotalPriceRange(min, max);
-    }
-
-    /**
-     * 결제 취소된 결제내역 조회
-     */
-    @GetMapping("/cancelled")
-    public List<PaymentListResponseDTO> getAllCancelled() {
-        return paymentListService.findAllCancelled();
-    }
-
-    /**
-     * 사용자별 금액 오름차순 정렬
-     */
-    @GetMapping("/user/{userId}/asc")
-    public List<PaymentListResponseDTO> getUserPaymentsAsc(@PathVariable Integer userId) {
-        return paymentListService.findByUserIdOrderByTotalPriceAsc(userId);
-    }
-
-    /**
-     * 사용자별 금액 내림차순 정렬
-     */
-    @GetMapping("/user/{userId}/desc")
-    public List<PaymentListResponseDTO> getUserPaymentsDesc(@PathVariable Integer userId) {
-        return paymentListService.findByUserIdOrderByTotalPriceDesc(userId);
+    // 3. 환불 처리 (DB상 상태만 변경)
+    @PostMapping("/cancel/{paymentId}")
+    public ResponseEntity<String> cancelPayment(@PathVariable Long paymentId) {
+        paymentListService.cancelPayment(paymentId);
+        return ResponseEntity.ok("환불 처리 완료");
     }
 }
