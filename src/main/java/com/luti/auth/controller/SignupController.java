@@ -13,9 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/signup")
@@ -27,8 +24,8 @@ public class SignupController {
     // 1. 이메일 인증코드 전송
     @PostMapping("/email")
     public ResponseEntity<String> sendEmail(@RequestBody EmailRequestDto requestDto, HttpServletRequest request) {
-        emailService.checkDuplicate(requestDto);
         try {
+            emailService.checkDuplicate(requestDto);
             String code = emailService.sendEmail(requestDto); // 6자리 코드 전송
 
             HttpSession session = request.getSession();
@@ -37,6 +34,8 @@ public class SignupController {
             session.setMaxInactiveInterval(300); // 5분
 
             return ResponseEntity.ok("인증코드가 이메일로 전송되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("이메일 전송에 실패했습니다: " + e.getMessage());
