@@ -10,7 +10,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "Route")
+@Table(name = "route")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Route {
 

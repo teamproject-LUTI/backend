@@ -9,7 +9,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "AccomodationInformation")
+@Table(name = "accomodationInformation")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AccomodationInformation {
 

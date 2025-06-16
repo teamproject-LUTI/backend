@@ -5,7 +5,7 @@ import lombok.*;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "ask_attachment")
+@Table(name = "askAttachment")
 @Getter
 @Setter
 @NoArgsConstructor
