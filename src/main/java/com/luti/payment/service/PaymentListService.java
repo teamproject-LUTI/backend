@@ -27,7 +27,6 @@ public class PaymentListService {
         PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentCd(dto.getPaymentCd())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 코드입니다."));
 
-
         PaymentList payment = PaymentList.builder()
                 .paymentCd(dto.getPaymentCd())
                 .userId(dto.getUserId())

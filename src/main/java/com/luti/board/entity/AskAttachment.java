@@ -5,7 +5,7 @@ import lombok.*;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "ask_attachment")
+@Table(name = "askAttachment")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,8 +15,8 @@ public class AskAttachment extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "file_no", updatable = false, nullable = false)
-    private Long id;
+    @Column(name = "ask_attachment_Id", updatable = false, nullable = false)
+    private Long askAttachmentId;
 
     /**
      * 소속된 문의글 (Ask 엔티티와 다대일 연관관계)
@@ -28,10 +28,10 @@ public class AskAttachment extends Auditable {
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "ask_no",
+            name = "ask_id",
             nullable = false,
             foreignKey = @ForeignKey(name = "FK_ASK_ATTACHMENT_ASK",
-                    foreignKeyDefinition = "FOREIGN KEY (ask_no) REFERENCES ask(ask_no) ON DELETE CASCADE")
+                    foreignKeyDefinition = "FOREIGN KEY (ask_id) REFERENCES ask(ask_id) ON DELETE CASCADE")
     )
     private Ask ask;
 

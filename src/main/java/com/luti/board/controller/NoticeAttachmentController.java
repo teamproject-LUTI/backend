@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/notices/{noticeNo}/attachments")
+@RequestMapping("/api/notices/{noticeId}/attachments")
 @RequiredArgsConstructor
 public class NoticeAttachmentController {
 
@@ -22,8 +22,8 @@ public class NoticeAttachmentController {
      */
     @GetMapping
     public MultiResponseDto<NoticeAttachmentResponseDto> list(
-            @PathVariable Long noticeNo) {
-        return service.getAttachments(noticeNo);
+            @PathVariable Long noticeId) {
+        return service.getAttachments(noticeId);
     }
 
     /**
@@ -32,9 +32,9 @@ public class NoticeAttachmentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SingleResponseDto<NoticeAttachmentResponseDto> create(
-            @PathVariable Long noticeNo,
+            @PathVariable Long noticeId,
             @RequestBody @Valid NoticeAttachmentRequestDto dto) {
-        return service.addAttachment(noticeNo, dto);
+        return service.addAttachment(noticeId, dto);
     }
 
     /**
@@ -43,7 +43,7 @@ public class NoticeAttachmentController {
     @DeleteMapping("/{fileNo}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable Long noticeNo,
+            @PathVariable Long noticeId,
             @PathVariable Long fileNo) {
         service.deleteAttachment(fileNo);
     }

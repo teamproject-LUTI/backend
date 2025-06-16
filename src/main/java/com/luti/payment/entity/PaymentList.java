@@ -48,7 +48,7 @@ public class PaymentList {
 
 
     @ManyToOne
-    @JoinColumn(name = "payment_cd", insertable = false, updatable = false)
+    @JoinColumn(name = "payment_id", insertable = false, updatable = false)
     private PaymentMethod paymentMethod;
 
     @ManyToOne

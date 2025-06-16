@@ -8,7 +8,7 @@ import lombok.*;
  * 후기(Review) 첨부파일 엔티티
  */
 @Entity
-@Table(name = "review_attachment")
+@Table(name = "reviewAttachment")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -17,8 +17,8 @@ public class ReviewAttachment extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "file_no", updatable = false, nullable = false)
-    private Long fileNo;
+    @Column(name = "review_attachment_id", updatable = false, nullable = false)
+    private Long reviewAttachmentId;
 
     /**
      * 이 첨부파일이 속한 후기글
@@ -27,7 +27,7 @@ public class ReviewAttachment extends Auditable {
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "review_no",
+            name = "review_id",
             nullable = false,
             foreignKey = @ForeignKey(name = "FK_REVIEW_ATTACHMENT_REVIEW")
     )

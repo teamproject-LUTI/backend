@@ -13,29 +13,33 @@ import java.util.Date;
 @Entity
 @Getter
 @Setter
-@Table(name = "accomodetail")
+@Table(name = "accomodationDetail")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AccomoDetail {
+public class AccomodationDetail {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "accomo_detail_id", updatable = false, nullable = false)
+    private Long accomodationDetailId;
+
     @Column(name = "payment_ownno")
     private Long paymentOwnno;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_no")
-    public PaymentList paymentNo;
+    @JoinColumn(name = "payment_id")
+    public PaymentList paymentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "accomo_no")
-    public AccomoInfo accomoNo;
+    @JoinColumn(name = "accomo_id")
+    public AccomodationInformation accomoId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     public User userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_cd")
-    public PaymentList paymentCd;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "payment_cd")
+//    public PaymentList paymentCd;
 
     @Column(name = "price")
     private Long price;

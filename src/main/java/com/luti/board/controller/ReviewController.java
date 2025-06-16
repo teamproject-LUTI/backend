@@ -31,12 +31,12 @@ public class ReviewController {
         return service.getReviews(page, size, userId);
     }
 
-    @GetMapping("/{reviewNo}")
+    @GetMapping("/{reviewId}")
     public SingleResponseDto<ReviewResponseDto> getOne(
-            @PathVariable Long reviewNo,
+            @PathVariable Long reviewId,
             @AuthenticationPrincipal(expression="userId") Long userId
     ) {
-        return new SingleResponseDto<>(service.getReviewDetail(reviewNo, userId));
+        return new SingleResponseDto<>(service.getReviewDetail(reviewId, userId));
     }
 
     @PostMapping
@@ -48,22 +48,22 @@ public class ReviewController {
         return new SingleResponseDto<>(service.createReview(dto, userId));
     }
 
-    @PutMapping("/{reviewNo}")
+    @PutMapping("/{reviewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void update(
-            @PathVariable Long reviewNo,
+            @PathVariable Long reviewId,
             @RequestBody @Valid ReviewRequestDto dto,
             @AuthenticationPrincipal(expression="userId") Long userId
     ) {
-        service.updateReview(reviewNo, dto, userId);
+        service.updateReview(reviewId, dto, userId);
     }
 
-    @DeleteMapping("/{reviewNo}")
+    @DeleteMapping("/{reviewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable Long reviewNo,
+            @PathVariable Long reviewId,
             @AuthenticationPrincipal(expression="userId") Long userId
     ) {
-        service.deleteReview(reviewNo, userId);
+        service.deleteReview(reviewId, userId);
     }
 }

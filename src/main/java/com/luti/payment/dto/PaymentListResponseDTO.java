@@ -14,8 +14,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class PaymentListResponseDTO {
 
-    private Long paymentId;            // 결제 ID (PK)
-    private Integer paymentCd;        // 결제 방식 코드
+  private Long paymentCd;        // 결제 ID (PK)
     private Long userId;           // 사용자 ID
     private Integer totalPrice;       // 총 결제 금액
     private Integer paymentState;     // 결제 상태

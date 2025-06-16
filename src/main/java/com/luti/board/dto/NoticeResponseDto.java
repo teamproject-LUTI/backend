@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NoticeResponseDto {
     /** 공지글 고유번호 */
-    private Long noticeNo;
+    private Long noticeId;
 
     /** 작성자 userId */
     private Long userId;
@@ -38,7 +38,7 @@ public class NoticeResponseDto {
 
     public static NoticeResponseDto of(Notice n) {
         return new NoticeResponseDto(
-                n.getNoticeNo(),
+                n.getNoticeId(),
                 n.getUser().getUserId(),      // User 엔티티의 PK getter (getId())
                 n.getTitle(),
                 n.getContent(),
