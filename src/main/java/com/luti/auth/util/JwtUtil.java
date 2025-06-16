@@ -57,14 +57,13 @@ public class JwtUtil {
 	 * @param name 사용자의 이름.
 	 * @param nickname 사용자의 닉네임.
 	 * @param profileImageUrl 사용자의 프로필 이미지 URL.
-	 * @param socialProvider 소셜 로그인 제공자 (예: "google", "kakao").
 	 * @param userTypeId 사용자의 유형 ID.
 	 * @return String 생성된 Access Token 문자열.
 	 * @author
 	 */
 	public String generateAccessToken(Long userId, String email, String name,
 			String nickname, String profileImageUrl,
-			String socialProvider, Long userTypeId) {
+			Long userTypeId, String provider) {
 		Date now = new Date(); // 현재 시간
 		Date expiryDate = new Date(now.getTime() + accessTokenExpiration); // Access Token 만료 시간 계산
 
@@ -74,7 +73,7 @@ public class JwtUtil {
 				.claim("name", name) // 클레임: 이름
 				.claim("nickname", nickname) // 클레임: 닉네임
 				.claim("profileImageUrl", profileImageUrl) // 클레임: 프로필 이미지 URL
-				.claim("socialProvider", socialProvider) // 클레임: 소셜 제공자
+				.claim("provider", provider) // 클레임: 소셜 제공자
 				.claim("userTypeId", userTypeId) // 클레임: 사용자 타입 ID
 				.claim("tokenType", "ACCESS") // 클레임: 토큰 타입 (ACCESS)
 				.issuedAt(now) // 토큰 발급 시간
@@ -243,24 +242,15 @@ public class JwtUtil {
 		return claims.get("profileImageUrl", String.class);
 	}
 
-	/**
-	 * 설명: 주어진 JWT 토큰에서 소셜 제공자 클레임을 추출하여 반환합니다.
-	 *
-	 * @param token 소셜 제공자를 추출할 JWT 토큰 문자열.
-	 * @return String 추출된 소셜 제공자명.
-	 * @throws JwtException 토큰 파싱 또는 서명 검증 실패 시 발생.
-	 * @author
-	 */
-	public String getSocialProviderFromToken(String token) {
+	public String getProviderFromToken(String token) {
 		Claims claims = getClaimsFromToken(token);
-		return claims.get("socialProvider", String.class);
+		return claims.get("provider", String.class);
 	}
 
 	/**
 	 * 설명: Access Token의 설정된 만료 시간(밀리초)을 반환합니다.
 	 *
 	 * @return long Access Token의 만료 시간(밀리초).
-	 * @author
 	 */
 	public long getAccessTokenExpiration() {
 		return accessTokenExpiration;
@@ -270,7 +260,6 @@ public class JwtUtil {
 	 * 설명: Refresh Token의 설정된 만료 시간(밀리초)을 반환합니다.
 	 *
 	 * @return long Refresh Token의 만료 시간(밀리초).
-	 * @author
 	 */
 	public long getRefreshTokenExpiration() {
 		return refreshTokenExpiration;
