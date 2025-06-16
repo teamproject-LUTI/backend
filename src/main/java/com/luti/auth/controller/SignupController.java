@@ -1,22 +1,23 @@
 package com.luti.auth.controller;
 
 import com.luti.auth.dto.EmailRequestDto;
+import com.luti.auth.dto.SignupRequestDto;
 import com.luti.auth.service.EmailService;
+import com.luti.auth.service.SignupService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/api/signup")
 public class SignupController {
 
-    @Autowired
     private final EmailService emailService;
+    private final SignupService signupService;
 
     // 1. 이메일 인증코드 전송
     @PostMapping("/email")
@@ -58,5 +59,11 @@ public class SignupController {
         session.removeAttribute("authEmail");
 
         return ResponseEntity.ok("이메일 인증 완료");
+    }
+
+    @PostMapping
+    public ResponseEntity<String> signup(@RequestBody SignupRequestDto signupRequestDto) {
+        signupService.register(signupRequestDto);
+        return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
 }
