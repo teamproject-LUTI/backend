@@ -157,7 +157,9 @@ public class User extends Auditable {
 	 * profileExtension 컬럼을 소셜 ID로 활용
 	 */
 	public void setSocialProvider(String provider, String socialId) {
-		this.birthday = provider; // google, kakao 등
+		if (this.birthday == null || this.birthday.equals("google") || this.birthday.equals("kakao") || this.birthday.equals("naver")) {
+			this.birthday = provider; // 소셜 제공자 정보만 저장
+		}
 		this.profileExtension = socialId; // 소셜 ID
 	}
 

@@ -1,14 +1,22 @@
 package com.luti.auth.entity;
 
+import java.time.LocalDateTime;
+
 import com.luti.audit.Auditable;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 설명: 사용자의 Refresh Token 정보를 데이터베이스에 관리하는 JPA 엔티티입니다.
