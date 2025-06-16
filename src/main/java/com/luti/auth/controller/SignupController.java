@@ -6,10 +6,15 @@ import com.luti.auth.service.EmailService;
 import com.luti.auth.service.SignupService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -62,7 +67,12 @@ public class SignupController {
     }
 
     @PostMapping
-    public ResponseEntity<String> signup(@RequestBody SignupRequestDto signupRequestDto) {
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequestDto signupRequestDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
         signupService.register(signupRequestDto);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
