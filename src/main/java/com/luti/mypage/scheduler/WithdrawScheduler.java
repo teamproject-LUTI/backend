@@ -36,21 +36,21 @@ public class WithdrawScheduler {
 	 * 매일 새벽 2시에 7일이 지난 탈퇴 사용자들을 완전 삭제
 	 * cron: 초 분 시 일 월 요일
 	 */
-	// @Scheduled(cron = "0 0 */3 * * *")	// 매일 3시간 마다
-	@Scheduled(cron = "0 */5 * * * *")    // 5분마다
+	@Scheduled(cron = "0 0 */3 * * *")	// 매일 3시간 마다
+	// @Scheduled(cron = "0 */5 * * * *")    // 5분마다
 	@Transactional
 	public void deleteWithdrawnUsers() {
 		log.info("탈퇴 사용자 완전 삭제 스케줄러 시작");
 
 		try {
 			// 3시간 마다
-			// LocalDateTime threeHoursAgo = LocalDateTime.now().minusHours(3);
+			LocalDateTime threeHoursAgo = LocalDateTime.now().minusHours(3);
 
-			// List<User> usersToDelete = userRepository.findWithdrawnUsersOlderThan(threeHoursAgo);
+			List<User> usersToDelete = userRepository.findWithdrawnUsersOlderThan(threeHoursAgo);
 
-			// 5분 마다
-			LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
-			List<User> usersToDelete = userRepository.findWithdrawnUsersOlderThan(fiveMinutesAgo);
+			// // 5분 마다
+			// LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
+			// List<User> usersToDelete = userRepository.findWithdrawnUsersOlderThan(fiveMinutesAgo);
 
 			if (usersToDelete.isEmpty()) {
 				log.info("삭제할 탈퇴 사용자가 없습니다.");
