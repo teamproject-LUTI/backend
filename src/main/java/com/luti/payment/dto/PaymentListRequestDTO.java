@@ -1,5 +1,6 @@
 package com.luti.payment.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,9 +8,10 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class PaymentListRequestDTO {
 
-    private Long paymentCd;       // 결제 방식 코드
+    private Long paymentMethodId;       // 결제 방식 코드
     private Long userId;             // 사용자 ID
     private Integer totalPrice;      // 총 결제 금액
     private LocalDate paymentDate;   // 결제 일자

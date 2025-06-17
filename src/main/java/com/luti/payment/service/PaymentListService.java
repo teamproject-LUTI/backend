@@ -24,11 +24,10 @@ public class PaymentListService {
 
     // 결제 정보 저장
     public PaymentListResponseDTO savePayment(PaymentListRequestDTO dto) {
-        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentCd(dto.getPaymentCd())
+        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentMethodId(dto.getPaymentMethodId())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 코드입니다."));
 
         PaymentList payment = PaymentList.builder()
-                .paymentCd(dto.getPaymentCd())
                 .userId(dto.getUserId())
                 .totalPrice(dto.getTotalPrice())
                 .paymentState(0) // 0: 결제완료

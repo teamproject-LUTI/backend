@@ -20,7 +20,7 @@ public class PaymentMethodService {
      * 결제방식 코드로 단건 조회
      */
     public Optional<PaymentMethodResponseDTO> findByCode(Long code) {
-        return paymentMethodRepository.findByPaymentCd(code)
+        return paymentMethodRepository.findByPaymentMethodId(code)
                 .map(PaymentMethodResponseDTO::from);
     }
 
