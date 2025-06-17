@@ -22,7 +22,7 @@ import lombok.Setter;
  * 기존 컬럼을 활용한 소셜 로그인 지원
  */
 @Entity
-@Table(name = "userInfo")
+@Table(name = "user_info")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -56,7 +56,7 @@ public class User extends Auditable {
 	private String gender;
 
 	@Column(name = "address")
-	private Integer address;
+	private String address;
 
 	@Column(name = "nickname", length = 30)
 	private String nickname;
@@ -79,11 +79,14 @@ public class User extends Auditable {
 	@Column(name = "withdraw", length = 2)
 	private String withdrawYn;
 
+	@Column(name = "provider", length = 20)
+	private String provider = "LOCAL";
+
 	@Builder
 	private User(String email, String password, String name, String birthday,
-			String phoneNumber, String gender, Integer address, String nickname,
+			String phoneNumber, String gender, String address, String nickname,
 			String profileFileName, String profilePhysicalPath, String profileLogicalPath,
-			String profileExtension, Integer profileSize, String withdrawYn, UserType userTypeId) {
+			String profileExtension, Integer profileSize, String withdrawYn, UserType userTypeId, String provider) {
 		this.email = email;
 		this.password = password;
 		this.name = name;
@@ -99,6 +102,7 @@ public class User extends Auditable {
 		this.profileSize = profileSize;
 		this.withdrawYn = withdrawYn != null ? withdrawYn : "N";
 		this.userTypeId = userTypeId;
+		this.provider = provider != null ? provider : "LOCAL";
 	}
 
 	/**
@@ -116,6 +120,7 @@ public class User extends Auditable {
 				.name(name)
 				.nickname(name)
 				.profileLogicalPath(profileImageUrl) // 프로필 이미지 URL
+				.provider("LOCAL")
 				.withdrawYn("N")
 				.userTypeId(userType)
 				.build();
@@ -125,12 +130,14 @@ public class User extends Auditable {
 	 * 일반 회원가입용 정적 팩토리 메서드
 	 */
 	public static User createRegularUser(String email, String password, String name,
-			String phoneNumber, UserType userType) {
+			String phoneNumber, String address, UserType userType) {
 		return User.builder()
 				.email(email)
 				.password(password)
 				.name(name)
 				.phoneNumber(phoneNumber)
+				.address(address)
+				.provider("LOCAL")
 				.withdrawYn("N")
 				.userTypeId(userType)
 				.build();
@@ -157,8 +164,8 @@ public class User extends Auditable {
 	 * profileExtension 컬럼을 소셜 ID로 활용
 	 */
 	public void setSocialProvider(String provider, String socialId) {
-		this.birthday = provider; // google, kakao 등
-		this.profileExtension = socialId; // 소셜 ID
+		this.provider = provider.toUpperCase(); // GOOGLE, KAKAO, NAVER
+		this.profileExtension = socialId;
 	}
 
 	/**
@@ -174,14 +181,14 @@ public class User extends Auditable {
 	 * 소셜 로그인 사용자인지 확인
 	 */
 	public boolean isSocialUser() {
-		return "SOCIAL_LOGIN".equals(this.password);
+		return !"LOCAL".equals(this.provider);
 	}
 
 	/**
 	 * 소셜 제공자 반환
 	 */
 	public String getSocialProvider() {
-		return isSocialUser() ? this.birthday : null;
+		return isSocialUser() ? this.provider : null;
 	}
 
 	/**

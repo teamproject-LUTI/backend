@@ -1,15 +1,17 @@
 package com.luti.auth.util;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 /**
  * 설명: JWT(JSON Web Token)의 생성, 파싱, 유효성 검증 및 토큰 정보 추출을 담당하는 유틸리티 클래스입니다.
@@ -25,6 +27,9 @@ public class JwtUtil {
 	private final long accessTokenExpiration; // Access Token의 만료 시간 (밀리초)
 
 	private final long refreshTokenExpiration; // Refresh Token의 만료 시간 (밀리초)
+
+	// 임시 토큰 만료 시간 (1시간)
+	private final long tempTokenExpiration = 3600000L; // 1시간
 
 	/**
 	 * 설명: JwtUtil의 생성자입니다.
@@ -55,14 +60,13 @@ public class JwtUtil {
 	 * @param name 사용자의 이름.
 	 * @param nickname 사용자의 닉네임.
 	 * @param profileImageUrl 사용자의 프로필 이미지 URL.
-	 * @param socialProvider 소셜 로그인 제공자 (예: "google", "kakao").
 	 * @param userTypeId 사용자의 유형 ID.
 	 * @return String 생성된 Access Token 문자열.
 	 * @author
 	 */
 	public String generateAccessToken(Long userId, String email, String name,
 			String nickname, String profileImageUrl,
-			String socialProvider, Long userTypeId) {
+			Long userTypeId, String provider) {
 		Date now = new Date(); // 현재 시간
 		Date expiryDate = new Date(now.getTime() + accessTokenExpiration); // Access Token 만료 시간 계산
 
@@ -72,13 +76,39 @@ public class JwtUtil {
 				.claim("name", name) // 클레임: 이름
 				.claim("nickname", nickname) // 클레임: 닉네임
 				.claim("profileImageUrl", profileImageUrl) // 클레임: 프로필 이미지 URL
-				.claim("socialProvider", socialProvider) // 클레임: 소셜 제공자
+				.claim("provider", provider) // 클레임: 소셜 제공자
 				.claim("userTypeId", userTypeId) // 클레임: 사용자 타입 ID
 				.claim("tokenType", "ACCESS") // 클레임: 토큰 타입 (ACCESS)
 				.issuedAt(now) // 토큰 발급 시간
 				.expiration(expiryDate) // 토큰 만료 시간
 				.signWith(secretKey, Jwts.SIG.HS256) // 비밀 키와 HS256 알고리즘으로 서명
 				.compact(); // JWT를 압축하여 문자열로 반환
+	}
+
+	/**
+	 * 탈퇴한 사용자용 임시 Access Token 생성
+	 * 제한된 권한으로 탈퇴 상태 확인 및 복구 기능만 사용 가능
+	 */
+	public String generateTempAccessToken(Long userId, String email, String name,
+			String nickname, String profileImageUrl,
+			Long userTypeId, String provider) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + tempTokenExpiration); // 1시간
+
+		return Jwts.builder()
+				.subject(userId.toString())
+				.claim("email", email)
+				.claim("name", name)
+				.claim("nickname", nickname)
+				.claim("profileImageUrl", profileImageUrl)
+				.claim("provider", provider)
+				.claim("userTypeId", userTypeId)
+				.claim("tokenType", "TEMP_ACCESS") // 임시 토큰 표시
+				.claim("withdrawn", true) // 탈퇴 상태 표시
+				.issuedAt(now)
+				.expiration(expiryDate)
+				.signWith(secretKey, Jwts.SIG.HS256)
+				.compact();
 	}
 
 	/**
@@ -100,6 +130,23 @@ public class JwtUtil {
 				.expiration(expiryDate) // 토큰 만료 시간
 				.signWith(secretKey, Jwts.SIG.HS256) // 비밀 키와 HS256 알고리즘으로 서명
 				.compact(); // JWT를 압축하여 문자열로 반환
+	}
+
+	/**
+	 * 탈퇴한 사용자용 임시 Refresh Token 생성
+	 */
+	public String generateTempRefreshToken(Long userId) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + tempTokenExpiration); // 1시간
+
+		return Jwts.builder()
+				.subject(userId.toString())
+				.claim("tokenType", "TEMP_REFRESH") // 임시 리프레시 토큰
+				.claim("withdrawn", true) // 탈퇴 상태 표시
+				.issuedAt(now)
+				.expiration(expiryDate)
+				.signWith(secretKey, Jwts.SIG.HS256)
+				.compact();
 	}
 
 	/**
@@ -199,6 +246,31 @@ public class JwtUtil {
 	}
 
 	/**
+	 * 토큰이 임시 토큰인지 확인
+	 */
+	public boolean isTempToken(String token) {
+		try {
+			String tokenType = getTokenType(token);
+			return "TEMP_ACCESS".equals(tokenType) || "TEMP_REFRESH".equals(tokenType);
+		} catch (JwtException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * 토큰에서 탈퇴 상태 확인
+	 */
+	public boolean isWithdrawnUser(String token) {
+		try {
+			Claims claims = getClaimsFromToken(token);
+			Boolean withdrawn = claims.get("withdrawn", Boolean.class);
+			return Boolean.TRUE.equals(withdrawn);
+		} catch (JwtException e) {
+			return false;
+		}
+	}
+
+	/**
 	 * 설명: 주어진 JWT 토큰에서 모든 클레임(Claims)을 추출하여 반환합니다.
 	 * 토큰의 모든 페이로드 정보를 접근할 때 사용됩니다.
 	 *
@@ -241,24 +313,15 @@ public class JwtUtil {
 		return claims.get("profileImageUrl", String.class);
 	}
 
-	/**
-	 * 설명: 주어진 JWT 토큰에서 소셜 제공자 클레임을 추출하여 반환합니다.
-	 *
-	 * @param token 소셜 제공자를 추출할 JWT 토큰 문자열.
-	 * @return String 추출된 소셜 제공자명.
-	 * @throws JwtException 토큰 파싱 또는 서명 검증 실패 시 발생.
-	 * @author
-	 */
-	public String getSocialProviderFromToken(String token) {
+	public String getProviderFromToken(String token) {
 		Claims claims = getClaimsFromToken(token);
-		return claims.get("socialProvider", String.class);
+		return claims.get("provider", String.class);
 	}
 
 	/**
 	 * 설명: Access Token의 설정된 만료 시간(밀리초)을 반환합니다.
 	 *
 	 * @return long Access Token의 만료 시간(밀리초).
-	 * @author
 	 */
 	public long getAccessTokenExpiration() {
 		return accessTokenExpiration;
@@ -268,10 +331,18 @@ public class JwtUtil {
 	 * 설명: Refresh Token의 설정된 만료 시간(밀리초)을 반환합니다.
 	 *
 	 * @return long Refresh Token의 만료 시간(밀리초).
-	 * @author
 	 */
 	public long getRefreshTokenExpiration() {
 		return refreshTokenExpiration;
+	}
+
+	/**
+	 * 임시 토큰의 만료 시간을 반환합니다.
+	 *
+	 * @return long 임시 토큰의 만료 시간(밀리초).
+	 */
+	public long getTempTokenExpiration() {
+		return tempTokenExpiration;
 	}
 
 }

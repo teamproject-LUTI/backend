@@ -13,7 +13,7 @@ import java.util.Date;
 @Entity
 @Getter
 @Setter
-@Table(name = "accomodationDetail")
+@Table(name = "accomodation_detail")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AccomodationDetail {
 

@@ -11,7 +11,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "travelRecord")
+@Table(name = "travel_record")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelRecord {
 
@@ -27,7 +27,7 @@ public class TravelRecord {
 	private Integer paymentCd;
 
 	@Column(name = "payment_id")
-	private Integer paymentId;
+	private Long paymentId;
 
 	// PaymentList 참조 (복합키로 매핑)
 	@ManyToOne(fetch = FetchType.LAZY)
