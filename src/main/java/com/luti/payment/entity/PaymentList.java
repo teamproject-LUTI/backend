@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Table(name = "payment_list")
 public class PaymentList {
 
+    ///  아아앙아ㅏㅇ아
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id", nullable = false)
