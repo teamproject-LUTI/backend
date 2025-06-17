@@ -3,14 +3,12 @@ package com.luti.auth.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.luti.auth.dto.LoginRequestDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.luti.auth.security.JwtAuthenticationToken;
 import com.luti.auth.service.AuthService;
@@ -179,6 +177,30 @@ public class AuthController {
 			log.error("모든 디바이스 로그아웃 중 오류 발생", e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(createErrorResponse("로그아웃 처리 중 오류가 발생했습니다."));
+		}
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginDto, HttpServletResponse response) {
+		try {
+			AuthService.TokenRefreshResult result = authService.login(loginDto);
+			if (!result.isSuccess()) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(createErrorResponse(result.getErrorMessage()));
+			}
+
+			setAccessTokenCookie(response, result.getAccessToken());
+			setRefreshTokenCookie(response, result.getRefreshToken());
+
+			Map<String, Object> responseBody = new HashMap<>();
+			responseBody.put("success", true);
+			responseBody.put("message", "로그인 성공");
+
+			return ResponseEntity.ok(responseBody);
+		} catch (Exception e) {
+			log.error("로그인 처리 중 예외 발생", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(createErrorResponse("로그인 처리 중 오류가 발생했습니다."));
 		}
 	}
 
