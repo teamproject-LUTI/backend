@@ -11,7 +11,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "travelRecord")
+@Table(name = "travel_record")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelRecord {
 
