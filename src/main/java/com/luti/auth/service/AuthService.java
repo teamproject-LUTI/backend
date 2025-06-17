@@ -36,6 +36,7 @@ public class AuthService {
 	 * 설명: 제공된 Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급(갱신)합니다.
 	 * Refresh Token의 유효성 검증, 소유자 확인, DB에 저장된 토큰 상태 확인 등 일련의 과정을 거쳐
 	 * 안전하게 토큰을 갱신하고, 토큰 로테이션(Token Rotation)을 구현합니다.
+	 * 임시 토큰의 경우 임시 토큰으로만 갱신됩니다.
 	 *
 	 * @param refreshTokenValue 클라이언트로부터 전달받은 Refresh Token 문자열.
 	 * @return TokenRefreshResult 토큰 갱신 성공 여부와 새로 발급된 토큰들을 담은 결과 객체.
@@ -52,9 +53,11 @@ public class AuthService {
 				return TokenRefreshResult.failure("유효하지 않은 토큰입니다.");
 			}
 
-			// 2. 토큰 타입이 "REFRESH"인지 확인 (Access Token이 잘못 넘어온 경우 방지)
+			// 2. 토큰 타입 확인
 			String tokenType = jwtUtil.getTokenType(refreshTokenValue);
-			if (!"REFRESH".equals(tokenType)) {
+			boolean isTempToken = "TEMP_REFRESH".equals(tokenType);
+
+			if (!isTempToken && !"REFRESH".equals(tokenType)) {
 				log.warn("잘못된 토큰 타입: {}", tokenType);
 				return TokenRefreshResult.failure("잘못된 토큰 타입입니다.");
 			}
@@ -64,57 +67,96 @@ public class AuthService {
 
 			// 4. 추출된 사용자 ID로 DB에서 사용자 정보 조회
 			User user = userRepository.findById(userId)
-					.orElse(null); // 사용자가 없는 경우 null 반환
+					.orElse(null);
 
 			if (user == null) {
 				log.warn("사용자를 찾을 수 없음: {}", userId);
 				return TokenRefreshResult.failure("사용자를 찾을 수 없습니다.");
 			}
 
-			// 5. DB에 저장된 Refresh Token 엔티티 조회 (원본 토큰이 DB에 존재하는지 확인)
-			Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByTokenValue(refreshTokenValue);
+			// 5. 임시 토큰이 아닌 경우에만 DB 토큰 검증
+			if (!isTempToken) {
+				// DB에 저장된 Refresh Token 엔티티 조회
+				Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByTokenValue(refreshTokenValue);
 
-			if (refreshTokenOpt.isEmpty()) {
-				log.warn("DB에서 Refresh Token을 찾을 수 없음");
-				return TokenRefreshResult.failure("토큰을 찾을 수 없습니다.");
+				if (refreshTokenOpt.isEmpty()) {
+					log.warn("DB에서 Refresh Token을 찾을 수 없음");
+					return TokenRefreshResult.failure("토큰을 찾을 수 없습니다.");
+				}
+
+				RefreshToken refreshToken = refreshTokenOpt.get();
+
+				// 조회된 Refresh Token 엔티티의 유효성 검증
+				if (!refreshToken.isValid()) {
+					log.warn("만료되거나 무효화된 Refresh Token");
+					return TokenRefreshResult.failure("만료되거나 무효화된 토큰입니다.");
+				}
+
+				// 토큰 소유자 확인
+				if (!refreshToken.getUser().getUserId().equals(userId)) {
+					log.warn("토큰 소유자 불일치 - 요청 사용자 ID: {}, 토큰 사용자 ID: {}", userId, refreshToken.getUser().getUserId());
+					return TokenRefreshResult.failure("권한이 없습니다.");
+				}
 			}
 
-			RefreshToken refreshToken = refreshTokenOpt.get();
+			// 6. 새로운 토큰 생성 (임시 토큰이면 임시 토큰으로, 일반 토큰이면 일반 토큰으로)
+			String newAccessToken;
+			String newRefreshToken;
 
-			// 6. 조회된 Refresh Token 엔티티의 유효성 (만료 여부 및 무효화 여부) 검증
-			if (!refreshToken.isValid()) {
-				log.warn("만료되거나 무효화된 Refresh Token");
-				return TokenRefreshResult.failure("만료되거나 무효화된 토큰입니다.");
+			if (isTempToken) {
+				// 탈퇴 상태가 아니면 임시 토큰 갱신 거부
+				if (!"Y".equals(user.getWithdrawYn())) {
+					log.info("이미 복구된 계정의 임시 토큰 갱신 시도 - 사용자 ID: {}", userId);
+					return TokenRefreshResult.failure("이미 복구된 계정입니다. 다시 로그인해주세요.");
+				}
+
+				// 임시 토큰 갱신
+				newAccessToken = jwtUtil.generateTempAccessToken(
+						user.getUserId(),
+						user.getEmail(),
+						user.getDisplayName(),
+						user.getNickname(),
+						user.getDisplayProfileImage(),
+						user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L,
+						user.getProvider()
+				);
+
+				newRefreshToken = jwtUtil.generateTempRefreshToken(user.getUserId());
+
+				log.info("임시 토큰 갱신 성공 - 사용자 ID: {}", userId);
+			} else {
+				// 탈퇴 상태면 일반 토큰 갱신 거부
+				if ("Y".equals(user.getWithdrawYn())) {
+					log.warn("탈퇴한 사용자의 일반 토큰 갱신 시도 - 사용자 ID: {}", userId);
+					return TokenRefreshResult.failure("탈퇴한 계정입니다.");
+				}
+
+				// 일반 토큰 갱신
+				newAccessToken = jwtUtil.generateAccessToken(
+						user.getUserId(),
+						user.getEmail(),
+						user.getDisplayName(),
+						user.getNickname(),
+						user.getDisplayProfileImage(),
+						user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L,
+						user.getProvider()
+				);
+
+				newRefreshToken = jwtUtil.generateRefreshToken(user.getUserId());
+
+				// DB의 Refresh Token 업데이트
+				Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByTokenValue(refreshTokenValue);
+				if (refreshTokenOpt.isPresent()) {
+					RefreshToken refreshToken = refreshTokenOpt.get();
+					LocalDateTime newExpiresAt = LocalDateTime.now()
+							.plusSeconds(jwtUtil.getRefreshTokenExpiration() / 1000);
+
+					refreshToken.updateToken(newRefreshToken, newExpiresAt);
+					refreshTokenRepository.save(refreshToken);
+				}
+
+				log.info("일반 토큰 갱신 성공 - 사용자 ID: {}", userId);
 			}
-
-			// 7. 조회된 Refresh Token의 소유자가 요청한 사용자와 일치하는지 확인 (보안 강화)
-			if (!refreshToken.getUser().getUserId().equals(userId)) {
-				log.warn("토큰 소유자 불일치 - 요청 사용자 ID: {}, 토큰 사용자 ID: {}", userId, refreshToken.getUser().getUserId());
-				return TokenRefreshResult.failure("권한이 없습니다.");
-			}
-
-			// 8. 모든 검증 통과 후, 새로운 Access Token 생성
-			String newAccessToken = jwtUtil.generateAccessToken(
-					user.getUserId(),
-					user.getEmail(),
-					user.getDisplayName(),
-					user.getNickname(),
-					user.getDisplayProfileImage(),
-					user.getSocialProvider(),
-					user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L // 사용자 타입 ID 전달
-			);
-
-			// 9. 새로운 Refresh Token 생성 (토큰 로테이션 적용)
-			String newRefreshToken = jwtUtil.generateRefreshToken(user.getUserId());
-
-			// 10. 기존 Refresh Token 엔티티를 새로운 토큰 값과 만료 시간으로 업데이트
-			LocalDateTime newExpiresAt = LocalDateTime.now()
-					.plusSeconds(jwtUtil.getRefreshTokenExpiration() / 1000);
-
-			refreshToken.updateToken(newRefreshToken, newExpiresAt);
-			refreshTokenRepository.save(refreshToken);
-
-			log.info("토큰 갱신 성공 - 사용자 ID: {}", userId);
 
 			return TokenRefreshResult.success(newAccessToken, newRefreshToken);
 
@@ -139,12 +181,18 @@ public class AuthService {
 
 		try {
 			if (refreshTokenValue != null) {
-				// 특정 Refresh Token만 DB에서 조회하여 무효화합니다.
-				refreshTokenRepository.findByTokenValue(refreshTokenValue)
-						.ifPresent(RefreshToken::revoke); // Optional이 존재하면 revoke() 메서드 호출
-				log.info("단일 Refresh Token 무효화 완료 - 사용자 ID: {}", userId);
+				// 임시 토큰인지 확인
+				if (jwtUtil.isTempToken(refreshTokenValue)) {
+					log.info("임시 토큰 로그아웃 - 사용자 ID: {}", userId);
+					// 임시 토큰은 DB에 저장되지 않으므로 별도 처리 없음
+				} else {
+					// 특정 Refresh Token만 DB에서 조회하여 무효화
+					refreshTokenRepository.findByTokenValue(refreshTokenValue)
+							.ifPresent(RefreshToken::revoke);
+					log.info("단일 Refresh Token 무효화 완료 - 사용자 ID: {}", userId);
+				}
 			} else {
-				// 해당 사용자의 모든 Refresh Token을 무효화합니다.
+				// 해당 사용자의 모든 Refresh Token을 무효화
 				User user = userRepository.findById(userId).orElse(null);
 				if (user != null) {
 					refreshTokenRepository.revokeAllByUser(user);
@@ -158,7 +206,6 @@ public class AuthService {
 
 		} catch (Exception e) {
 			log.error("로그아웃 처리 중 예외 발생: {}", e.getMessage(), e);
-			// 예외 발생 시에도 사용자에게는 성공으로 보일 수 있도록 처리 (보안상 민감한 정보 노출 방지)
 		}
 	}
 
@@ -176,7 +223,7 @@ public class AuthService {
 		try {
 			User user = userRepository.findById(userId).orElse(null);
 			if (user != null) {
-				refreshTokenRepository.revokeAllByUser(user); // 해당 사용자의 모든 토큰을 DB에서 무효화
+				refreshTokenRepository.revokeAllByUser(user);
 				log.info("모든 디바이스 로그아웃 완료 - 사용자 ID: {}", userId);
 			} else {
 				log.warn("모든 디바이스에서 로그아웃할 사용자를 찾을 수 없음: {}", userId);
@@ -210,24 +257,11 @@ public class AuthService {
 	 */
 	public static class TokenRefreshResult {
 
-		private final boolean success; // 토큰 갱신 성공 여부
+		private final boolean success;
+		private final String accessToken;
+		private final String refreshToken;
+		private final String errorMessage;
 
-		private final String accessToken; // 새로 발급된 Access Token (성공 시)
-
-		private final String refreshToken; // 새로 발급된 Refresh Token (성공 시)
-
-		private final String errorMessage; // 토큰 갱신 실패 시 에러 메시지
-
-		/**
-		 * 설명: TokenRefreshResult의 프라이빗 생성자입니다.
-		 * 외부에서 직접 객체를 생성하는 것을 방지하고, 팩토리 메서드를 통해 생성하도록 강제합니다.
-		 *
-		 * @param success 토큰 갱신 성공 여부.
-		 * @param accessToken 새로 발급된 Access Token.
-		 * @param refreshToken 새로 발급된 Refresh Token.
-		 * @param errorMessage 토큰 갱신 실패 시 에러 메시지.
-		 * @author
-		 */
 		private TokenRefreshResult(boolean success, String accessToken, String refreshToken, String errorMessage) {
 			this.success = success;
 			this.accessToken = accessToken;
@@ -235,27 +269,10 @@ public class AuthService {
 			this.errorMessage = errorMessage;
 		}
 
-		/**
-		 * 설명: 토큰 갱신 성공 시 호출되는 팩토리 메서드입니다.
-		 * 성공 상태와 함께 새로 발급된 Access Token과 Refresh Token을 포함하는 결과 객체를 생성합니다.
-		 *
-		 * @param accessToken 새로 발급된 Access Token.
-		 * @param refreshToken 새로 발급된 Refresh Token.
-		 * @return TokenRefreshResult 성공 상태의 TokenRefreshResult 객체.
-		 * @author
-		 */
 		public static TokenRefreshResult success(String accessToken, String refreshToken) {
 			return new TokenRefreshResult(true, accessToken, refreshToken, null);
 		}
 
-		/**
-		 * 설명: 토큰 갱신 실패 시 호출되는 팩토리 메서드입니다.
-		 * 실패 상태와 함께 에러 메시지를 포함하는 결과 객체를 생성합니다.
-		 *
-		 * @param errorMessage 실패 원인에 대한 설명.
-		 * @return TokenRefreshResult 실패 상태의 TokenRefreshResult 객체.
-		 * @author
-		 */
 		public static TokenRefreshResult failure(String errorMessage) {
 			return new TokenRefreshResult(false, null, null, errorMessage);
 		}
@@ -275,7 +292,5 @@ public class AuthService {
 		public String getErrorMessage() {
 			return errorMessage;
 		}
-
 	}
-
 }
