@@ -19,8 +19,8 @@ public class PaymentMethodService {
     /**
      * 결제방식 코드로 단건 조회
      */
-    public Optional<PaymentMethodResponseDTO> findByCode(Integer code) {
-        return paymentMethodRepository.findByPaymentCd(code)
+    public Optional<PaymentMethodResponseDTO> findByCode(Long code) {
+        return paymentMethodRepository.findByPaymentMethodId(code)
                 .map(PaymentMethodResponseDTO::from);
     }
 
@@ -51,8 +51,9 @@ public class PaymentMethodService {
     /**
      * 가장 큰 결제방식 코드 반환 (신규 등록용)
      */
-    public Integer getNextPaymentCd() {
+    public Long getNextPaymentCd() {
         PaymentMethod last = paymentMethodRepository.findTopByOrderByPaymentCdDesc();
-        return last != null ? last.getPaymentCd() + 1 : 1;
+        return last != null ? last.getPaymentCd() + 1 : 1L;
     }
+
 }

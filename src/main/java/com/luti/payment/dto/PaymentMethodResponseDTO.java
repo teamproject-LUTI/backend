@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PaymentMethodResponseDTO {
 
-    private Integer paymentCd;
+    private Long paymentId;
+    private Long paymentCd;
     private String paymentMethod;
 
     public static PaymentMethodResponseDTO from(PaymentMethod entity) {

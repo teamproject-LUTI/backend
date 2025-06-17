@@ -14,13 +14,11 @@ import java.time.LocalDate;
 @Table(name = "payment_list")
 public class PaymentList {
 
+    ///  아아앙아ㅏㅇ아
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id", nullable = false)
     private Long paymentId;
-
-    @Column(name = "payment_cd", nullable = false)
-    private Integer paymentCd;
 
     @Column(name = "user_id")
     private Long userId;
@@ -46,9 +44,8 @@ public class PaymentList {
     @Column(name = "merchant_uid", length = 100)
     private String merchantUid;
 
-
     @ManyToOne
-    @JoinColumn(name = "payment_id", insertable = false, updatable = false)
+    @JoinColumn(name = "payment_method_id", insertable = false, updatable = false)
     private PaymentMethod paymentMethod;
 
     @ManyToOne

@@ -1,7 +1,8 @@
 package com.luti.travel.entity;
 
-import com.luti.payment.entity.PaymentList;
+//import com.luti.payment.entity.PaymentList;
 
+import com.luti.payment.entity.PaymentList;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,7 +34,7 @@ public class TravelRecord {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumns({
 			@JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false),
-			@JoinColumn(name = "payment_cd", referencedColumnName = "payment_cd", insertable = false, updatable = false),
+			@JoinColumn(name = "payment_method_id", referencedColumnName = "payment_method_id", insertable = false, updatable = false),
 			@JoinColumn(name = "payment_id", referencedColumnName = "payment_id", insertable = false, updatable = false)
 	})
   
@@ -51,8 +52,8 @@ public class TravelRecord {
 		return paymentList != null ? paymentList.getUserId() : null;
 	}
 
-	public Integer getPaymentCd() {
-		return paymentList != null ? paymentList.getPaymentCd() : null;
+	public Long getPaymentCd() {
+		return paymentList != null ? paymentList.getPaymentMethod().getPaymentMethodId() : null;
 	}
 
 	public Long getPaymentId() {
