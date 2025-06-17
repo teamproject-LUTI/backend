@@ -20,8 +20,8 @@ public class Notice extends Auditable {
     /** 공지글 고유번호 (PK, AUTO_INCREMENT) */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notice_no", updatable = false, nullable = false)
-    private Long noticeNo;
+    @Column(name = "notice_id", updatable = false, nullable = false)
+    private Long noticeId;
 
     /**
      * 게시글 작성자 정보 (User 엔티티와 다대일 연관관계)
@@ -44,16 +44,11 @@ public class Notice extends Auditable {
     private String content;
 
     /** 조회수 (기본값 0) */
+    @Builder.Default
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
-    /**
-     * 삭제 여부 플래그 (soft delete)
-     * <p>
-     * - true: 삭제된 상태
-     * - false: 정상 상태
-     * </p>
-     */
+    @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private Boolean deleted = false;
 
@@ -70,10 +65,6 @@ public class Notice extends Auditable {
             orphanRemoval = true
     )
     private List<NoticeAttachment> attachments = new ArrayList<>();
-
-    // ========================================================
-    // 편의 메서드 (비즈니스 로직 캡슐화)
-    // ========================================================
 
     /**
      * 조회수를 1 증가

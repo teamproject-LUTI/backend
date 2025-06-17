@@ -8,41 +8,36 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Integer> {
+public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
 
-    // 결제방식 이름으로 조회 (정확히 일치)
+    // paymentCd로 조회
+    Optional<PaymentMethod> findByPaymentCd(Long paymentCd);
+
+    // 결제방식 이름으로 조회
     Optional<PaymentMethod> findByPaymentMethod(String paymentMethod);
 
-    // 결제방식 이름 일부로 검색 (LIKE 검색)
+    // LIKE 검색
     List<PaymentMethod> findByPaymentMethodContaining(String keyword);
 
-    // 결제방식 코드 목록으로 조회 (IN 조건)
+    // paymentCd IN
     List<PaymentMethod> findByPaymentCdIn(List<Integer> codes);
 
-    // 결제방식 코드 기준 오름차순 정렬 전체 조회
+    // 정렬 조회
     List<PaymentMethod> findAllByOrderByPaymentCdAsc();
-
-    // 결제방식 이름 기준 오름차순 정렬 전체 조회
-    List<PaymentMethod> findAllByOrderByPaymentMethodAsc();
-
-    // 결제방식 코드 기준 내림차순 정렬
     List<PaymentMethod> findAllByOrderByPaymentCdDesc();
-
-    // 결제방식 이름 기준 내림차순 정렬
+    List<PaymentMethod> findAllByOrderByPaymentMethodAsc();
     List<PaymentMethod> findAllByOrderByPaymentMethodDesc();
 
-    // 결제방식 중복 존재 여부 확인
+    // 중복 체크
     boolean existsByPaymentMethod(String paymentMethod);
-
-    // 특정 코드의 결제방식 존재 여부 확인
     boolean existsByPaymentCd(Integer paymentCd);
 
-    // 이름 리스트로 조회 (예: "카드", "현금" 등)
+    // 이름 IN 조회
     List<PaymentMethod> findByPaymentMethodIn(List<String> names);
 
-    // 가장 큰 코드값 1건 조회 (신규 등록 시 사용)
+    // 가장 큰 코드
     PaymentMethod findTopByOrderByPaymentCdDesc();
 
-    // 이름 포함 검색 + 오름차순 정렬
+    // 이름 포함 + 정렬
     List<PaymentMethod> findByPaymentMethodContainingOrderByPaymentMethodAsc(String keyword);
 }

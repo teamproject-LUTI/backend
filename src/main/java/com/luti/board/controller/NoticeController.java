@@ -57,37 +57,37 @@ public class NoticeController {
     /**
      * 단일 공지사항 상세 조회
      *
-     * @param noticeNo 공지사항 고유번호
+     * @param noticeId 공지사항 고유번호
      * @return 요청한 공지사항 정보
      */
-    @GetMapping("/{noticeNo}")
+    @GetMapping("/{noticeId}")
     public SingleResponseDto<NoticeResponseDto> detail(
-            @PathVariable Long noticeNo) {
-        return noticeService.getNotice(noticeNo);
+            @PathVariable Long noticeId) {
+        return noticeService.getNotice(noticeId);
     }
 
     /**
      * 공지사항 수정
      *
-     * @param noticeNo 수정할 공지사항 고유번호
+     * @param noticeId 수정할 공지사항 고유번호
      * @param dto      변경할 제목과 내용을 담은 요청 DTO
      * @return 수정된 공지사항 정보
      */
-    @PatchMapping("/{noticeNo}")
+    @PatchMapping("/{noticeId}")
     public SingleResponseDto<NoticeResponseDto> update(
-            @PathVariable Long noticeNo,
+            @PathVariable Long noticeId,
             @RequestBody @Valid NoticeRequestDto dto) {
-        return noticeService.updateNotice(noticeNo, dto);
+        return noticeService.updateNotice(noticeId, dto);
     }
 
     /**
      * 공지사항 삭제 (soft delete)
      *
-     * @param noticeNo 삭제할 공지사항 고유번호
+     * @param noticeId 삭제할 공지사항 고유번호
      */
-    @DeleteMapping("/{noticeNo}")
+    @DeleteMapping("/{noticeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long noticeNo) {
-        noticeService.deleteNotice(noticeNo);
+    public void delete(@PathVariable Long noticeId) {
+        noticeService.deleteNotice(noticeId);
     }
 }

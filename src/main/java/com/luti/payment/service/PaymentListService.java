@@ -1,8 +1,12 @@
 package com.luti.payment.service;
 
+import com.luti.payment.dto.PaymentListRequestDTO;
 import com.luti.payment.dto.PaymentListResponseDTO;
 import com.luti.payment.entity.PaymentList;
+import com.luti.payment.entity.PaymentMethod;
 import com.luti.payment.repository.PaymentListRepository;
+import com.luti.payment.repository.PaymentMethodRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,113 +16,47 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PaymentListService {
 
     private final PaymentListRepository paymentListRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
 
-    /**
-     * PaymentList 엔티티를 PaymentListResponseDTO 변환하는 유틸 메서드
-     */
-    private PaymentListResponseDTO toDto(PaymentList entity) {
-        return PaymentListResponseDTO.builder()
-                .paymentNo(entity.getPaymentNo())
-                .paymentCd(entity.getPaymentCd())
-                .userId(entity.getUserId())
-                .totalPrice(entity.getTotalPrice())
-                .paymentState(entity.getPaymentState())
-                .paymentDate(entity.getPaymentDate())
-                .cancelDate(entity.getCancelDate())
-                .receiptUrl(entity.getReceiptUrl())
-                .impUid(entity.getImpUid())
-                .paymentMethodName(
-                        entity.getPaymentMethod() != null
-                                ? entity.getPaymentMethod().getPaymentMethod()
-                                : null
-                )
+    // 결제 정보 저장
+    public PaymentListResponseDTO savePayment(PaymentListRequestDTO dto) {
+        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentCd(dto.getPaymentCd())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 코드입니다."));
+
+        PaymentList payment = PaymentList.builder()
+                .paymentCd(dto.getPaymentCd())
+                .userId(dto.getUserId())
+                .totalPrice(dto.getTotalPrice())
+                .paymentState(0) // 0: 결제완료
+                .paymentDate(dto.getPaymentDate())
+                .impUid(dto.getImpUid())
+                .merchantUid(dto.getMerchantUid())
+                .paymentMethod(paymentMethod)
                 .build();
+
+        PaymentList saved = paymentListRepository.save(payment);
+        return PaymentListResponseDTO.from(saved);
     }
 
-    /**
-     * 사용자 ID로 결제내역 전체 조회
-     */
-    public List<PaymentListResponseDTO> findByUserId(Integer userId) {
-        return paymentListRepository.findAll().stream()
-                .filter(p -> p.getUserId().equals(userId))
-                .map(this::toDto)
+    // 결제 취소 (환불 처리)
+    public PaymentListResponseDTO cancelPayment(Long paymentId) {
+        PaymentList payment = paymentListRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException(" 해당 결제 내역을 찾을 수 없습니다."));
+
+        payment.setPaymentState(1); // 1: 환불
+        payment.setCancelDate(LocalDate.now());
+
+        return PaymentListResponseDTO.from(payment);
+    }
+
+    // 사용자 ID로 결제 내역 조회
+    public List<PaymentListResponseDTO> findByUserId(Long userId) {
+        return paymentListRepository.findByUserId(userId).stream()
+                .map(PaymentListResponseDTO::from)
                 .collect(Collectors.toList());
     }
-
-    /**
-     * 결제 방식 코드로 결제내역 조회
-     */
-    public List<PaymentListResponseDTO> findByPaymentCd(Integer paymentCd) {
-        return paymentListRepository.findAll().stream()
-                .filter(p -> p.getPaymentCd().equals(paymentCd))
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 결제 일자 기준 범위 조회 (ex. 2024-01-01 ~ 2024-01-31)
-     */
-    public List<PaymentListResponseDTO> findByPaymentDateBetween(LocalDate start, LocalDate end) {
-        return paymentListRepository.findByPaymentDateBetween(start, end).stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 결제방식 기준으로 가장 최근 결제 1건 조회
-     */
-    public PaymentListResponseDTO findLatestByPaymentCd(Integer paymentCd) {
-        PaymentList latest = paymentListRepository.findTop1ByPaymentCdOrderByPaymentDateDesc(paymentCd);
-        return latest != null ? toDto(latest) : null;
-    }
-
-    /**
-     * 총 결제금액 범위로 결제내역 조회
-     */
-    public List<PaymentListResponseDTO> findByTotalPriceRange(Integer min, Integer max) {
-        return paymentListRepository.findByTotalPriceBetween(min, max).stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 결제 취소된 결제내역만 조회
-     */
-    public List<PaymentListResponseDTO> findAllCancelled() {
-        return paymentListRepository.findByCancelDateIsNotNull().stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 사용자 ID 기준으로 결제금액 오름차순 정렬 조회
-     */
-    public List<PaymentListResponseDTO> findByUserIdOrderByTotalPriceAsc(Integer userId) {
-        return paymentListRepository.findAll().stream()
-                .filter(p -> p.getUserId().equals(userId))
-                .sorted((a, b) -> Integer.compare(
-                        a.getTotalPrice() != null ? a.getTotalPrice() : 0,
-                        b.getTotalPrice() != null ? b.getTotalPrice() : 0
-                ))
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 사용자 ID 기준으로 결제금액 내림차순 정렬 조회
-     */
-    public List<PaymentListResponseDTO> findByUserIdOrderByTotalPriceDesc(Integer userId) {
-        return paymentListRepository.findAll().stream()
-                .filter(p -> p.getUserId().equals(userId))
-                .sorted((a, b) -> Integer.compare(
-                        b.getTotalPrice() != null ? b.getTotalPrice() : 0,
-                        a.getTotalPrice() != null ? a.getTotalPrice() : 0
-                ))
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
 }

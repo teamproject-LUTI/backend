@@ -19,8 +19,8 @@ public class Ask extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ask_no", updatable = false, nullable = false)
-    private Long id;
+    @Column(name = "ask_id", updatable = false, nullable = false)
+    private Long askId;
 
     /**
      * 작성자 정보 (User 엔티티와 N:1 연관관계)
@@ -32,7 +32,7 @@ public class Ask extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false,
             foreignKey = @ForeignKey(name = "FK_ASK_USER"))
-    private User author;
+    private User user;
 
     /** 문의글 제목 (최대 100자, NOT NULL) */
     @Column(name = "qna_title", length = 100, nullable = false)
@@ -68,24 +68,6 @@ public class Ask extends Auditable {
     private List<AskAttachment> attachments = new ArrayList<>();
 
     /**
-     * 댓글 목록 (OneToMany 연관관계)
-     * <p>
-     * - cascade = ALL: Ask 변경 시 Comment로 전파
-     * - orphanRemoval = true: Ask에서 분리된 Comment는 자동 삭제
-     * </p>
-     */
-    @OneToMany(
-            mappedBy = "ask",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<Comment> comments = new ArrayList<>();
-
-    // ========================================================
-    // 편의 메서드 (비즈니스 로직 캡슐화)
-    // ========================================================
-
-    /**
      * 답변 상태를 “답변 완료”로 변경
      */
     public void markAnswered() {
@@ -112,23 +94,4 @@ public class Ask extends Auditable {
         attachment.setAsk(null);
     }
 
-    /**
-     * 댓글을 추가하고, 양방향 연관관계를 설정
-     *
-     * @param comment 추가할 Comment 엔티티
-     */
-    public void addComment(Comment comment) {
-        comments.add(comment);
-        comment.setAsk(this);
-    }
-
-    /**
-     * 댓글을 제거하고, 양방향 연관관계를 해제
-     *
-     * @param comment 제거할 Comment 엔티티
-     */
-    public void removeComment(Comment comment) {
-        comments.remove(comment);
-        comment.setAsk(null);
-    }
 }

@@ -1,5 +1,7 @@
 package com.luti.auth.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,7 +39,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 * @return Optional<User> 해당 조건에 맞는 User 엔티티 (존재하지 않으면 Optional.empty()).
 	 * @author
 	 */
-	@Query("SELECT u FROM User u WHERE u.birthday = :provider AND u.profileExtension = :socialId AND u.password = 'SOCIAL_LOGIN'")
+	@Query("SELECT u FROM User u WHERE u.provider = :provider AND u.profileExtension = :socialId AND u.password = 'SOCIAL_LOGIN'")
 	Optional<User> findBySocialProviderAndSocialId(@Param("provider") String provider,
 			@Param("socialId") String socialId);
 
@@ -60,5 +62,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 * @author
 	 */
 	boolean existsByNickname(String nickname);
+
+	boolean existsByUserId(Long userId);
+
+	boolean existsByEmail(String email);
+
+	User findByUserId(Long userId);
+
+	/**
+	 * 탈퇴 사용자 조회
+	 *
+	 * @param dateTime 기준 날짜
+	 * @return 삭제 대상 탈퇴 사용자 목록
+	 */
+	@Query("SELECT u FROM User u WHERE u.withdrawYn = 'Y' AND u.modifiedAt < :dateTime")
+	List<User> findWithdrawnUsersOlderThan(@Param("dateTime") LocalDateTime dateTime);
+
+	/**
+	 * 탈퇴한 사용자인지 확인
+	 *
+	 * @param userId 사용자 ID
+	 * @return 탈퇴 여부
+	 */
+	@Query("SELECT u.withdrawYn FROM User u WHERE u.userId = :userId")
+	String getWithdrawStatus(@Param("userId") Long userId);
 
 }

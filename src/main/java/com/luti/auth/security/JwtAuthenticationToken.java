@@ -27,9 +27,9 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
 	private final String profileImageUrl;
 
-	private final String socialProvider;
-
 	private final Long userTypeId;
+
+	private final String provider;
 
 	/**
 	 * 설명: JwtAuthenticationToken의 생성자입니다.
@@ -41,22 +41,22 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	 * @param name 사용자의 이름.
 	 * @param nickname 사용자의 닉네임.
 	 * @param profileImageUrl 사용자의 프로필 이미지 URL.
-	 * @param socialProvider 소셜 로그인 제공자.
 	 * @param userTypeId 사용자의 타입 ID.
 	 * @param authorities 사용자에게 부여된 권한(GrantedAuthority) 컬렉션.
 	 * @author
 	 */
 	public JwtAuthenticationToken(Long userId, String email, String name,
-			String nickname, String profileImageUrl, String socialProvider,
-			Long userTypeId, Collection<? extends GrantedAuthority> authorities) {
+			String nickname, String profileImageUrl,
+			Long userTypeId, String provider,
+			Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
 		this.userId = userId;
 		this.email = email;
 		this.name = name;
 		this.nickname = nickname;
 		this.profileImageUrl = profileImageUrl;
-		this.socialProvider = socialProvider;
 		this.userTypeId = userTypeId;
+		this.provider = provider;
 		setAuthenticated(true);
 	}
 
@@ -86,8 +86,8 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	 * @return String 소셜 제공자명 (예: "google", "kakao").
 	 * @author
 	 */
-	public String getCurrentUserSocialProvider() {
-		return this.socialProvider;
+	public String getCurrentUserProvider() {
+		return this.provider;
 	}
 
 	/**

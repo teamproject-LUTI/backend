@@ -8,7 +8,12 @@ import com.luti.board.dto.ReviewResponseDto;
 import com.luti.board.entity.Review;
 import com.luti.board.repository.LikeRepository;
 import com.luti.board.repository.ReviewRepository;
+import com.luti.dto.MultiResponseDto;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -18,94 +23,95 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReviewService {
+    private final ReviewRepository reviewRepo;
+    private final LikeRepository   likeRepo;
+    private final UserRepository   userRepo;
 
-    private final ReviewRepository reviewRepository;
-    private final LikeRepository likeRepository;
-    private final UserRepository userRepository;
+    /** 1. 페이징된 목록 조회 */
+    public MultiResponseDto<ReviewListDto> getReviews(int page, int size, Long currentUserId) {
+        Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size));
+        List<ReviewListDto> dtos = reviews.stream()
+                .map(r -> ReviewListDto.builder()
+                        .reviewId(r.getReviewId())
+                        .title(r.getTitle())
+                        .userName(r.getUser().getNickname())
+                        .createdAt(r.getCreatedAt())
+                        .likeCount(r.getLikeCount())
+                        .liked(likeRepo.existsByReviewReviewIdAndUserUserId(r.getReviewId(), currentUserId))
+                        // thumbnailPath에 값을 꼭 넘겨야 합니다!
+                        .thumbnailPath(
+                                r.getAttachments().isEmpty()
+                                        ? null
+                                        : r.getAttachments().get(0).getLogicalPath()
+                        )
+                        .build()
+                ).collect(Collectors.toList());
 
-
-    /** 게시물 목록 조회 */
-    public List<ReviewListDto> getAllReviews(Long userId){
-        return reviewRepository.findAll()
-                .stream()
-                .map(r -> {
-                    ReviewListDto dto = new ReviewListDto();
-                    dto.setReviewNo(r.getReviewNo());
-                    dto.setTitle(r.getTitle());
-                    dto.setCreatedAt(r.getCreatedAt());
-                    dto.setAuthorName(r.getAuthor().getNickname());
-                    dto.setLikeCount(r.getLikeCount());
-                    dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(r.getReviewNo(), userId));
-
-                    return dto;
-                }).collect(Collectors.toList());
+        return new MultiResponseDto<>(dtos, reviews);
     }
 
-    /** 게시물 등록 */
+    /** 2. 생성 */
     @Transactional
     public Long createReview(ReviewRequestDto req, Long userId) {
-        /** userId로 User조회, 없으면 예외 */
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. id=" + userId));
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
 
-        /** 빌더로 Review 객체 생성 */
-        Review review = Review.builder()
-                .author(user)
+        Review r = Review.builder()
+                .user(user)
                 .title(req.getTitle())
                 .content(req.getContent())
                 .travelRegion(req.getTravelRegion())
+                .travelPeriod(req.getTravelPeriod())  // 누락 보완
                 .build();
-
-        reviewRepository.save(review);
-        return review.getReviewNo();
+        reviewRepo.save(r);
+        return r.getReviewId();
     }
 
-    /** 게시물 수정 */
+    /** 3. 수정 (작성자만) */
     @Transactional
-    public void updateReview(Long reviewNo, ReviewRequestDto req, Long userId) {
-        /** 기존글 조회 */
-        Review review = reviewRepository.findById(reviewNo)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. reviewNo=" + reviewNo));
-
-        /** 변경할 값 세팅 */
-        review.setTitle(req.getTitle());
-        review.setContent(req.getContent());
-        review.setTravelRegion(req.getTravelRegion());
-        review.setTravelPeriod(req.getTravelPeriod());
+    public void updateReview(Long reviewId, ReviewRequestDto req, Long userId) {
+        Review r = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
+        if (!r.getUser().getUserId().equals(userId)) {
+            throw new AccessDeniedException("Not author");
+        }
+        r.setTitle(req.getTitle());
+        r.setContent(req.getContent());
+        r.setTravelRegion(req.getTravelRegion());
+        r.setTravelPeriod(req.getTravelPeriod());
     }
 
-    /** 게시물 삭제 */
+    /** 4. 삭제 (soft-delete, 작성자만) */
     @Transactional
-    public void deleteReview(Long reviewNo, Long userId) {
-        /** 기존 게시물 조회 */
-        Review review = reviewRepository.findById(reviewNo)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. reviewNo=" + reviewNo));
-
-        reviewRepository.delete(review);
+    public void deleteReview(Long reviewId, Long userId) {
+        Review r = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
+        if (!r.getUser().getUserId().equals(userId)) {
+            throw new AccessDeniedException("Not author");
+        }
+        reviewRepo.delete(r);  // @SQLDelete가 작동합니다
     }
 
-
-    /** 게시물 상세 조회 */
+    /** 5. 상세조회 */
     @Transactional
-    public ReviewResponseDto getReviewDetail(Long reviewNo, Long currentUserId) {
-        Review r = reviewRepository.findById(reviewNo)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. reviewNo=" + reviewNo));
+    public ReviewResponseDto getReviewDetail(Long reviewId, Long currentUserId) {
+        Review r = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
+        r.incrementViewCount();  // 편의 메서드
+        // (dirty-checking으로 자동 반영)
 
-        /** 조회수 증가 */
-        r.setViewCount(r.getViewCount() + 1);
-        reviewRepository.save(r);
-
-        ReviewResponseDto dto = new ReviewResponseDto();
-        dto.setReviewNo(r.getReviewNo());
-        dto.setTitle(r.getTitle());
-        dto.setContent(r.getContent());
-        dto.setViewCount(r.getViewCount());
-        dto.setLikeCount(r.getLikeCount());
-        dto.setCreatedAt(r.getCreatedAt());
-        dto.setTravelRegion(r.getTravelRegion());
-        dto.setTravelPeriod(r.getTravelPeriod());
-        dto.setAuthorName(r.getAuthor().getNickname());
-        dto.setLiked(likeRepository.existsByReview_ReviewNoAndUser_UserId(reviewNo, currentUserId)); //currentUserId 변수명 수정해야함
-        return dto;
+        return ReviewResponseDto.builder()
+                .reviewId(r.getReviewId())
+                .title(r.getTitle())
+                .content(r.getContent())
+                .viewCount(r.getViewCount())
+                .likeCount(r.getLikeCount())
+                .createdAt(r.getCreatedAt())
+                .travelRegion(r.getTravelRegion())
+                .travelPeriod(r.getTravelPeriod())
+                .userName(r.getUser().getNickname())
+                .liked(likeRepo.existsByReviewReviewIdAndUserUserId(reviewId, currentUserId))
+                .build();
     }
 }
+

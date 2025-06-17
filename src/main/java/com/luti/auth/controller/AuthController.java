@@ -1,5 +1,17 @@
 package com.luti.auth.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.luti.auth.security.JwtAuthenticationToken;
 import com.luti.auth.service.AuthService;
 import com.luti.auth.util.JwtUtil;
@@ -9,15 +21,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 설명: 인증 관련 API 요청을 처리하는 컨트롤러 클래스.
@@ -117,6 +120,7 @@ public class AuthController {
 			//  쿠키 삭제
 			clearAccessTokenCookie(response);
 			clearRefreshTokenCookie(response);
+			clearJSessionIdCookie(response);
 
 			Map<String, Object> responseBody = new HashMap<>();
 			responseBody.put("success", true);
@@ -204,7 +208,7 @@ public class AuthController {
 			userInfo.put("name", jwtAuth.getCurrentUserName());
 			userInfo.put("nickname", jwtAuth.getCurrentUserNickname());
 			userInfo.put("profileImageUrl", jwtAuth.getCurrentUserProfileImage());
-			userInfo.put("socialProvider", jwtAuth.getCurrentUserSocialProvider());
+			userInfo.put("provider", jwtAuth.getCurrentUserProvider());
 			userInfo.put("userTypeId", jwtAuth.getCurrentUserTypeId());
 			userInfo.put("authorities", jwtAuth.getAuthorities());
 
@@ -338,6 +342,22 @@ public class AuthController {
 	 */
 	private void clearRefreshTokenCookie(HttpServletResponse response) {
 		Cookie cookie = new Cookie("refreshToken", "");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(0); // 즉시 만료
+		response.addCookie(cookie);
+	}
+
+	/**
+	 * 설명: JSESSIONID를 삭제합니다.
+	 * `JSESSIONID` 이름의 세션를 `maxAge`를 0으로 설정하여 즉시 만료시켜 삭제합니다.
+	 *
+	 * @param response HttpServletResponse 객체, 쿠키를 삭제하는 데 사용됩니다.
+	 * @author
+	 */
+	private void clearJSessionIdCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("JSESSIONID", "");
 		cookie.setHttpOnly(true);
 		cookie.setSecure(true);
 		cookie.setPath("/");
