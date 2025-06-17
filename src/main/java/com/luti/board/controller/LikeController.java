@@ -1,12 +1,16 @@
 package com.luti.board.controller;
 
+import com.luti.auth.security.JwtAuthenticationToken;
 import com.luti.board.dto.LikeRequestDto;
 import com.luti.board.dto.LikeResponseDto;
 import com.luti.board.dto.LikedReviewDto;
 import com.luti.board.service.LikeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,25 +25,34 @@ public class LikeController {
     @PostMapping
     public ResponseEntity<LikeResponseDto> like(
             @RequestBody LikeRequestDto dto,
-            @AuthenticationPrincipal Long userId
+            Authentication authentication
     ) {
-        LikeResponseDto response = likeService.likeReview(
-                dto.getReviewId(),
-                dto.getUserId()
-        );
-        return ResponseEntity.ok(response);
+        // JWT 인증 토큰이 아니라면 401
+        if (!(authentication instanceof JwtAuthenticationToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // JwtAuthenticationToken 에서 Jwt 꺼내기
+        JwtAuthenticationToken token = (JwtAuthenticationToken) authentication;
+        Long userId = token.getCurrentUserId();
+
+        LikeResponseDto resp = likeService.likeReview(dto.getReviewId(), userId);
+        return ResponseEntity.ok(resp);
     }
 
     /** 2. 리뷰 상세에서 좋아요 취소하기 */
     @DeleteMapping
     public ResponseEntity<LikeResponseDto> unlike(
-            @RequestBody LikeRequestDto dto
+            @RequestBody LikeRequestDto dto,
+            Authentication authentication
     ) {
-        LikeResponseDto response = likeService.unlikeReview(
-                dto.getReviewId(),
-                dto.getUserId()
-        );
-        return ResponseEntity.ok(response);
+        if (!(authentication instanceof JwtAuthenticationToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        JwtAuthenticationToken token = (JwtAuthenticationToken) authentication;
+        Long userId = token.getCurrentUserId();
+
+        LikeResponseDto resp = likeService.unlikeReview(dto.getReviewId(), userId);
+        return ResponseEntity.ok(resp);
     }
 
     /** 3. 해당 사용자가 좋아요 누른 리뷰 목록(즐겨찾기 페이지) */
