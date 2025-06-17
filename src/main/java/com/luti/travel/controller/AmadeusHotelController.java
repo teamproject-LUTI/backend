@@ -1,9 +1,9 @@
 package com.luti.travel.controller;
 
-import com.amadeus.exceptions.ResponseException;
 import com.amadeus.resources.HotelBooking;
 import com.amadeus.resources.HotelOfferSearch;
 import com.luti.travel.dto.*;
+import com.luti.travel.exception.ExternalApiException;
 import com.luti.travel.service.AmadeusHotelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +17,7 @@ public class AmadeusHotelController {
 
     @PostMapping("/searchByGpt")
     public HotelOfferSearch[] searchByGpt(
-            @RequestBody AmadeusHotelDto.HotelSearchRequest r) throws ResponseException {
+            @RequestBody AmadeusHotelDto.HotelSearchRequest r) throws ExternalApiException {
         return hotelSvc.search(r.cityCode(), r.checkInDate(), r.checkOutDate(), r.adults());
     }
     /**
@@ -31,7 +31,7 @@ public class AmadeusHotelController {
      */
     @PostMapping("/search")
     public HotelOfferSearch[] search(@RequestBody AmadeusHotelDto.HotelSearchRequest r)
-            throws ResponseException {
+            throws ExternalApiException {
 
         return hotelSvc.search(
                 r.cityCode(), r.checkInDate(), r.checkOutDate(), r.adults());
@@ -46,7 +46,7 @@ public class AmadeusHotelController {
      */
     @PostMapping("/by-hotel")
     public HotelOfferSearch[] byHotel(@RequestBody AmadeusHotelDto.HotelByIdRequest r)
-            throws ResponseException {
+            throws ExternalApiException {
 
         return hotelSvc.byHotel(
                 r.hotelId(), r.checkInDate(), r.checkOutDate(), r.adults());
@@ -60,13 +60,13 @@ public class AmadeusHotelController {
      */
     @PostMapping("/book")
     public HotelBooking[] book(@RequestBody AmadeusHotelDto.HotelBookRequest r)
-            throws ResponseException {
+            throws ExternalApiException {
         return hotelSvc.book(r.offerId(), r.guests(), r.payments());
     }
 
     @PostMapping("/auto-book")
     public HotelBooking[] autoBook(@RequestBody TripPlanDto plan)
-            throws ResponseException {
+            throws ExternalApiException {
         return hotelSvc.autoBook(plan);
     }
 }

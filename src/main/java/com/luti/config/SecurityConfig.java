@@ -85,8 +85,10 @@ public class SecurityConfig {
                                     "/public/**",              // 공개 리소스
                                     "/health",                 // 상태 확인
                                     "/actuator/**",            // Spring Boot 액추에이터 엔드포인트
-                                    "/error",
-                                    "/favicon.ico" // 에러 페이지
+                                    "/error",                  // 에러 페이지
+                                    "/favicon.ico",
+                                    "/chat/**"                 //gpt
+
                             ).permitAll()
 
                             // 관리자 역할이 필요한 경로 설정

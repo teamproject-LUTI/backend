@@ -19,7 +19,7 @@ public class AccomodationDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "accomo_detail_id", updatable = false, nullable = false)
+    @Column(name = "accomodation_detail_id", updatable = false, nullable = false)
     private Long accomodationDetailId;
 
     @Column(name = "payment_ownno")
@@ -30,8 +30,8 @@ public class AccomodationDetail {
     public PaymentList paymentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "accomo_id")
-    public AccomodationInformation accomoId;
+    @JoinColumn(name = "accomodation_information_id")
+    public AccomodationInformation accomodationInformationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -55,6 +55,5 @@ public class AccomodationDetail {
 
     @Column(name = "room_type")
     private String roomType;
-
 
 }

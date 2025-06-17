@@ -52,11 +52,7 @@ public class TravelRecord {
 		return paymentList != null ? paymentList.getUserId() : null;
 	}
 
-	public Long getPaymentCd() {
-		return paymentList != null ? paymentList.getPaymentMethod().getPaymentMethodId() : null;
-	}
+	public Long getPaymentCd() { return paymentList != null ? paymentList.getPaymentMethod().getPaymentMethodId() : null;  }
 
-	public Long getPaymentId() {
-		return paymentList != null ? paymentList.getPaymentId() : null;
-	}
+	public Long getPaymentId() { return paymentList != null ? paymentList.getPaymentId() : null;  }
 }
