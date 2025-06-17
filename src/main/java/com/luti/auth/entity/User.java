@@ -140,6 +140,7 @@ public class User extends Auditable {
 				.gender(dto.getGender())
 				.address(dto.getAddress())
 				.nickname(dto.getNickname())
+				.provider("LOCAL")
 				.withdrawYn("N")
 				.userTypeId(userType)
 				.build();
