@@ -224,7 +224,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		// JWT 검증이 명시적으로 필요한 특정 API 경로 (이들은 필터를 스킵하지 않음)
 		// 이 경로들은 Access Token이 없으면 401 응답을 받아야 함
-		if (path.equals("/api/auth/validate") ||
+		if (path.startsWith("/api/menus") ||
+            path.equals("/api/auth/validate") ||
 			path.equals("/api/auth/me") ||
 			path.equals("/api/auth/logout") ||
 			path.equals("/api/auth/logout-all") ||

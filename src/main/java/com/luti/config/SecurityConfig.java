@@ -7,6 +7,7 @@ import com.amadeus.Amadeus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -36,6 +37,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -82,9 +84,8 @@ public class SecurityConfig {
                                     "/",                       // 루트 경로
                                     "/login",                  // 로그인 페이지
                                     "/api/signup",             // 회원가입 페이지
-                                    "/api/signup/email",		 // 회원가입 이메일 인증코드 전송
+                                    "/api/signup/email",         // 회원가입 이메일 인증코드 전송
                                     "/api/signup/verify-code", // 회원가입 이메일 인증코드 검증
-
                                     "/public/**",              // 공개 리소스
                                     "/health",                 // 상태 확인
                                     "/actuator/**",            // Spring Boot 액추에이터 엔드포인트
@@ -96,7 +97,6 @@ public class SecurityConfig {
 
                             // 관리자 역할이 필요한 경로 설정
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
                             .requestMatchers(
                                     "/api/auth/validate",
                                     "/api/auth/me",
@@ -107,7 +107,9 @@ public class SecurityConfig {
                                     "/api/auth/withdraw/status", // 탈퇴 상태 확인 추가
                                     "/api/mypage/**",
                                     "/api/user/**",
-                                    "/api/payments/"
+                                    "/api/payments/",
+                                    "/api/menus/**"
+
                             ).authenticated()
 
                             .anyRequest().authenticated();
@@ -222,6 +224,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public Amadeus amadeus(
             @Value("${amadeus.client-id}") String clientId,
@@ -230,6 +233,7 @@ public class SecurityConfig {
         return Amadeus.builder(clientId, clientSecret)
                 .build();
     }
+
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
         return builder.build();
