@@ -26,6 +26,7 @@ import com.luti.auth.service.CustomOAuth2UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * 설명: Spring Security 설정을 정의하는 클래스입니다.
@@ -223,5 +224,9 @@ public class SecurityConfig {
 
 		return Amadeus.builder(clientId, clientSecret)
 				.build();
+	}
+	@Bean
+	public WebClient webClient(WebClient.Builder builder) {
+		return builder.build();
 	}
 }

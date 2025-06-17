@@ -43,13 +43,18 @@ public class ExternalApiException extends RuntimeException {
 
     /** OpenAI(ChatGPT) WebClient 오류 전용 */
     public static ExternalApiException ofChatGpt(WebClientResponseException ex, String op) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
         return new ExternalApiException(
                 ApiSource.CHATGPT,
-                (HttpStatus) ex.getStatusCode(),
+                status,
                 op + " 실패: " + ex.getResponseBodyAsString(),
                 ex
         );
     }
+
 
     /** 그 밖의 런타임 예외를 감싸는 헬퍼 */
     public static ExternalApiException ofGeneric(ApiSource source, String op, Exception ex) { // NEW
