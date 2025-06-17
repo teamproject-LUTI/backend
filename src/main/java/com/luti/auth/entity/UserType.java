@@ -16,7 +16,7 @@ import lombok.Setter;
  * @author 박종호
  */
 @Entity
-@Table(name = "userType")
+@Table(name = "user_type")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
