@@ -27,7 +27,7 @@ public class TravelRecord {
 	private Integer paymentCd;
 
 	@Column(name = "payment_id")
-	private Integer paymentId;
+	private Long paymentId;
 
 	// PaymentList 참조 (복합키로 매핑)
 	@ManyToOne(fetch = FetchType.LAZY)
