@@ -81,7 +81,10 @@ public class SecurityConfig {
                                     "/login/oauth2/**",        // OAuth2 로그인 리다이렉션
                                     "/",                       // 루트 경로
                                     "/login",                  // 로그인 페이지
-                                    "/signup",                 // 회원가입 페이지
+                                    "/api/signup",             // 회원가입 페이지
+                                    "/api/signup/email",		 // 회원가입 이메일 인증코드 전송
+                                    "/api/signup/verify-code", // 회원가입 이메일 인증코드 검증
+
                                     "/public/**",              // 공개 리소스
                                     "/health",                 // 상태 확인
                                     "/actuator/**",            // Spring Boot 액추에이터 엔드포인트
