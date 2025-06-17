@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
 
     // paymentCd로 조회
-    Optional<PaymentMethod> findByPaymentCd(Integer paymentCd);
+    Optional<PaymentMethod> findByPaymentCd(Long paymentCd);
 
     // 결제방식 이름으로 조회
     Optional<PaymentMethod> findByPaymentMethod(String paymentMethod);

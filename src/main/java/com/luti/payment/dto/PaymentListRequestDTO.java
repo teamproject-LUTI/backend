@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Setter
 public class PaymentListRequestDTO {
 
-    private Integer paymentCd;       // 결제 방식 코드
+    private Long paymentCd;       // 결제 방식 코드
     private Long userId;             // 사용자 ID
     private Integer totalPrice;      // 총 결제 금액
     private LocalDate paymentDate;   // 결제 일자

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class PaymentListResponseDTO {
 
+
     private Long paymentId;        // 결제 ID (PK, DB에서 사용)
     private Long paymentCd;        // 결제 ID (PK)
     private Long userId;           // 사용자 ID
