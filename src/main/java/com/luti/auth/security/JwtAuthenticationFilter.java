@@ -69,9 +69,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
 				log.debug("토큰 유효성 검증 성공");
 
-				// 3. 토큰 타입이 ACCESS인지 확인
+				// 3. 토큰 타입 확인
 				String tokenType = jwtUtil.getTokenType(token);
-				if (!"ACCESS".equals(tokenType)) {
+				if (!"ACCESS".equals(tokenType) && !"TEMP_ACCESS".equals(tokenType)) {
 					log.warn("유효하지 않은 토큰 타입: {}", tokenType);
 					filterChain.doFilter(request, response);
 					return;
@@ -81,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				Claims claims = jwtUtil.getClaimsFromToken(token);
 				Long userId = Long.parseLong(claims.getSubject());
 
-				// *** 5. 사용자 존재 여부 및 탈퇴 상태 확인 (새로 추가) ***
+				// 5. 사용자 존재 여부 확인
 				User user = userRepository.findById(userId).orElse(null);
 				if (user == null) {
 					log.warn("삭제된 사용자의 토큰 사용 시도 - 사용자 ID: {}", userId);
@@ -89,14 +89,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					return;
 				}
 
-				// 탈퇴한 사용자인 경우 특별 응답 (복구 가능)
-				if ("Y".equals(user.getWithdrawYn())) {
-					log.info("탈퇴한 사용자 로그인 시도 감지 - 사용자 ID: {}", userId);
-					sendWithdrawResponse(response, "탈퇴한 계정입니다. 복구하시겠습니까?");
-					return;
+				// 6. 임시 토큰 처리 (탈퇴한 사용자용)
+				if ("TEMP_ACCESS".equals(tokenType)) {
+					// 임시 토큰은 탈퇴 관련 API만 접근 가능
+					if (!isWithdrawRelatedPath(requestPath)) {
+						log.warn("임시 토큰으로 일반 API 접근 시도 - 경로: {}, 사용자 ID: {}", requestPath, userId);
+						sendTempTokenLimitedResponse(response, "제한된 토큰입니다. 계정 복구 후 이용해주세요.");
+						return;
+					}
+
+					// 탈퇴 상태가 아닌 경우 (이미 복구됨)
+					if (!"Y".equals(user.getWithdrawYn())) {
+						log.info("이미 복구된 계정의 임시 토큰 사용 - 사용자 ID: {}", userId);
+						sendAlreadyRestoredResponse(response, "이미 복구된 계정입니다. 다시 로그인해주세요.");
+						return;
+					}
+
+					log.debug("임시 토큰으로 탈퇴 관련 API 접근 허용 - 사용자 ID: {}", userId);
+				} else {
+					// 일반 토큰의 경우 탈퇴 상태 확인
+					if ("Y".equals(user.getWithdrawYn())) {
+						log.info("탈퇴한 사용자 일반 토큰 사용 시도 - 사용자 ID: {}", userId);
+						sendWithdrawResponse(response, "탈퇴한 계정입니다. 복구하시겠습니까?");
+						return;
+					}
 				}
 
-				// 6. 나머지 토큰 정보 추출
+				// 7. 나머지 토큰 정보 추출
 				String email = claims.get("email", String.class);
 				String name = claims.get("name", String.class);
 				String nickname = claims.get("nickname", String.class);
@@ -104,10 +123,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				String provider = claims.get("provider", String.class);
 				Long userTypeId = claims.get("userTypeId", Long.class);
 
-				// 7. 사용자 타입에 따른 역할 결정
+				// 8. 사용자 타입에 따른 역할 결정
 				String role = determineRole(userTypeId);
 
-				// 8. Spring Security 인증 객체 생성
+				// 9. Spring Security 인증 객체 생성
 				JwtAuthenticationToken authentication = new JwtAuthenticationToken(
 						userId,
 						email,
@@ -119,7 +138,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 						Collections.singletonList(new SimpleGrantedAuthority(role))
 				);
 
-				// 9. 인증 상세 정보 설정 및 SecurityContext 설정
+				// 10. 인증 상세 정보 설정 및 SecurityContext 설정
 				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -137,6 +156,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	/**
+	 * 탈퇴 관련 API 경로인지 확인
+	 */
+	private boolean isWithdrawRelatedPath(String path) {
+		return path.equals("/api/mypage/withdraw/status") ||
+			   path.equals("/api/mypage/restore") ||
+			   path.equals("/api/auth/me") ||
+			   path.equals("/api/auth/validate");
 	}
 
 	/**
@@ -198,7 +227,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (path.equals("/api/auth/validate") ||
 			path.equals("/api/auth/me") ||
 			path.equals("/api/auth/logout") ||
-			path.equals("/api/auth/logout-all")) {
+			path.equals("/api/auth/logout-all") ||
+			path.equals("/api/mypage/withdraw/status") ||
+			path.equals("/api/mypage/restore")) {
 			log.debug("JWT 필터 실행 필요 - 경로: {}", path);
 			return false; // 필터 실행 (스킵하지 않음)
 		}
@@ -261,6 +292,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	/**
+	 * 임시 토큰으로 제한된 접근 시도에 대한 응답 전송
+	 */
+	private void sendTempTokenLimitedResponse(HttpServletResponse response, String message) throws IOException {
+		response.setStatus(HttpStatus.FORBIDDEN.value()); // 403 상태코드
+		response.setContentType("application/json;charset=UTF-8");
+
+		String jsonResponse = String.format(
+				"{\"success\": false, \"error\": \"%s\", \"errorCode\": \"TEMP_TOKEN_LIMITED\", \"needsRestore\": true}",
+				message
+		);
+
+		response.getWriter().write(jsonResponse);
+	}
+
+	/**
+	 * 이미 복구된 계정에 대한 응답 전송
+	 */
+	private void sendAlreadyRestoredResponse(HttpServletResponse response, String message) throws IOException {
+		// 쿠키 삭제 (임시 토큰 정리)
+		clearAccessTokenCookie(response);
+		clearRefreshTokenCookie(response);
+
+		response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 상태코드
+		response.setContentType("application/json;charset=UTF-8");
+
+		String jsonResponse = String.format(
+				"{\"success\": false, \"error\": \"%s\", \"errorCode\": \"ALREADY_RESTORED\", \"needsLogin\": true}",
+				message
+		);
+
+		response.getWriter().write(jsonResponse);
+	}
+
+	/**
 	 * Access Token 쿠키 삭제
 	 */
 	private void clearAccessTokenCookie(HttpServletResponse response) {
@@ -295,5 +360,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		cookie.setMaxAge(0); // 즉시 만료
 		response.addCookie(cookie);
 	}
-
 }

@@ -28,6 +28,9 @@ public class JwtUtil {
 
 	private final long refreshTokenExpiration; // Refresh Token의 만료 시간 (밀리초)
 
+	// 임시 토큰 만료 시간 (1시간)
+	private final long tempTokenExpiration = 3600000L; // 1시간
+
 	/**
 	 * 설명: JwtUtil의 생성자입니다.
 	 * application.properties 또는 application.yml에서 JWT 관련 설정을 주입받아 초기화합니다.
@@ -83,6 +86,32 @@ public class JwtUtil {
 	}
 
 	/**
+	 * 탈퇴한 사용자용 임시 Access Token 생성
+	 * 제한된 권한으로 탈퇴 상태 확인 및 복구 기능만 사용 가능
+	 */
+	public String generateTempAccessToken(Long userId, String email, String name,
+			String nickname, String profileImageUrl,
+			Long userTypeId, String provider) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + tempTokenExpiration); // 1시간
+
+		return Jwts.builder()
+				.subject(userId.toString())
+				.claim("email", email)
+				.claim("name", name)
+				.claim("nickname", nickname)
+				.claim("profileImageUrl", profileImageUrl)
+				.claim("provider", provider)
+				.claim("userTypeId", userTypeId)
+				.claim("tokenType", "TEMP_ACCESS") // 임시 토큰 표시
+				.claim("withdrawn", true) // 탈퇴 상태 표시
+				.issuedAt(now)
+				.expiration(expiryDate)
+				.signWith(secretKey, Jwts.SIG.HS256)
+				.compact();
+	}
+
+	/**
 	 * 설명: 사용자 ID를 포함하는 Refresh Token을 생성합니다.
 	 * 이 토큰은 긴 만료 시간을 가지며, Access Token 갱신에 사용됩니다.
 	 *
@@ -101,6 +130,23 @@ public class JwtUtil {
 				.expiration(expiryDate) // 토큰 만료 시간
 				.signWith(secretKey, Jwts.SIG.HS256) // 비밀 키와 HS256 알고리즘으로 서명
 				.compact(); // JWT를 압축하여 문자열로 반환
+	}
+
+	/**
+	 * 탈퇴한 사용자용 임시 Refresh Token 생성
+	 */
+	public String generateTempRefreshToken(Long userId) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + tempTokenExpiration); // 1시간
+
+		return Jwts.builder()
+				.subject(userId.toString())
+				.claim("tokenType", "TEMP_REFRESH") // 임시 리프레시 토큰
+				.claim("withdrawn", true) // 탈퇴 상태 표시
+				.issuedAt(now)
+				.expiration(expiryDate)
+				.signWith(secretKey, Jwts.SIG.HS256)
+				.compact();
 	}
 
 	/**
@@ -200,6 +246,31 @@ public class JwtUtil {
 	}
 
 	/**
+	 * 토큰이 임시 토큰인지 확인
+	 */
+	public boolean isTempToken(String token) {
+		try {
+			String tokenType = getTokenType(token);
+			return "TEMP_ACCESS".equals(tokenType) || "TEMP_REFRESH".equals(tokenType);
+		} catch (JwtException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * 토큰에서 탈퇴 상태 확인
+	 */
+	public boolean isWithdrawnUser(String token) {
+		try {
+			Claims claims = getClaimsFromToken(token);
+			Boolean withdrawn = claims.get("withdrawn", Boolean.class);
+			return Boolean.TRUE.equals(withdrawn);
+		} catch (JwtException e) {
+			return false;
+		}
+	}
+
+	/**
 	 * 설명: 주어진 JWT 토큰에서 모든 클레임(Claims)을 추출하여 반환합니다.
 	 * 토큰의 모든 페이로드 정보를 접근할 때 사용됩니다.
 	 *
@@ -263,6 +334,15 @@ public class JwtUtil {
 	 */
 	public long getRefreshTokenExpiration() {
 		return refreshTokenExpiration;
+	}
+
+	/**
+	 * 임시 토큰의 만료 시간을 반환합니다.
+	 *
+	 * @return long 임시 토큰의 만료 시간(밀리초).
+	 */
+	public long getTempTokenExpiration() {
+		return tempTokenExpiration;
 	}
 
 }

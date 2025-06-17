@@ -55,16 +55,32 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 			log.info("OAuth2 로그인 성공 - 사용자 ID: {}, 이메일: {}", user.getUserId(), user.getEmail());
 
-			// *** 탈퇴한 사용자 확인 (새로 추가) ***
+			// *** 탈퇴한 사용자 확인 및 임시 토큰 발급 ***
 			if ("Y".equals(user.getWithdrawYn())) {
 				log.info("탈퇴한 사용자 OAuth2 로그인 시도 감지 - 사용자 ID: {}", user.getUserId());
 
-				// 복구 페이지로 리다이렉트
-				String restoreUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/restore")
-						.queryParam("type", "oauth2")
-						.queryParam("message", "탈퇴한 계정입니다. 복구하시겠습니까?")
-						.build().toUriString();
+				// 탈퇴한 사용자용 임시 토큰 발급 (제한된 권한)
+				String tempAccessToken = jwtUtil.generateTempAccessToken(
+						user.getUserId(),
+						user.getEmail(),
+						user.getDisplayName(),
+						user.getNickname(),
+						user.getDisplayProfileImage(),
+						user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : 1L,
+						user.getProvider()
+				);
 
+				String tempRefreshToken = jwtUtil.generateTempRefreshToken(user.getUserId());
+
+				// 임시 토큰을 쿠키로 설정 (짧은 만료시간)
+				setTempAccessTokenCookie(response, tempAccessToken);
+				setTempRefreshTokenCookie(response, tempRefreshToken);
+
+				// OAuth2 인증 완료 후 세션 무효화 및 JSESSIONID 쿠키 삭제
+				invalidateSessionAndClearCookie(request, response);
+
+				// 복구 페이지로 리다이렉트
+				String restoreUrl = frontendUrl + "/account/restore";
 				log.info("탈퇴한 사용자 복구 페이지로 리다이렉트: {}", restoreUrl);
 				getRedirectStrategy().sendRedirect(request, response, restoreUrl);
 				return;
@@ -177,6 +193,34 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	}
 
 	/**
+	 * 임시 Access Token을 HttpOnly 쿠키로 설정 (탈퇴한 사용자용)
+	 */
+	private void setTempAccessTokenCookie(HttpServletResponse response, String tempAccessToken) {
+		Cookie accessTokenCookie = new Cookie("accessToken", tempAccessToken);
+		accessTokenCookie.setHttpOnly(true);
+		accessTokenCookie.setSecure(true);
+		accessTokenCookie.setPath("/");
+		accessTokenCookie.setMaxAge(3600); // 1시간
+
+		response.addCookie(accessTokenCookie);
+		log.debug("임시 Access Token 쿠키 설정 완료");
+	}
+
+	/**
+	 * 임시 Refresh Token을 HttpOnly 쿠키로 설정 (탈퇴한 사용자용)
+	 */
+	private void setTempRefreshTokenCookie(HttpServletResponse response, String tempRefreshToken) {
+		Cookie refreshTokenCookie = new Cookie("refreshToken", tempRefreshToken);
+		refreshTokenCookie.setHttpOnly(true);
+		refreshTokenCookie.setSecure(true);
+		refreshTokenCookie.setPath("/");
+		refreshTokenCookie.setMaxAge(3600); // 1시간
+
+		response.addCookie(refreshTokenCookie);
+		log.debug("임시 Refresh Token 쿠키 설정 완료");
+	}
+
+	/**
 	 * Refresh Token을 DB에 저장
 	 */
 	@Transactional
@@ -230,5 +274,4 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		return request.getRemoteAddr();
 	}
-
 }
