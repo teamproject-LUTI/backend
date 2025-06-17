@@ -98,7 +98,8 @@ public class SecurityConfig {
 									"/api/auth/restore",       // 계정복구 추가
 									"/api/auth/withdraw/status", // 탈퇴 상태 확인 추가
 									"/api/mypage/**",
-									"/api/user/**"
+									"/api/user/**",
+									"/api/payments/"
 							).authenticated()
 
 							.anyRequest().authenticated();

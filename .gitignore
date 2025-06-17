@@ -220,3 +220,9 @@ src/main/resources/no-nangbie-0a842ab6a8f9.json
 
 src/main/resources/
 src/main/resources/application.properties
+
+# SECRUTITY CONFIG IGNORE
+*securityconfig*
+src\main\java\com\luti\config\SecurityConfig.java
+src/main/java/com/luti/config/SecurityConfig.java
+################################################

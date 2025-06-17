@@ -7,7 +7,7 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Table(name = "noticeAttachment")
+@Table(name = "notice_attachment")
 @Getter
 @Setter
 @NoArgsConstructor
