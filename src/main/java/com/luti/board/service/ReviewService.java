@@ -113,5 +113,16 @@ public class ReviewService {
                 .liked(likeRepo.existsByReviewReviewIdAndUserUserId(reviewId, currentUserId))
                 .build();
     }
+
+
+    /** 특정 사용자가 작성한 리뷰 총 개수 */
+    public long getMyReviewCount(Long userId) {
+        return reviewRepo.countByUserUserId(userId);
+    }
+
+    /** 특정 사용자가 작성한 모든 리뷰의 조회수 총합 */
+    public long getTotalViewCount(Long userId) {
+        return reviewRepo.sumViewCountByUserUserId(userId);
+    }
 }
 

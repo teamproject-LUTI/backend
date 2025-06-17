@@ -7,7 +7,11 @@ import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reviews/{reviewId}/attachments")
@@ -23,13 +27,14 @@ public class ReviewAttachmentController {
         return service.getAttachments(reviewId);
     }
 
-    /** 2) 리뷰에 첨부파일 추가 */
-    @PostMapping
+    /** 2) 리뷰에 첨부파일 추가 (Multipart) */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public SingleResponseDto<ReviewAttachmentResponseDto> addAttachment(
+    public SingleResponseDto<ReviewAttachmentResponseDto> addAttachments(
             @PathVariable Long reviewId,
-            @RequestBody ReviewAttachmentRequestDto dto) {
-        return service.addAttachment(reviewId, dto);
+            @RequestPart("files") List<MultipartFile> files) {
+        // 서비스 계층에서 MultipartFile 리스트 처리하도록 구현
+        return service.addAttachmentFiles(reviewId, files);
     }
 
     /** 3) 첨부파일 삭제  */

@@ -10,10 +10,15 @@ import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +28,9 @@ public class ReviewAttachmentService {
 
     private final ReviewRepository reviewRepository;
     private final ReviewAttachmentRepository attachmentRepository;
+
+    // 기본 업로드 경로 (프로젝트 루트 기준)
+    private static final String UPLOAD_DIR = "uploads";
 
     /**
      * 특정 리뷰의 첨부파일 목록 조회
@@ -43,28 +51,45 @@ public class ReviewAttachmentService {
     }
 
     /**
-     * 리뷰에 첨부파일 추가
+     * 리뷰에 첨부파일 추가 (MultipartFile 처리)
      */
     @Transactional
-    public SingleResponseDto<ReviewAttachmentResponseDto> addAttachment(
+    public SingleResponseDto<ReviewAttachmentResponseDto> addAttachmentFiles(
             Long reviewId,
-            ReviewAttachmentRequestDto dto) {
+            List<MultipartFile> files) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
 
-        // 엔티티 생성 및 양방향 연관관계 설정
-        ReviewAttachment attachment = ReviewAttachment.builder()
-                .fileName(dto.getFileName())
-                .physicalPath(dto.getPhysicalPath())
-                .logicalPath(dto.getLogicalPath())
-                .extension(dto.getExtension())
-                .size(dto.getSize())  // RequestDto의 Long → Entity의 Integer
-                .build();
-        attachment.linkToReview(review);
+        List<ReviewAttachment> savedList = files.stream().map(file -> {
+            String original = file.getOriginalFilename();
+            String ext = original.substring(original.lastIndexOf('.') + 1);
+            String uuid = UUID.randomUUID().toString();
+            String storedName = uuid + "." + ext;
+            File dest = new File(UPLOAD_DIR, storedName);
+            if (!dest.getParentFile().exists()) {
+                dest.getParentFile().mkdirs();
+            }
+            try {
+                file.transferTo(dest);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to store file " + original, e);
+            }
 
-        ReviewAttachment saved = attachmentRepository.save(attachment);
-        return new SingleResponseDto<>(ReviewAttachmentResponseDto.fromEntity(saved));
+            ReviewAttachment attach = ReviewAttachment.builder()
+                    .fileName(original)
+                    .physicalPath(dest.getAbsolutePath())
+                    .logicalPath("/uploads/" + storedName)
+                    .extension(ext)
+                    .size(file.getSize())
+                    .build();
+            attach.linkToReview(review);
+            return attachmentRepository.save(attach);
+        }).collect(Collectors.toList());
+
+        ReviewAttachmentResponseDto dto = ReviewAttachmentResponseDto.fromEntity(savedList.get(0));
+        return new SingleResponseDto<>(dto);
     }
+
 
     /**
      * 첨부파일 삭제 (완전 삭제)

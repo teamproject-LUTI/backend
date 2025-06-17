@@ -31,9 +31,13 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
      */
     long countByReviewReviewId(Long reviewId);
 
+    /**내가 올린 모든 리뷰에 대한 좋아요 총합 */
+    long countByReviewUserUserId(Long userId);
+
 
     /**
      * 사용자가 누른 전체 좋아요 레코드
      */
     List<Like> findAllByUserUserId(Long userId);
+
 }

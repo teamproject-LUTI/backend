@@ -93,6 +93,11 @@ public class LikeService {
     public boolean isLiked(Long reviewId, Long userId) {
         return likeRepository.existsByReviewReviewIdAndUserUserId(reviewId, userId);
     }
+
+    /** 특정 사용자가 받은 좋아요 총 개수 */
+    public long getTotalReceivedLikes(Long userId) {
+        return likeRepository.countByReviewUserUserId(userId);
+    }
 }
 
 

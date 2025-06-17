@@ -66,4 +66,22 @@ public class ReviewController {
     ) {
         service.deleteReview(reviewId, userId);
     }
+
+    /** 특정 사용자가 작성한 리뷰 총 개수 조회(마이페이지에서 사용) */
+    @GetMapping("/user/{userId}/count")
+    public ResponseEntity<Long> getMyReviewCount(
+            @PathVariable Long userId
+    ) {
+        long count = service.getMyReviewCount(userId);
+        return ResponseEntity.ok(count);
+    }
+
+    /** 특정 사용자가 작성한 모든 리뷰의 조회수 총합 조회(마이페이지에서 사용) */
+    @GetMapping("/user/{userId}/views")
+    public ResponseEntity<Long> getTotalViewCount(
+            @PathVariable Long userId
+    ) {
+        long totalViews = service.getTotalViewCount(userId);
+        return ResponseEntity.ok(totalViews);
+    }
 }

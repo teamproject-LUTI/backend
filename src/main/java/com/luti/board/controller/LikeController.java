@@ -73,4 +73,13 @@ public class LikeController {
         boolean liked = likeService.isLiked(reviewId, userId);
         return ResponseEntity.ok(liked);
     }
+
+    /** 5. 내가 올린 모든 리뷰에 받은 좋아요 총 개수 조회 */
+    @GetMapping("/user/{userId}/count")
+    public ResponseEntity<Long> getTotalReceivedLikes(
+            @PathVariable Long userId
+    ) {
+        long totalLikes = likeService.getTotalReceivedLikes(userId);
+        return ResponseEntity.ok(totalLikes);
+    }
 }

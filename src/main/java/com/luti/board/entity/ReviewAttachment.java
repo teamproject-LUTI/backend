@@ -8,8 +8,9 @@ import lombok.*;
  * 후기(Review) 첨부파일 엔티티
  */
 @Entity
-@Table(name = "reviewAttachment")
-@Getter @Setter
+@Table(name = "review_Attachment")
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
