@@ -14,7 +14,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class PaymentListResponseDTO {
 
-  private Long paymentCd;        // 결제 ID (PK)
+    private Long paymentId;        // 결제 ID (PK, DB에서 사용)
+    private Long paymentCd;        // 결제 ID (PK)
     private Long userId;           // 사용자 ID
     private Integer totalPrice;       // 총 결제 금액
     private Integer paymentState;     // 결제 상태
@@ -27,7 +28,7 @@ public class PaymentListResponseDTO {
     public static PaymentListResponseDTO from(PaymentList entity) {
         return PaymentListResponseDTO.builder()
                 .paymentId(entity.getPaymentId())
-                .paymentCd(entity.getPaymentCd())
+                .paymentCd(Long.valueOf(entity.getPaymentCd()))
                 .userId(entity.getUserId())
                 .totalPrice(entity.getTotalPrice())
                 .paymentState(entity.getPaymentState())

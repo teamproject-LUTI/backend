@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  *
  */
 @Entity
-@Table(name = "refreshToken")
+@Table(name = "refresh_token")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 엔티티 요구사항: 기본 생성자 (접근 레벨 보호)
 public class RefreshToken extends Auditable {

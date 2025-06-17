@@ -22,7 +22,7 @@ import lombok.Setter;
  * 기존 컬럼을 활용한 소셜 로그인 지원
  */
 @Entity
-@Table(name = "userInfo")
+@Table(name = "user_info")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
