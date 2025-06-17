@@ -24,16 +24,10 @@ public class PaymentListService {
 
     // 결제 정보 저장
     public PaymentListResponseDTO savePayment(PaymentListRequestDTO dto) {
-        System.out.println("[savePayment] 요청 받은 DTO: " + dto);
-
-        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentCd(dto.getPaymentCd())
-                .orElseThrow(() -> {
-                    System.out.println("[savePayment] 유효하지 않은 결제 코드: " + dto.getPaymentCd());
-                    return new IllegalArgumentException("유효하지 않은 결제 코드입니다.");
-                });
+        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentMethodId(dto.getPaymentMethodId())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 코드입니다."));
 
         PaymentList payment = PaymentList.builder()
-                .paymentCd(dto.getPaymentCd())
                 .userId(dto.getUserId())
                 .totalPrice(dto.getTotalPrice())
                 .paymentState(0) // 0: 결제완료
@@ -44,36 +38,23 @@ public class PaymentListService {
                 .build();
 
         PaymentList saved = paymentListRepository.save(payment);
-        System.out.println("[savePayment] 저장 완료된 결제 정보: " + saved);
-
         return PaymentListResponseDTO.from(saved);
     }
 
     // 결제 취소 (환불 처리)
     public PaymentListResponseDTO cancelPayment(Long paymentId) {
-        System.out.println("[cancelPayment] 환불 요청된 paymentId: " + paymentId);
-
         PaymentList payment = paymentListRepository.findById(paymentId)
-                .orElseThrow(() -> {
-                    System.out.println("[cancelPayment] 결제 내역 없음: ID = " + paymentId);
-                    return new IllegalArgumentException("해당 결제 내역을 찾을 수 없습니다.");
-                });
+                .orElseThrow(() -> new IllegalArgumentException(" 해당 결제 내역을 찾을 수 없습니다."));
 
         payment.setPaymentState(1); // 1: 환불
         payment.setCancelDate(LocalDate.now());
 
-        System.out.println("[cancelPayment] 환불 처리 완료: " + payment);
         return PaymentListResponseDTO.from(payment);
     }
 
     // 사용자 ID로 결제 내역 조회
     public List<PaymentListResponseDTO> findByUserId(Long userId) {
-        System.out.println("[findByUserId] 사용자 ID로 결제 내역 조회: userId = " + userId);
-
-        List<PaymentList> payments = paymentListRepository.findByUserId(userId);
-
-        System.out.println("[findByUserId] 조회된 결제 건수: " + payments.size());
-        return payments.stream()
+        return paymentListRepository.findByUserId(userId).stream()
                 .map(PaymentListResponseDTO::from)
                 .collect(Collectors.toList());
     }
