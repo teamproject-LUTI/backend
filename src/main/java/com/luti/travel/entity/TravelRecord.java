@@ -50,7 +50,7 @@ public class TravelRecord {
 		return paymentList != null ? paymentList.getUserId() : null;
 	}
 
-	public Integer getPaymentCd() {
+	public Long getPaymentCd() {
 		return paymentList != null ? paymentList.getPaymentCd() : null;
 	}
 

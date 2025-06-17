@@ -24,7 +24,7 @@ public class PaymentMethod {
 	private Long paymentMethodId;
 
 	@Column(name = "payment_cd")
-	private Integer paymentCd; // 카드 = 1, 카카오페이 = 2 등
+	private Long paymentCd; // 카드 = 1, 카카오페이 = 2 등
 
 	@Column(name = "payment_method", length = 50)
 	private String paymentMethod; // 카드, 카카오페이, 네이버페이 등

@@ -20,7 +20,7 @@ public class PaymentList {
     private Long paymentId;
 
     @Column(name = "payment_cd", nullable = false)
-    private Integer paymentCd;
+    private Long paymentCd;
 
     @Column(name = "user_id")
     private Long userId;
