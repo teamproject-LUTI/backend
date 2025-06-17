@@ -1,4 +1,4 @@
-package com.luti.auth.config;
+package com.luti.config;
 
 import java.util.Arrays;
 import java.util.List;
