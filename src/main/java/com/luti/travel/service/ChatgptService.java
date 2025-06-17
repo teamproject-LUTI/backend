@@ -55,7 +55,7 @@ public class ChatgptService {
           "model":"gpt-4o",
           "temperature":0.3,
           "messages":[
-             {"role":"system","content":"너는 여행 플래너야. 한국어 응답 금지."},
+             {"role":"system","content":"You are a travel planner. No Korean responses."},
              {"role":"user","content":%s}
           ],
           "functions": %s,
