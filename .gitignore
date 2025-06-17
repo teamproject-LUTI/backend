@@ -226,3 +226,5 @@ src/main/resources/application.properties
 src\main\java\com\luti\config\SecurityConfig.java
 src/main/java/com/luti/config/SecurityConfig.java
 ################################################
+/application.properties
+/settings.gradle
