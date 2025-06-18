@@ -45,9 +45,6 @@ public class PaymentList {
     @Column(name = "merchant_uid", length = 100)
     private String merchantUid;
 
-    @Column(name = "payment_time")
-    private LocalTime paymentTime;
-
     @ManyToOne
     @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
