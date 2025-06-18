@@ -90,8 +90,7 @@ public class SecurityConfig {
                                     "/health",                 // 상태 확인
                                     "/actuator/**",            // Spring Boot 액추에이터 엔드포인트
                                     "/error",                  // 에러 페이지
-                                    "/favicon.ico",
-                                    "/chat/**"                 //gpt
+                                    "/favicon.ico"
 
                             ).permitAll()
 
@@ -108,7 +107,8 @@ public class SecurityConfig {
                                     "/api/mypage/**",
                                     "/api/user/**",
                                     "/api/payments/",
-                                    "/api/menus/**"
+                                    "/api/menus/**",
+                                    "/chat/**"                 //gpt
 
                             ).authenticated()
 
