@@ -43,7 +43,8 @@ public class TravelRecord {
 	@Column(name = "travel_title", length = 100)
 	private String travelTitle;
 
-	@Column(name = "travel_content", columnDefinition = "TEXT")
+	@Lob
+	@Column(name = "travel_content", columnDefinition = "json")
 	private String travelContent;
 
 	// 편의 메서드들 (필요시)
@@ -51,11 +52,7 @@ public class TravelRecord {
 		return paymentList != null ? paymentList.getUserId() : null;
 	}
 
-	public Long getPaymentCd() {
-		return paymentList != null ? paymentList.getPaymentMethod().getPaymentMethodId() : null;
-	}
+	public Long getPaymentCd() { return paymentList != null ? paymentList.getPaymentMethod().getPaymentMethodId() : null;  }
 
-	public Long getPaymentId() {
-		return paymentList != null ? paymentList.getPaymentId() : null;
-	}
+	public Long getPaymentId() { return paymentList != null ? paymentList.getPaymentId() : null;  }
 }
