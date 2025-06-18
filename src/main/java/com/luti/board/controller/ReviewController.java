@@ -26,7 +26,7 @@ public class ReviewController {
     public MultiResponseDto<ReviewListDto> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal(expression="userId") Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         return service.getReviews(page, size, userId);
     }
@@ -34,7 +34,7 @@ public class ReviewController {
     @GetMapping("/{reviewId}")
     public SingleResponseDto<ReviewResponseDto> getOne(
             @PathVariable Long reviewId,
-            @AuthenticationPrincipal(expression="userId") Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         return new SingleResponseDto<>(service.getReviewDetail(reviewId, userId));
     }
@@ -43,7 +43,7 @@ public class ReviewController {
     @ResponseStatus(HttpStatus.CREATED)
     public SingleResponseDto<Long> create(
             @RequestBody @Valid ReviewRequestDto dto,
-            @AuthenticationPrincipal(expression="userId") Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         return new SingleResponseDto<>(service.createReview(dto, userId));
     }
@@ -53,7 +53,7 @@ public class ReviewController {
     public void update(
             @PathVariable Long reviewId,
             @RequestBody @Valid ReviewRequestDto dto,
-            @AuthenticationPrincipal(expression="userId") Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         service.updateReview(reviewId, dto, userId);
     }
@@ -62,7 +62,7 @@ public class ReviewController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @PathVariable Long reviewId,
-            @AuthenticationPrincipal(expression="userId") Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         service.deleteReview(reviewId, userId);
     }
