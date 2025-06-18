@@ -184,19 +184,38 @@ public class AuthController {
 	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginDto, HttpServletResponse response) {
 		try {
 			AuthService.TokenRefreshResult result = authService.login(loginDto);
+
 			if (!result.isSuccess()) {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 						.body(createErrorResponse(result.getErrorMessage()));
 			}
 
+			// ★ 임시 토큰인 경우 구분하여 처리
+			if (result.isTemp()) {
+				// 임시 토큰을 쿠키로 설정 (짧은 만료시간)
+				setTempAccessTokenCookie(response, result.getAccessToken());
+				setTempRefreshTokenCookie(response, result.getRefreshToken());
+
+				Map<String, Object> responseBody = new HashMap<>();
+				responseBody.put("success", true);
+				responseBody.put("message", "탈퇴한 계정입니다. 복구 페이지로 이동합니다.");
+				responseBody.put("tokenType", "TEMP");
+				responseBody.put("redirectTo", "/account/restore"); // ★ 프론트에서 리다이렉트용
+
+				return ResponseEntity.ok(responseBody);
+			}
+
+			// 정상 토큰 설정
 			setAccessTokenCookie(response, result.getAccessToken());
 			setRefreshTokenCookie(response, result.getRefreshToken());
 
 			Map<String, Object> responseBody = new HashMap<>();
 			responseBody.put("success", true);
 			responseBody.put("message", "로그인 성공");
+			responseBody.put("tokenType", "NORMAL");
 
 			return ResponseEntity.ok(responseBody);
+
 		} catch (Exception e) {
 			log.error("로그인 처리 중 예외 발생", e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -400,6 +419,24 @@ public class AuthController {
 		error.put("success", false);
 		error.put("error", message);
 		return error;
+	}
+
+	private void setTempAccessTokenCookie(HttpServletResponse response, String accessToken) {
+		Cookie cookie = new Cookie("accessToken", accessToken);
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(3600); // 1시간
+		response.addCookie(cookie);
+	}
+
+	private void setTempRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+		Cookie cookie = new Cookie("refreshToken", refreshToken);
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(3600); // 1시간
+		response.addCookie(cookie);
 	}
 
 }
