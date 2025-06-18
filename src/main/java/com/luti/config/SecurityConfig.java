@@ -85,6 +85,7 @@ public class SecurityConfig {
                                     "/api/signup/email",		 // 회원가입 이메일 인증코드 전송
                                     "/api/signup/verify-code", // 회원가입 이메일 인증코드 검증
                                     "/public/**",              // 공개 리소스
+                                    "/files/**",
                                     "/health",                 // 상태 확인
                                     "/actuator/**",            // Spring Boot 액추에이터 엔드포인트
                                     "/error",                  // 에러 페이지

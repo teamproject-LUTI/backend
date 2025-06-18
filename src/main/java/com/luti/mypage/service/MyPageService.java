@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -26,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 public class MyPageService {
 
 	private final UserRepository userRepository;
+
+	@Value("${server.domain:http://localhost:8080}")  // 이 부분 추가
+	private String serverDomain;
 
 	/**
 	 * 마이페이지 프로필 정보 조회
@@ -109,9 +113,19 @@ public class MyPageService {
 	 * MyPageProfileResponseDto 객체 생성
 	 */
 	private MyPageProfileResponseDto buildMyPageProfileResponse(User user) {
+
+		String profileImageUrl = null;
+		if (user.getProfileLogicalPath() != null) {
+			if (user.getProfileLogicalPath().startsWith("http")) {
+				profileImageUrl = user.getProfileLogicalPath(); // 소셜 URL 그대로
+			} else {
+				profileImageUrl = serverDomain + user.getProfileLogicalPath(); // 완전한 URL 생성
+			}
+		}
+
 		return MyPageProfileResponseDto.builder()
 				.basicInfo(MyPageProfileResponseDto.BasicInfoDto.builder()
-						.profileImage(user.getDisplayProfileImage())
+						.profileImage(profileImageUrl)
 						.name(user.getName())
 						.nickname(user.getDisplayName())
 						.birthday(formatBirthday(user.getBirthday()))
