@@ -36,7 +36,8 @@ public class ReviewController {
             @PathVariable Long reviewId,
             @AuthenticationPrincipal Long userId
     ) {
-        return new SingleResponseDto<>(service.getReviewDetail(reviewId, userId));
+        ReviewResponseDto dto = service.getReviewDetail(reviewId, userId);
+        return new SingleResponseDto<>(dto);
     }
 
     @PostMapping

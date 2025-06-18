@@ -38,6 +38,12 @@ public class ReviewResponseDto {
     /** 작성자 이름 */
     private final String userName;
 
+    /** 작성자 ID */
+    private final Long userId;
+
+    /** 게시글 상세보기에서 현재 로그인한 작성자가 맞는지 확인을 위해 추가 */
+    private final boolean isOwner;
+
     /** 현재 로그인 사용자가 좋아요했는지 여부 */
     private final boolean liked;
 }

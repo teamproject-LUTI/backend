@@ -94,11 +94,12 @@ public class ReviewService {
 
     /** 5. 상세조회 */
     @Transactional
-    public ReviewResponseDto getReviewDetail(Long reviewId, Long currentUserId) {
+    public ReviewResponseDto getReviewDetail(Long reviewId, Long userId) {
         Review r = reviewRepo.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
         r.incrementViewCount();  // 편의 메서드
-        // (dirty-checking으로 자동 반영)
+        boolean owner = r.getUser().getUserId().equals(userId);
+
 
         return ReviewResponseDto.builder()
                 .reviewId(r.getReviewId())
@@ -110,7 +111,9 @@ public class ReviewService {
                 .travelRegion(r.getTravelRegion())
                 .travelPeriod(r.getTravelPeriod())
                 .userName(r.getUser().getNickname())
-                .liked(likeRepo.existsByReviewReviewIdAndUserUserId(reviewId, currentUserId))
+                .userId(r.getUser().getUserId())
+                .liked(likeRepo.existsByReviewReviewIdAndUserUserId(reviewId, userId))
+                .isOwner(userId.equals(r.getUser().getUserId()))
                 .build();
     }
 
