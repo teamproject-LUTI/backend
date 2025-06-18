@@ -1,20 +1,23 @@
 package com.luti.menuManagement.controller;
 
 import com.luti.dto.SingleResponseDto;
+import com.luti.menuManagement.dto.NavigationMenuRequestDto;
 import com.luti.menuManagement.dto.NavigationMenuResponseDto;
 import com.luti.menuManagement.service.NavigationMenuService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/menus")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 @Slf4j
 public class NavigationMenuController {
@@ -52,15 +55,65 @@ public class NavigationMenuController {
      */
     @GetMapping("/admin/all")
     @PreAuthorize("@adminPermissionService.isCurrentUserAdmin()")
-    public ResponseEntity<SingleResponseDto<List<NavigationMenuResponseDto>>> getAllMenusForAdmin() {
+    public ResponseEntity<List<NavigationMenuResponseDto>> getAllMenusForAdmin(
+            HttpServletRequest request) {
+
         log.info("👑 관리자용 전체 메뉴 조회 요청");
+        log.info("🍪 세션 ID: {}", request.getSession(false) != null ? request.getSession().getId() : "없음");
 
         try {
             SingleResponseDto<List<NavigationMenuResponseDto>> response = menuService.getAllMenusForAdmin();
-            return ResponseEntity.ok(response);
+
+            // JSON 응답 확인을 위한 로그
+            log.info("📤 응답 데이터 개수: {}", response.getData() != null ? response.getData().size() : 0);
+
+            // 직접 List 반환하여 JSON 응답 보장
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json; charset=UTF-8")
+                    .body(response.getData());
+
+        } catch (SecurityException e) {
+            log.error("❌ 권한 부족: {}", e.getMessage());
+            return ResponseEntity.status(403)
+                    .header("Content-Type", "application/json")
+                    .body(null);
         } catch (Exception e) {
             log.error("❌ 관리자용 메뉴 조회 실패", e);
-            return ResponseEntity.status(500).body(new SingleResponseDto<>(null));
+            return ResponseEntity.status(500)
+                    .header("Content-Type", "application/json")
+                    .body(null);
         }
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SingleResponseDto<NavigationMenuResponseDto>> createMenu(
+            @Valid @RequestBody NavigationMenuRequestDto requestDto) {
+
+        requestDto.sanitize();
+
+        SingleResponseDto<NavigationMenuResponseDto> result = menuService.createMenu(requestDto);
+        return ResponseEntity.ok(result);
+    }
+
+    // UPDATE - 기존 RequestDto 재사용
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SingleResponseDto<NavigationMenuResponseDto>> updateMenu(
+            @PathVariable Long id,
+            @Valid @RequestBody NavigationMenuRequestDto requestDto) {
+
+        requestDto.sanitize();
+
+        SingleResponseDto<NavigationMenuResponseDto> response = menuService.updateMenu(id, requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    // DELETE - ID만 필요하므로 별도 DTO 불필요
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteMenu(@PathVariable Long id) {
+        menuService.deleteMenu(id);
+        return ResponseEntity.noContent().build();
     }
 }
