@@ -35,10 +35,11 @@ public class PaymentListController {
         return ResponseEntity.ok(payments);
     }
 
-    // 3. 환불 처리 (DB상 상태만 변경)
+    // 3. 환불 처리
     @PostMapping("/cancel/{paymentId}")
-    public ResponseEntity<String> cancelPayment(@PathVariable Long paymentId) {
-        paymentListService.cancelPayment(paymentId);
-        return ResponseEntity.ok("환불 처리 완료");
+    public ResponseEntity<PaymentListResponseDTO> cancelPayment(@PathVariable Long paymentId) {
+        PaymentListResponseDTO canceled = paymentListService.cancelPayment(paymentId);
+        return ResponseEntity.ok(canceled);
     }
+
 }
