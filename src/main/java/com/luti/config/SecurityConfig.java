@@ -82,7 +82,7 @@ public class SecurityConfig {
                                     "/oauth2/**",              // OAuth2 관련 엔드포인트
                                     "/login/oauth2/**",        // OAuth2 로그인 리다이렉션
                                     "/",                       // 루트 경로
-                                    "/login",                  // 로그인 페이지
+                                    "/api/auth/login",         // 로그인 페이지
                                     "/api/signup",             // 회원가입 페이지
                                     "/api/signup/email",         // 회원가입 이메일 인증코드 전송
                                     "/api/signup/verify-code", // 회원가입 이메일 인증코드 검증

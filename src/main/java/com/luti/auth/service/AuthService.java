@@ -3,6 +3,8 @@ package com.luti.auth.service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import com.luti.auth.dto.LoginRequestDto;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class AuthService {
 	private final UserRepository userRepository;
 
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final PasswordEncoder passwordEncoder;
 
 	/**
 	 * 설명: 제공된 Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급(갱신)합니다.
@@ -231,6 +234,47 @@ public class AuthService {
 		} catch (Exception e) {
 			log.error("모든 디바이스 로그아웃 처리 중 예외 발생: {}", e.getMessage(), e);
 		}
+	}
+
+	@Transactional
+	public TokenRefreshResult login(LoginRequestDto loginDto) {
+		Optional<User> userOptional = userRepository.findByEmail(loginDto.getEmail());
+
+		if (userOptional.isEmpty()) {
+			return TokenRefreshResult.failure("해당 이메일이 존재하지 않습니다.");
+		}
+
+		User user = userOptional.get();
+
+		if (!user.hasPassword()) {
+			return TokenRefreshResult.failure("일반 로그인 사용자가 아닙니다.");
+		}
+
+		if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
+			return TokenRefreshResult.failure("비밀번호가 일치하지 않습니다.");
+		}
+
+		String accessToken = jwtUtil.generateAccessToken(
+				user.getUserId(),
+				user.getEmail(),
+				user.getName(),
+				user.getNickname(),
+				user.getProfileLogicalPath(),
+				user.getUserTypeId().getUserTypeId(),
+				user.getProvider()
+		);
+
+		String refreshToken = jwtUtil.generateRefreshToken(user.getUserId());
+
+		RefreshToken tokenEntity = RefreshToken.builder()
+				.user(user)
+				.tokenValue(refreshToken)
+				.expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenExpiration() / 1000))
+				.build();
+
+		refreshTokenRepository.save(tokenEntity);
+
+		return TokenRefreshResult.success(accessToken, refreshToken);
 	}
 
 	/**
