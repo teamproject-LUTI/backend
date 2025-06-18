@@ -23,6 +23,8 @@ public class NavigationMenuController {
 
 
 
+
+
     /**
      * 계층형 메뉴 조회 - 인증된 사용자의 권한에 따라 다른 메뉴 제공
      * 프론트엔드에서 /api/menus/hierarchy로 호출
