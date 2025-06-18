@@ -222,6 +222,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public Amadeus amadeus(
             @Value("${amadeus.client-id}") String clientId,
