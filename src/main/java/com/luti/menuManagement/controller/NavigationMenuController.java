@@ -21,14 +21,7 @@ public class NavigationMenuController {
 
     private final NavigationMenuService menuService;
 
-    /**
-     * 테스트용 엔드포인트 - 컨트롤러가 제대로 동작하는지 확인
-     */
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        log.info("🧪 테스트 엔드포인트 호출됨");
-        return ResponseEntity.ok("NavigationMenuController가 정상 동작합니다!");
-    }
+
 
     /**
      * 계층형 메뉴 조회 - 인증된 사용자의 권한에 따라 다른 메뉴 제공
