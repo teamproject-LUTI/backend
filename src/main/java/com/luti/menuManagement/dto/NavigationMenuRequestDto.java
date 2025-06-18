@@ -1,3 +1,5 @@
+// NavigationMenuRequestDto.java - requiredRole 필드 추가
+
 package com.luti.menuManagement.dto;
 
 import jakarta.validation.constraints.*;
@@ -32,6 +34,12 @@ public class NavigationMenuRequestDto {
     @Size(max = 100, message = "아이콘은 100자를 초과할 수 없습니다.")
     private String icon;
 
+    // 🔥 권한 관련 필드 추가
+    @Min(value = 1, message = "권한 레벨은 1 이상이어야 합니다.")
+    @Max(value = 2, message = "권한 레벨은 2 이하여야 합니다.")
+    @NotNull(message = "권한 레벨은 필수입니다.")
+    private Integer requiredRole = 1; // 기본값: 일반사용자(1), 관리자(2)
+
     /**
      * 입력 데이터 정리 메서드
      */
@@ -51,6 +59,10 @@ public class NavigationMenuRequestDto {
 
         if(this.icon != null) {
             this.icon = this.icon.trim();
+        }
+
+        if(this.requiredRole == null) {
+            this.requiredRole = 1;
         }
     }
 }

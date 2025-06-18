@@ -28,6 +28,7 @@ public class NavigationMenuResponseDto {
     private Boolean hasChildren = false; // 자식 메뉴 존재 여부
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer requiredRole; // 필요한 권한 레벨 (1: 일반사용자, 2: 관리자)
 
     // 생성자, 수정자 ID
     private Long createdBy;
@@ -62,6 +63,7 @@ public class NavigationMenuResponseDto {
         this.icon = menu.getIcon();
         this.level = menu.getLevel();
         this.hasChildren = menu.getHasChildren();
+        this.requiredRole = menu.getRequiredRole();
         this.createdAt = menu.getCreatedAt();
         this.updatedAt = menu.getUpdatedAt();
         this.createdBy = menu.getCreatedBy();
@@ -85,6 +87,7 @@ public class NavigationMenuResponseDto {
         dto.setHasChildren(menu.getHasChildren());
         dto.setParentId(menu.getParentId());
         dto.setIsActive(menu.getIsActive());
+        dto.setRequiredRole(menu.getRequiredRole());
 
         // 권한 관련 정보는 설정하지 않음
         dto.setCanModify(false);
