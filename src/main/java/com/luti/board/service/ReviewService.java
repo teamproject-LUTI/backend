@@ -17,6 +17,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,12 +40,7 @@ public class ReviewService {
                         .createdAt(r.getCreatedAt())
                         .likeCount(r.getLikeCount())
                         .liked(likeRepo.existsByReviewReviewIdAndUserUserId(r.getReviewId(), currentUserId))
-                        // thumbnailPath에 값을 꼭 넘겨야 합니다!
-                        .thumbnailPath(
-                                r.getAttachments().isEmpty()
-                                        ? null
-                                        : r.getAttachments().get(0).getLogicalPath()
-                        )
+                        .thumbnailPath(extractFirstImageUrl(r.getContent()))
                         .build()
                 ).collect(Collectors.toList());
 
@@ -99,6 +96,8 @@ public class ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("Review not found: " + reviewId));
         r.incrementViewCount();  // 편의 메서드
         boolean owner = r.getUser().getUserId().equals(userId);
+        // 에디터 HTML에서 첫 번째 이미지 URL 추출
+        String thumb = extractFirstImageUrl(r.getContent());
 
 
         return ReviewResponseDto.builder()
@@ -114,6 +113,7 @@ public class ReviewService {
                 .userId(r.getUser().getUserId())
                 .liked(likeRepo.existsByReviewReviewIdAndUserUserId(reviewId, userId))
                 .isOwner(userId.equals(r.getUser().getUserId()))
+                .thumbnailPath(thumb)
                 .build();
     }
 
@@ -126,6 +126,23 @@ public class ReviewService {
     /** 특정 사용자가 작성한 모든 리뷰의 조회수 총합 */
     public long getTotalViewCount(Long userId) {
         return reviewRepo.sumViewCountByUserUserId(userId);
+    }
+
+    /** 에디터 썸네일 추출 */
+    private String extractFirstImageUrl(String html) {
+        if (html == null) return null;
+        System.out.println(">>> Content HTML: " + html);
+        Pattern p = Pattern.compile(
+                "<img[^>]*src=[\"']?([^\"'>]+)[\"']?",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher m = p.matcher(html);
+        if (m.find()) {
+            String src = m.group(1);
+            System.out.println(">>> Found img src: " + src);
+            return src;
+        }
+        return null;
     }
 }
 

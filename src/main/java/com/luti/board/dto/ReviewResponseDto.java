@@ -46,4 +46,7 @@ public class ReviewResponseDto {
 
     /** 현재 로그인 사용자가 좋아요했는지 여부 */
     private final boolean liked;
+
+    /**  썸네일 경로 필드 추가  */
+    private final String  thumbnailPath;
 }
