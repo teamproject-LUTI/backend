@@ -8,8 +8,14 @@ import lombok.*;
  * 후기(Review) 첨부파일 엔티티
  */
 @Entity
+<<<<<<< HEAD
 @Table(name = "review_attachment")
 @Getter @Setter
+=======
+@Table(name = "review_Attachment")
+@Getter
+@Setter
+>>>>>>> b05de040f58ad520d6f3f7dc5a7e450d2a510bb4
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
@@ -52,7 +58,7 @@ public class ReviewAttachment extends Auditable {
 
     /** 파일 크기(Byte) */
     @Column(name = "size", nullable = false)
-    private Integer size;
+    private Long size;
 
     /**
      * Review와 양방향 연관관계 설정
