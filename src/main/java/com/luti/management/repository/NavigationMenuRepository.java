@@ -1,8 +1,6 @@
-package com.luti.menuManagement.repository;
+package com.luti.management.repository;
 
-import com.luti.menuManagement.entity.NavigationMenu;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.luti.management.entity.NavigationMenu;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

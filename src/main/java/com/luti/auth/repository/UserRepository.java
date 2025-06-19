@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -86,5 +88,46 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 */
 	@Query("SELECT u.withdrawYn FROM User u WHERE u.userId = :userId")
 	String getWithdrawStatus(@Param("userId") Long userId);
+
+	/**
+	 * 모든 사용자를 생성일 역순으로 조회 (페이징)
+	 */
+	@Query("SELECT u FROM User u WHERE u.withdrawYn != 'Y' OR u.withdrawYn IS NULL ORDER BY u.createdAt DESC")
+	Page<User> findAllActiveUsers(Pageable pageable);
+
+	/**
+	 * 특정 사용자 타입의 사용자들을 페이징으로 조회
+	 * UserType은 연관관계이므로 JOIN 쿼리 사용
+	 */
+	@Query("SELECT u FROM User u WHERE u.userTypeId.userTypeId = :userTypeId AND (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
+	Page<User> findByUserTypeIdAndNotWithdrawn(@Param("userTypeId") Long userTypeId, Pageable pageable);
+
+	/**
+	 * 사용자 검색 (이름, 이메일, 닉네임으로 검색) - 페이징 지원
+	 */
+	@Query("SELECT u FROM User u WHERE (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL) AND " +
+			"(LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+			"LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+			"LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+	Page<User> searchActiveUsers(@Param("keyword") String keyword, Pageable pageable);
+
+
+	/**
+	 * 활성 사용자 수 조회 (탈퇴하지 않은 사용자)
+	 */
+	@Query("SELECT COUNT(u) FROM User u WHERE (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
+	long countActiveUsers();
+
+	/**
+	 * 사용자 타입별 사용자 수 조회 (탈퇴자 제외)
+	 */
+	@Query("SELECT COUNT(u) FROM User u WHERE u.userTypeId.userTypeId = :userTypeId AND (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
+	long countByUserTypeIdAndNotWithdrawn(@Param("userTypeId") Long userTypeId);
+
+	/**
+	 * 소셜 로그인 사용자 수 조회
+	 */
+	@Query("SELECT COUNT(u) FROM User u WHERE u.password = 'SOCIAL_LOGIN' AND (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
+	long countSocialLoginUsers();
 
 }
