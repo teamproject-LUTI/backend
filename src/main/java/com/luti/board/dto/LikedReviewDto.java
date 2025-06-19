@@ -20,5 +20,23 @@ public class LikedReviewDto {
     /** 좋아요 */
     private int likeCount;
 
+    /** 현재 사용자가 좋아요했는지 여부 */
+    private boolean liked;
+
+    /** 썸네일 이미지 경로 */
+    private String thumbnailPath;
+
+    /** 글 내용 */
+    private String content;
+
+    /** 조회수 */
+    private int viewCount;
+
+    /** 여행 지역 */
+    private String travelRegion;
+
+    /** 여행 기간 */
+    private String travelPeriod;
+
 
 }
