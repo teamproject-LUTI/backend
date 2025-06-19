@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@SQLDelete(sql = "UPDATE review SET is_deleted = true WHERE review_no = ?")
+@SQLDelete(sql = "UPDATE review SET is_deleted = true WHERE review_id = ?")
 @Where(clause = "is_deleted = false")
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
