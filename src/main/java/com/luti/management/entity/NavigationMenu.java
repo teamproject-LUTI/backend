@@ -1,11 +1,10 @@
-package com.luti.menuManagement.entity;
+package com.luti.management.entity;
 
 import com.luti.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -1,17 +1,16 @@
-package com.luti.menuManagement.service;
+package com.luti.management.service;
 
 import com.luti.dto.SingleResponseDto;
-import com.luti.menuManagement.dto.NavigationMenuRequestDto;
-import com.luti.menuManagement.dto.NavigationMenuResponseDto;
-import com.luti.menuManagement.entity.NavigationMenu;
-import com.luti.menuManagement.repository.NavigationMenuRepository;
+import com.luti.management.dto.NavigationMenuRequestDto;
+import com.luti.management.dto.NavigationMenuResponseDto;
+import com.luti.management.entity.NavigationMenu;
+import com.luti.management.repository.NavigationMenuRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,15 +33,12 @@ public class NavigationMenuService {
             Integer currentUserTypeId = adminPermissionService.getCurrentUserTypeId();
             boolean isAdmin = adminPermissionService.isCurrentUserAdmin();
 
-            log.info("🔍 권한별 메뉴 조회 - 관리자: {}, 사용자타입: {}", isAdmin, currentUserTypeId);
-
             List<NavigationMenu> topLevelMenus = getTopLevelMenus(isAdmin, currentUserTypeId);
 
             List<NavigationMenuResponseDto> menuTree = topLevelMenus.stream()
                     .map(menu -> buildMenuWithChildren(menu, isAdmin, currentUserTypeId))
                     .collect(Collectors.toList());
 
-            log.info("✅ 권한별 메뉴 조회 완료 - 총 메뉴 트리: {}", menuTree.size());
             return new SingleResponseDto<>(menuTree);
 
         } catch (Exception e) {
@@ -58,7 +54,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 관리");
 
         try {
-            log.info("👑 관리자용 전체 메뉴 조회");
 
             List<NavigationMenu> topLevelMenus = menuRepository.findAllByOrderByMenuOrderAsc();
 
@@ -66,7 +61,6 @@ public class NavigationMenuService {
                     .map(menu -> buildAdminMenuWithChildren(menu))
                     .collect(Collectors.toList());
 
-            log.info("✅ 관리자용 전체 메뉴 조회 완료 - 총 메뉴: {}", menuTree.size());
             return new SingleResponseDto<>(menuTree);
 
         } catch (Exception e) {
@@ -131,9 +125,7 @@ public class NavigationMenuService {
         }
     }
 
-    /**
-     * CREATE
-     */
+
     /**
      * 메뉴 생성 (CREATE)
      */
@@ -142,7 +134,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 생성");
 
         try {
-            log.info("📝 메뉴 생성 시작 - 메뉴명: {}", requestDto.getName());
 
             // 입력 데이터 정리
             requestDto.sanitize();
@@ -186,8 +177,6 @@ public class NavigationMenuService {
 
             // 부모 메뉴의 hasChildren 업데이트
             updateParentHasChildren(requestDto.getParentId());
-
-            log.info("✅ 메뉴 생성 완료 - ID: {}, 메뉴명: {}", savedMenu.getNavigationMenuId(), savedMenu.getName());
 
             NavigationMenuResponseDto responseDto = NavigationMenuResponseDto.forAdmin(savedMenu);
             return new SingleResponseDto<>(responseDto);
@@ -281,7 +270,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 수정");
 
         try {
-            log.info("✏️ 메뉴 수정 시작 - ID: {}, 메뉴명: {}", id, requestDto.getName());
 
             // 기존 메뉴 조회
             NavigationMenu existingMenu = menuRepository.findById(id)
@@ -324,7 +312,6 @@ public class NavigationMenuService {
                 updateParentHasChildren(requestDto.getParentId());
             }
 
-            log.info("✅ 메뉴 수정 완료 - ID: {}, 메뉴명: {}", updatedMenu.getNavigationMenuId(), updatedMenu.getName());
 
             NavigationMenuResponseDto responseDto = NavigationMenuResponseDto.forAdmin(updatedMenu);
             return new SingleResponseDto<>(responseDto);
@@ -382,7 +369,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 삭제");
 
         try {
-            log.info("🗑️ 메뉴 삭제 시작 - ID: {}", id);
 
             // 기존 메뉴 조회
             NavigationMenu menu = menuRepository.findById(id)
@@ -391,7 +377,6 @@ public class NavigationMenuService {
             // 하위 메뉴가 있는지 확인
             List<NavigationMenu> childMenus = menuRepository.findByParentIdOrderByMenuOrderAsc(id);
             if (!childMenus.isEmpty()) {
-                log.info("💡 하위 메뉴와 함께 삭제 - 상위 메뉴: {}, 하위 메뉴 수: {}", menu.getName(), childMenus.size());
                 // 하위 메뉴들 먼저 삭제 (재귀적)
                 for (NavigationMenu child : childMenus) {
                     deleteMenuRecursively(child.getNavigationMenuId());
@@ -407,7 +392,6 @@ public class NavigationMenuService {
             // 부모 메뉴의 hasChildren 업데이트
             updateParentHasChildren(parentId);
 
-            log.info("✅ 메뉴 삭제 완료 - 메뉴명: {}", menuName);
             return new SingleResponseDto<>("메뉴가 성공적으로 삭제되었습니다: " + menuName);
 
         } catch (Exception e) {

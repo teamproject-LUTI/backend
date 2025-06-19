@@ -1,7 +1,7 @@
-package com.luti.menuManagement.dto;
+package com.luti.management.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.luti.menuManagement.entity.NavigationMenu;
+import com.luti.management.entity.NavigationMenu;
 import lombok.*;
 
 import java.time.LocalDateTime;
