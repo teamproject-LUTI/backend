@@ -1,5 +1,6 @@
 package com.luti.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -10,15 +11,30 @@ import java.nio.file.Paths;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    @Value("${file.upload.dir}")
+    private String profileUploadDir;
+
+    @Value("${file.upload.general.dir}")
+    private String generalUploadDir;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        /** 업로드된 파일의 실제 경로 */
-        String uploadPath = Paths.get(System.getProperty("user.dir"), "uploads").toUri().toString();
+        // 1. 프로필 이미지용
+        registry.addResourceHandler("/files/**")
+                .addResourceLocations("file:" + profileUploadDir + "/")
+                .setCachePeriod(3600) // 1시간 캐시
+                .resourceChain(true);
 
-        /** "/uploads/**" 요청은 로컬 "uploads/" 폴더에서 찾도록 매핑 */
+        // 2. 일반 파일용
+        String generalUploadPath = Paths.get(generalUploadDir).toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadPath);
+                .addResourceLocations(generalUploadPath);
+
+        // 로그로 설정 확인
+        System.out.println("정적 리소스 설정 완료:");
+        System.out.println("- 프로필 이미지: /files/** -> " + profileUploadDir);
+        System.out.println("- 일반 파일: /uploads/** -> " + generalUploadPath);
     }
 
 }
