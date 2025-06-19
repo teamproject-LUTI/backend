@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.luti.auth.dto.LoginRequestDto;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import com.luti.auth.entity.User;
+import com.luti.auth.repository.UserRepository;
 import com.luti.auth.security.JwtAuthenticationToken;
 import com.luti.auth.service.AuthService;
 import com.luti.auth.util.JwtUtil;
@@ -33,6 +36,8 @@ public class AuthController {
 	private final AuthService authService;
 
 	private final JwtUtil jwtUtil;
+
+	private final UserRepository userRepository;
 
 	/**
 	 * 설명: Refresh Token을 사용하여 Access Token과 Refresh Token을 갱신합니다.
@@ -181,7 +186,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginDto, HttpServletResponse response) {
+	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginDto,
+			HttpServletResponse response) {
 		try {
 			AuthService.TokenRefreshResult result = authService.login(loginDto);
 
@@ -233,30 +239,39 @@ public class AuthController {
 	 */
 	@GetMapping("/me")
 	public ResponseEntity<Map<String, Object>> getCurrentUser() {
-		log.info("현재 사용자 정보 조회 요청");
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(createErrorResponse("인증이 필요합니다."));
+		}
 
 		try {
-			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			// ✅ JWT에서 userId만 가져와서 DB에서 최신 정보 조회
+			Long userId = jwtAuth.getCurrentUserId();
+			User user = userRepository.findById(userId).orElse(null); // DB에서 실시간 조회
 
-			if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-						.body(createErrorResponse("인증이 필요합니다."));
+			// ⚠️ 사용자가 존재하지 않는 경우 처리 추가
+			if (user == null) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(createErrorResponse("사용자를 찾을 수 없습니다."));
 			}
 
 			Map<String, Object> userInfo = new HashMap<>();
-			userInfo.put("userId", jwtAuth.getCurrentUserId());
-			userInfo.put("email", jwtAuth.getCurrentUserEmail());
-			userInfo.put("name", jwtAuth.getCurrentUserName());
-			userInfo.put("nickname", jwtAuth.getCurrentUserNickname());
-			userInfo.put("profileImageUrl", jwtAuth.getCurrentUserProfileImage());
-			userInfo.put("provider", jwtAuth.getCurrentUserProvider());
-			userInfo.put("userTypeId", jwtAuth.getCurrentUserTypeId());
+			userInfo.put("userId", user.getUserId());
+			userInfo.put("email", user.getEmail());
+			userInfo.put("name", user.getName());
+			userInfo.put("nickname", user.getDisplayName());
+			userInfo.put("profileImageUrl", user.getDisplayProfileImage());
+			userInfo.put("provider", user.getProvider());
+			userInfo.put("userTypeId", user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : null);
 			userInfo.put("authorities", jwtAuth.getAuthorities());
 
 			Map<String, Object> responseBody = new HashMap<>();
 			responseBody.put("success", true);
 			responseBody.put("user", userInfo);
 
+			log.info("사용자 정보 조회 성공 - 사용자 ID: {}", userId);
 			return ResponseEntity.ok(responseBody);
 
 		} catch (Exception e) {
