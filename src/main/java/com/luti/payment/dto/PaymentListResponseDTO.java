@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -20,8 +21,8 @@ public class PaymentListResponseDTO {
     private Long userId;                // 사용자 ID
     private Integer totalPrice;         // 총 결제 금액
     private Integer paymentState;       // 결제 상태
-    private LocalDate paymentDate;      // 결제 일자
-    private LocalDate cancelDate;       // 결제 취소 일자
+    private LocalDateTime paymentDate;      // 결제 일자 (한국 기준)
+    private LocalDateTime cancelDate;       // 결제 취소 일자 (한국 기준)
     private String receiptUrl;          // 영수증 URL
     private String impUid;              // 아임포트 UID
     private String paymentMethodName;   // 결제 방식 이름
