@@ -32,10 +32,10 @@ public class PaymentList {
     private Integer paymentState;
 
     @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
+    private LocalDateTime paymentDate; // 결제 일시(한국 시간, 날짜+시간)
 
     @Column(name = "cancel_date")
-    private LocalDateTime cancelDate;
+    private LocalDateTime cancelDate; // 취소 일시(한국 시간, 날짜+시간)
 
     @Column(name = "receipturl", length = 500)
     private String receiptUrl;

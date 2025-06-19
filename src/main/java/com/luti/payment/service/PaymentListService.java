@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,7 @@ public class PaymentListService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역을 찾을 수 없습니다."));
 
         payment.setPaymentState(1); // 1: 환불
-        payment.setCancelDate(LocalDate.now());
+        payment.setCancelDate(LocalDateTime.now());
 
         return PaymentListResponseDTO.from(payment);
     }
