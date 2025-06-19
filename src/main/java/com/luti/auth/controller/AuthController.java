@@ -247,11 +247,11 @@ public class AuthController {
 		}
 
 		try {
-			// ✅ JWT에서 userId만 가져와서 DB에서 최신 정보 조회
+			//JWT에서 userId만 가져와서 DB에서 최신 정보 조회
 			Long userId = jwtAuth.getCurrentUserId();
 			User user = userRepository.findById(userId).orElse(null); // DB에서 실시간 조회
 
-			// ⚠️ 사용자가 존재하지 않는 경우 처리 추가
+			//사용자가 존재하지 않는 경우 처리 추가
 			if (user == null) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(createErrorResponse("사용자를 찾을 수 없습니다."));
