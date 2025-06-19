@@ -4,6 +4,8 @@ import com.luti.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -14,14 +16,11 @@ import java.time.LocalDate;
 @Table(name = "payment_list")
 public class PaymentList {
 
-    ///  아아앙아ㅏㅇ아
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id", nullable = false)
     private Long paymentId;
-
-    @Column(name = "payment_cd", nullable = false)
-    private Long paymentCd;
 
     @Column(name = "user_id")
     private Long userId;
@@ -33,10 +32,10 @@ public class PaymentList {
     private Integer paymentState;
 
     @Column(name = "payment_date")
-    private LocalDate paymentDate;
+    private LocalDateTime paymentDate; // 결제 일시(한국 시간, 날짜+시간)
 
     @Column(name = "cancel_date")
-    private LocalDate cancelDate;
+    private LocalDateTime cancelDate; // 취소 일시(한국 시간, 날짜+시간)
 
     @Column(name = "receipturl", length = 500)
     private String receiptUrl;
@@ -47,9 +46,8 @@ public class PaymentList {
     @Column(name = "merchant_uid", length = 100)
     private String merchantUid;
 
-
     @ManyToOne
-    @JoinColumn(name = "payment_id", insertable = false, updatable = false)
+    @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
 
     @ManyToOne

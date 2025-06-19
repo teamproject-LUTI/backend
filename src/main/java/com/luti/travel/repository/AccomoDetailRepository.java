@@ -14,80 +14,80 @@ public interface AccomoDetailRepository extends JpaRepository<AccomodationDetail
 	// 기본 단일 조회
 
 	// paymentOwnno (PK)로 단일 조회
-	Optional<AccomodationDetail> findByPaymentOwnno(Long paymentOwnno);
-
-	// 사용자 기준
-	// 사용자 ID로 전체 예약 목록 조회
-	List<AccomodationDetail> findByUserId(User userId);
-
-	// 사용자 ID로 예약 목록을 숙박 시작일 내림차순 정렬하여 조회
-	List<AccomodationDetail> findByUserIdOrderByAccomoStartDesc(User userId);
-
-	// 사용자 ID와 숙박 시작일 범위로 예약 내역 조회
-	List<AccomodationDetail> findByUserIdAndAccomoStartBetween(User userId, Date start, Date end);
-
-	// 숙소 기준(필요한가?)
-	// 특정 숙소(accomoId)로 예약 내역 전체 조회
-	List<AccomodationDetail> findByAccomoId(AccomodationInformation accomoId);
-
-	// 숙소와 방 종류 기준으로 예약 조회
-	List<AccomodationDetail> findByAccomoIdAndRoomType(AccomodationInformation accomoId, String roomType);
-
-	// 숙소와 최소 인원 수 이상 조건으로 예약 조회
-	List<AccomodationDetail> findByAccomoIdAndUserCountGreaterThan(AccomodationInformation accomoId, Long userCount);
-
-	// 결제 기준
-	// 결제 번호(paymentId)로 예약 조회
-	List<AccomodationDetail> findByPaymentId(PaymentList paymentId);
-
-	// 결제 코드(paymentCd)로 예약 조회
-//	List<AccomodationDetail> findByPaymentCd(PaymentList paymentCd);
-	List<AccomodationDetail> findByPaymentIdPaymentCd(Integer paymentCd);
-
-	// 결제 번호 + 결제 코드 조합으로 예약 조회
-//	List<AccomodationDetail> findByPaymentIdAndPaymentCd(PaymentList paymentId, PaymentList paymentCd);
-	List<AccomodationDetail> findByPaymentIdPaymentIdAndPaymentIdPaymentCd(Long paymentId, Integer paymentCd);
-
-	// 날짜 기준
-	// 정확한 숙박 시작일로 예약 조회
-	List<AccomodationDetail> findByAccomoStart(Date date);
-
-	// 숙박 시작일이 특정 기간 사이에 있는 예약 조회
-	List<AccomodationDetail> findByAccomoStartBetween(Date start, Date end);
-
-	// 숙박 시작일이 특정 날짜 이후인 예약 조회
-	List<AccomodationDetail> findByAccomoStartAfter(Date date);
-
-	// 숙박 종료일이 특정 기간 사이인 예약 조회
-	List<AccomodationDetail> findByAccomoEndBetween(Date start, Date end);
-
-	// 숙박 시작일 ≤ 시작 조건 AND 숙박 종료일 ≥ 종료 조건
-	List<AccomodationDetail> findByAccomoStartLessThanEqualAndAccomoEndGreaterThanEqual(Date start, Date end);
-
-	// 가격 기준
-	// 특정 가격 이상인 예약 조회
-	List<AccomodationDetail> findByPriceGreaterThanEqual(Long price);
-
-	// 가격이 특정 범위에 있는 예약 조회
-	List<AccomodationDetail> findByPriceBetween(Long min, Long max);
-
-	// 인원 수 기준
-	// 정확한 인원 수로 예약 조회
-	List<AccomodationDetail> findByUserCount(Long count);
-
-	// 특정 인원 수 이상인 예약 조회
-	List<AccomodationDetail> findByUserCountGreaterThanEqual(Long count);
-
-	// 인원 수가 특정 범위 내인 예약 조회
-	List<AccomodationDetail> findByUserCountBetween(Long min, Long max);
-
-	// 복합 조건
-	// 사용자 + 숙소 + 숙박 시작일 범위 조건으로 예약 조회
-	List<AccomodationDetail> findByUserIdAndAccomoIdAndAccomoStartBetween(
-			User userId, AccomodationInformation accomoId, Date start, Date end);
-
-	// 사용자 + 방 종류 + 최소 인원 수 조건으로 예약 조회(필요한가?)
-	List<AccomodationDetail> findByUserIdAndRoomTypeAndUserCountGreaterThanEqual(
-			User userId, String roomType, Long minCount);
+//	Optional<AccomodationDetail> findByPaymentOwnno(Long paymentOwnno);
+//
+//	// 사용자 기준
+//	// 사용자 ID로 전체 예약 목록 조회
+//	List<AccomodationDetail> findByUserId(User userId);
+//
+//	// 사용자 ID로 예약 목록을 숙박 시작일 내림차순 정렬하여 조회
+//	List<AccomodationDetail> findByUserIdOrderByAccomoStartDesc(User userId);
+//
+//	// 사용자 ID와 숙박 시작일 범위로 예약 내역 조회
+//	List<AccomodationDetail> findByUserIdAndAccomoStartBetween(User userId, Date start, Date end);
+//
+//	// 숙소 기준(필요한가?)
+//	// 특정 숙소(accomoId)로 예약 내역 전체 조회
+//	List<AccomodationDetail> findByAccomoId(AccomodationInformation accomoId);
+//
+//	// 숙소와 방 종류 기준으로 예약 조회
+//	List<AccomodationDetail> findByAccomoIdAndRoomType(AccomodationInformation accomoId, String roomType);
+//
+//	// 숙소와 최소 인원 수 이상 조건으로 예약 조회
+//	List<AccomodationDetail> findByAccomoIdAndUserCountGreaterThan(AccomodationInformation accomoId, Long userCount);
+//
+//	// 결제 기준
+//	// 결제 번호(paymentId)로 예약 조회
+//	List<AccomodationDetail> findByPaymentId(PaymentList paymentId);
+//
+//	// 결제 코드(paymentCd)로 예약 조회
+////	List<AccomodationDetail> findByPaymentCd(PaymentList paymentCd);
+////	List<AccomodationDetail> findByPaymentIdPaymentMethodId(Integer paymentCd);
+//
+//	// 결제 번호 + 결제 코드 조합으로 예약 조회
+////	List<AccomodationDetail> findByPaymentIdAndPaymentCd(PaymentList paymentId, PaymentList paymentCd);
+////	List<AccomodationDetail> findByPaymentIdPaymentIdAndPaymentIdPaymentCd(Long paymentId, Integer paymentCd);
+//
+//	// 날짜 기준
+//	// 정확한 숙박 시작일로 예약 조회
+//	List<AccomodationDetail> findByAccomoStart(Date date);
+//
+//	// 숙박 시작일이 특정 기간 사이에 있는 예약 조회
+//	List<AccomodationDetail> findByAccomoStartBetween(Date start, Date end);
+//
+//	// 숙박 시작일이 특정 날짜 이후인 예약 조회
+//	List<AccomodationDetail> findByAccomoStartAfter(Date date);
+//
+//	// 숙박 종료일이 특정 기간 사이인 예약 조회
+//	List<AccomodationDetail> findByAccomoEndBetween(Date start, Date end);
+//
+//	// 숙박 시작일 ≤ 시작 조건 AND 숙박 종료일 ≥ 종료 조건
+//	List<AccomodationDetail> findByAccomoStartLessThanEqualAndAccomoEndGreaterThanEqual(Date start, Date end);
+//
+//	// 가격 기준
+//	// 특정 가격 이상인 예약 조회
+//	List<AccomodationDetail> findByPriceGreaterThanEqual(Long price);
+//
+//	// 가격이 특정 범위에 있는 예약 조회
+//	List<AccomodationDetail> findByPriceBetween(Long min, Long max);
+//
+//	// 인원 수 기준
+//	// 정확한 인원 수로 예약 조회
+//	List<AccomodationDetail> findByUserCount(Long count);
+//
+//	// 특정 인원 수 이상인 예약 조회
+//	List<AccomodationDetail> findByUserCountGreaterThanEqual(Long count);
+//
+//	// 인원 수가 특정 범위 내인 예약 조회
+//	List<AccomodationDetail> findByUserCountBetween(Long min, Long max);
+//
+//	// 복합 조건
+//	// 사용자 + 숙소 + 숙박 시작일 범위 조건으로 예약 조회
+//	List<AccomodationDetail> findByUserIdAndAccomoIdAndAccomoStartBetween(
+//			User userId, AccomodationInformation accomoId, Date start, Date end);
+//
+//	// 사용자 + 방 종류 + 최소 인원 수 조건으로 예약 조회(필요한가?)
+//	List<AccomodationDetail> findByUserIdAndRoomTypeAndUserCountGreaterThanEqual(
+//			User userId, String roomType, Long minCount);
 
 }

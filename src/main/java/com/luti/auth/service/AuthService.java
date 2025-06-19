@@ -3,6 +3,9 @@ package com.luti.auth.service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import com.luti.auth.dto.LoginRequestDto;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,8 @@ public class AuthService {
 	private final UserRepository userRepository;
 
 	private final RefreshTokenRepository refreshTokenRepository;
+
+	private final PasswordEncoder passwordEncoder;
 
 	/**
 	 * 설명: 제공된 Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급(갱신)합니다.
@@ -233,6 +238,67 @@ public class AuthService {
 		}
 	}
 
+	@Transactional
+	public TokenRefreshResult login(LoginRequestDto loginDto) {
+		Optional<User> userOptional = userRepository.findByEmail(loginDto.getEmail());
+
+		if (userOptional.isEmpty()) {
+			return TokenRefreshResult.failure("해당 이메일이 존재하지 않습니다.");
+		}
+
+		User user = userOptional.get();
+
+		if (!user.hasPassword()) {
+			return TokenRefreshResult.failure("일반 로그인 사용자가 아닙니다.");
+		}
+
+		if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
+			return TokenRefreshResult.failure("비밀번호가 일치하지 않습니다.");
+		}
+
+		if ("Y".equals(user.getWithdrawYn())) {
+			log.info("탈퇴한 일반 사용자 로그인 시도 - 사용자 ID: {}", user.getUserId());
+
+			// 임시 토큰 발급 (OAuth2와 동일한 프로세스)
+			String tempAccessToken = jwtUtil.generateTempAccessToken(
+					user.getUserId(),
+					user.getEmail(),
+					user.getName(),
+					user.getNickname(),
+					user.getProfileLogicalPath(),
+					user.getUserTypeId().getUserTypeId(),
+					user.getProvider()
+			);
+
+			String tempRefreshToken = jwtUtil.generateTempRefreshToken(user.getUserId());
+
+			return TokenRefreshResult.tempSuccess(tempAccessToken, tempRefreshToken);
+		}
+
+		// ★ 수정 1: accessToken 생성 누락
+		String accessToken = jwtUtil.generateAccessToken(
+				user.getUserId(),
+				user.getEmail(),
+				user.getName(),
+				user.getNickname(),
+				user.getProfileLogicalPath(),
+				user.getUserTypeId().getUserTypeId(),
+				user.getProvider()
+		);
+
+		String refreshToken = jwtUtil.generateRefreshToken(user.getUserId());
+
+		RefreshToken tokenEntity = RefreshToken.builder()
+				.user(user)
+				.tokenValue(refreshToken)
+				.expiresAt(LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenExpiration() / 1000))
+				.build();
+
+		refreshTokenRepository.save(tokenEntity);
+
+		return TokenRefreshResult.success(accessToken, refreshToken);
+	}
+
 	/**
 	 * 설명: 데이터베이스에 저장된 만료되었거나 이미 무효화된 Refresh Token들을 주기적으로 정리(삭제)합니다.
 	 * 이 메서드는 주로 스케줄러(예: `@Scheduled` 어노테이션)에 의해 호출되어 DB의 불필요한 데이터를 제거하고 성능을 유지합니다.
@@ -256,41 +322,39 @@ public class AuthService {
 	 * 갱신 성공 여부, 새로 발급된 Access Token과 Refresh Token, 그리고 실패 시 에러 메시지를 포함합니다.
 	 */
 	public static class TokenRefreshResult {
-
 		private final boolean success;
 		private final String accessToken;
 		private final String refreshToken;
 		private final String errorMessage;
+		private final boolean isTemp;
 
-		private TokenRefreshResult(boolean success, String accessToken, String refreshToken, String errorMessage) {
+		private TokenRefreshResult(boolean success, String accessToken, String refreshToken, String errorMessage, boolean isTemp) {
 			this.success = success;
 			this.accessToken = accessToken;
 			this.refreshToken = refreshToken;
 			this.errorMessage = errorMessage;
+			this.isTemp = isTemp;
 		}
 
 		public static TokenRefreshResult success(String accessToken, String refreshToken) {
-			return new TokenRefreshResult(true, accessToken, refreshToken, null);
+			return new TokenRefreshResult(true, accessToken, refreshToken, null, false);
 		}
 
+		public static TokenRefreshResult tempSuccess(String accessToken, String refreshToken) {
+			return new TokenRefreshResult(true, accessToken, refreshToken, null, true);
+		}
+
+		// ★ 이 메서드가 누락되어 있었습니다
 		public static TokenRefreshResult failure(String errorMessage) {
-			return new TokenRefreshResult(false, null, null, errorMessage);
+			return new TokenRefreshResult(false, null, null, errorMessage, false);
 		}
 
-		public boolean isSuccess() {
-			return success;
-		}
-
-		public String getAccessToken() {
-			return accessToken;
-		}
-
-		public String getRefreshToken() {
-			return refreshToken;
-		}
-
-		public String getErrorMessage() {
-			return errorMessage;
-		}
+		// getter 메서드들
+		public boolean isSuccess() { return success; }
+		public String getAccessToken() { return accessToken; }
+		public String getRefreshToken() { return refreshToken; }
+		public String getErrorMessage() { return errorMessage; }
+		public boolean isTemp() { return isTemp; }
 	}
+
 }

@@ -3,15 +3,16 @@ package com.luti.auth.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.luti.auth.dto.LoginRequestDto;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import com.luti.auth.entity.User;
+import com.luti.auth.repository.UserRepository;
 import com.luti.auth.security.JwtAuthenticationToken;
 import com.luti.auth.service.AuthService;
 import com.luti.auth.util.JwtUtil;
@@ -35,6 +36,8 @@ public class AuthController {
 	private final AuthService authService;
 
 	private final JwtUtil jwtUtil;
+
+	private final UserRepository userRepository;
 
 	/**
 	 * 설명: Refresh Token을 사용하여 Access Token과 Refresh Token을 갱신합니다.
@@ -182,6 +185,50 @@ public class AuthController {
 		}
 	}
 
+	@PostMapping("/login")
+	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginDto,
+			HttpServletResponse response) {
+		try {
+			AuthService.TokenRefreshResult result = authService.login(loginDto);
+
+			if (!result.isSuccess()) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(createErrorResponse(result.getErrorMessage()));
+			}
+
+			// ★ 임시 토큰인 경우 구분하여 처리
+			if (result.isTemp()) {
+				// 임시 토큰을 쿠키로 설정 (짧은 만료시간)
+				setTempAccessTokenCookie(response, result.getAccessToken());
+				setTempRefreshTokenCookie(response, result.getRefreshToken());
+
+				Map<String, Object> responseBody = new HashMap<>();
+				responseBody.put("success", true);
+				responseBody.put("message", "탈퇴한 계정입니다. 복구 페이지로 이동합니다.");
+				responseBody.put("tokenType", "TEMP");
+				responseBody.put("redirectTo", "/account/restore"); // ★ 프론트에서 리다이렉트용
+
+				return ResponseEntity.ok(responseBody);
+			}
+
+			// 정상 토큰 설정
+			setAccessTokenCookie(response, result.getAccessToken());
+			setRefreshTokenCookie(response, result.getRefreshToken());
+
+			Map<String, Object> responseBody = new HashMap<>();
+			responseBody.put("success", true);
+			responseBody.put("message", "로그인 성공");
+			responseBody.put("tokenType", "NORMAL");
+
+			return ResponseEntity.ok(responseBody);
+
+		} catch (Exception e) {
+			log.error("로그인 처리 중 예외 발생", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(createErrorResponse("로그인 처리 중 오류가 발생했습니다."));
+		}
+	}
+
 	/**
 	 * 설명: 현재 인증된 사용자의 상세 정보를 조회하여 반환합니다.
 	 * SecurityContextHolder에서 현재 인증 정보를 가져와 사용자 ID, 이메일, 이름, 닉네임, 프로필 이미지 URL, 소셜 프로바이더, 사용자 유형 ID, 권한 등의 정보를 추출합니다.
@@ -192,30 +239,39 @@ public class AuthController {
 	 */
 	@GetMapping("/me")
 	public ResponseEntity<Map<String, Object>> getCurrentUser() {
-		log.info("현재 사용자 정보 조회 요청");
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(createErrorResponse("인증이 필요합니다."));
+		}
 
 		try {
-			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			//JWT에서 userId만 가져와서 DB에서 최신 정보 조회
+			Long userId = jwtAuth.getCurrentUserId();
+			User user = userRepository.findById(userId).orElse(null); // DB에서 실시간 조회
 
-			if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-						.body(createErrorResponse("인증이 필요합니다."));
+			//사용자가 존재하지 않는 경우 처리 추가
+			if (user == null) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(createErrorResponse("사용자를 찾을 수 없습니다."));
 			}
 
 			Map<String, Object> userInfo = new HashMap<>();
-			userInfo.put("userId", jwtAuth.getCurrentUserId());
-			userInfo.put("email", jwtAuth.getCurrentUserEmail());
-			userInfo.put("name", jwtAuth.getCurrentUserName());
-			userInfo.put("nickname", jwtAuth.getCurrentUserNickname());
-			userInfo.put("profileImageUrl", jwtAuth.getCurrentUserProfileImage());
-			userInfo.put("provider", jwtAuth.getCurrentUserProvider());
-			userInfo.put("userTypeId", jwtAuth.getCurrentUserTypeId());
+			userInfo.put("userId", user.getUserId());
+			userInfo.put("email", user.getEmail());
+			userInfo.put("name", user.getName());
+			userInfo.put("nickname", user.getDisplayName());
+			userInfo.put("profileImageUrl", user.getDisplayProfileImage());
+			userInfo.put("provider", user.getProvider());
+			userInfo.put("userTypeId", user.getUserTypeId() != null ? user.getUserTypeId().getUserTypeId() : null);
 			userInfo.put("authorities", jwtAuth.getAuthorities());
 
 			Map<String, Object> responseBody = new HashMap<>();
 			responseBody.put("success", true);
 			responseBody.put("user", userInfo);
 
+			log.info("사용자 정보 조회 성공 - 사용자 ID: {}", userId);
 			return ResponseEntity.ok(responseBody);
 
 		} catch (Exception e) {
@@ -378,6 +434,24 @@ public class AuthController {
 		error.put("success", false);
 		error.put("error", message);
 		return error;
+	}
+
+	private void setTempAccessTokenCookie(HttpServletResponse response, String accessToken) {
+		Cookie cookie = new Cookie("accessToken", accessToken);
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(3600); // 1시간
+		response.addCookie(cookie);
+	}
+
+	private void setTempRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+		Cookie cookie = new Cookie("refreshToken", refreshToken);
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(3600); // 1시간
+		response.addCookie(cookie);
 	}
 
 }

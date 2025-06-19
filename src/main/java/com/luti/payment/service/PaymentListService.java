@@ -8,9 +8,11 @@ import com.luti.payment.repository.PaymentListRepository;
 import com.luti.payment.repository.PaymentMethodRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,31 +26,35 @@ public class PaymentListService {
 
     // 결제 정보 저장
     public PaymentListResponseDTO savePayment(PaymentListRequestDTO dto) {
-        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentCd(dto.getPaymentCd())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 코드입니다."));
 
+        PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentMethodId(dto.getPaymentMethodId())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 방식 ID입니다."));
+
+        // 연관관계 객체 없이 먼저 build
         PaymentList payment = PaymentList.builder()
-                .paymentCd(dto.getPaymentCd())
                 .userId(dto.getUserId())
                 .totalPrice(dto.getTotalPrice())
                 .paymentState(0) // 0: 결제완료
                 .paymentDate(dto.getPaymentDate())
                 .impUid(dto.getImpUid())
                 .merchantUid(dto.getMerchantUid())
-                .paymentMethod(paymentMethod)
                 .build();
 
+        // 연관관계 주입 (중요!)
+        payment.setPaymentMethod(paymentMethod);
+
         PaymentList saved = paymentListRepository.save(payment);
+
         return PaymentListResponseDTO.from(saved);
     }
 
     // 결제 취소 (환불 처리)
     public PaymentListResponseDTO cancelPayment(Long paymentId) {
         PaymentList payment = paymentListRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException(" 해당 결제 내역을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역을 찾을 수 없습니다."));
 
         payment.setPaymentState(1); // 1: 환불
-        payment.setCancelDate(LocalDate.now());
+        payment.setCancelDate(LocalDateTime.now());
 
         return PaymentListResponseDTO.from(payment);
     }

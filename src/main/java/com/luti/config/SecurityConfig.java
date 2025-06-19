@@ -3,8 +3,11 @@ package com.luti.config;
 import java.util.Arrays;
 import java.util.List;
 
+import com.amadeus.Amadeus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,6 +27,7 @@ import com.luti.auth.service.CustomOAuth2UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * 설명: Spring Security 설정을 정의하는 클래스입니다.
@@ -33,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -77,18 +82,21 @@ public class SecurityConfig {
                                     "/oauth2/**",              // OAuth2 관련 엔드포인트
                                     "/login/oauth2/**",        // OAuth2 로그인 리다이렉션
                                     "/",                       // 루트 경로
-                                    "/login",                  // 로그인 페이지
-                                    "/signup",                 // 회원가입 페이지
+                                    "/api/auth/login",         // 로그인 페이지
+                                    "/api/signup",             // 회원가입 페이지
+                                    "/api/signup/email",         // 회원가입 이메일 인증코드 전송
+                                    "/api/signup/verify-code", // 회원가입 이메일 인증코드 검증
                                     "/public/**",              // 공개 리소스
+                                    "/files/**",
                                     "/health",                 // 상태 확인
                                     "/actuator/**",            // Spring Boot 액추에이터 엔드포인트
-                                    "/error",
-                                    "/favicon.ico" // 에러 페이지
+                                    "/error",                  // 에러 페이지
+                                    "/favicon.ico"
+
                             ).permitAll()
 
                             // 관리자 역할이 필요한 경로 설정
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
                             .requestMatchers(
                                     "/api/auth/validate",
                                     "/api/auth/me",
@@ -99,7 +107,10 @@ public class SecurityConfig {
                                     "/api/auth/withdraw/status", // 탈퇴 상태 확인 추가
                                     "/api/mypage/**",
                                     "/api/user/**",
-                                    "/api/payments/"
+                                    "/api/payments/",
+                                    "/api/menus/**",
+                                    "/chat/**"                 //gpt
+
                             ).authenticated()
 
                             .anyRequest().authenticated();
@@ -215,4 +226,17 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public Amadeus amadeus(
+            @Value("${amadeus.client-id}") String clientId,
+            @Value("${amadeus.client-secret}") String clientSecret) {
+
+        return Amadeus.builder(clientId, clientSecret)
+                .build();
+    }
+
+    @Bean
+    public WebClient webClient(WebClient.Builder builder) {
+        return builder.build();
+    }
 }

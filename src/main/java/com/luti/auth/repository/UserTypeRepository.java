@@ -2,6 +2,7 @@ package com.luti.auth.repository;
 
 import java.util.Optional;
 
+import com.luti.auth.enums.UserTypeEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.luti.auth.entity.UserType;
@@ -33,5 +34,14 @@ public interface UserTypeRepository extends JpaRepository<UserType, Long> {
 	default Optional<UserType> findDefaultUserType() {
 		return findById(1L);
 	}
-
+	/**
+	 * 설명: 애플리케이션의 관리자 사용자 타입(ID가 2인 UserType)을 조회합니다.
+	 * 이 메서드는 인터페이스에 직접 구현되어 있으며, findById(2L)을 호출하여 관리자 사용자 타입을 빠르게 가져옵니다.
+	 *
+	 * @return Optional<UserType> ID가 2인 UserType 엔티티 (존재하지 않으면 Optional.empty()).
+	 * @author
+	 */
+	default Optional<UserType> findAdminUserType() {
+		return findById(UserTypeEnum.ADMIN.getId());
+	}
 }
