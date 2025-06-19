@@ -72,6 +72,10 @@ public class ChatgptController {
                     om.convertValue(root.get("plan"), new TypeReference<List<Map<String,Object>>>() {}));
         }
         result.put("hotels", hotelCards);
+
+        if (cityCode.isBlank())
+            throw new IllegalArgumentException("GPT 응답에 cityCode 가 없습니다.");
+
         return result;
     }
 }
