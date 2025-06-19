@@ -15,6 +15,9 @@ public class AskResponseDto {
     /** 작성자 사용자 ID */
     private Long userId;
 
+    /** 사용자 이름 */
+    private String userName;
+
     /** 문의글 제목 */
     private String title;
 
@@ -40,6 +43,7 @@ public class AskResponseDto {
         return new AskResponseDto(
                 ask.getAskId(),                          // Ask 엔티티 PK
                 ask.getUser().getUserId(),          // User 엔티티의 userId
+                ask.getUser().getName(),
                 ask.getTitle(),                       // 문의 제목
                 ask.getContent(),                     // 문의 내용
                 ask.getAnswered(),                    // 답변 여부
