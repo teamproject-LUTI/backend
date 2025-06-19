@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,6 +45,8 @@ public class WithdrawController {
 	private final JwtUtil jwtUtil;
 	private final UserRepository userRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
+
+	private final PasswordEncoder passwordEncoder;
 
 	/**
 	 * 회원탈퇴 요청
@@ -269,6 +272,31 @@ public class WithdrawController {
 		cookie.setMaxAge((int)(jwtUtil.getAccessTokenExpiration() / 1000)); // 30분
 		response.addCookie(cookie);
 		log.debug("Access Token 쿠키 설정 완료");
+	}
+
+	@PostMapping("/verify-password")
+	public ResponseEntity<Map<String, Object>> verifyPassword(
+			@RequestBody Map<String, String> request) {
+
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) auth;
+			Long userId = jwtAuth.getCurrentUserId();
+
+			User user = userRepository.findById(userId).orElseThrow();
+			String inputPassword = request.get("password");
+
+			// 비밀번호 검증만 수행
+			if (!passwordEncoder.matches(inputPassword, user.getPassword())) {
+				return ResponseEntity.ok(Map.of("success", false, "valid", false));
+			}
+
+			return ResponseEntity.ok(Map.of("success", true, "valid", true));
+
+		} catch (Exception e) {
+			return ResponseEntity.status(500)
+					.body(Map.of("success", false, "error", "검증 중 오류 발생"));
+		}
 	}
 
 	/**

@@ -2,6 +2,7 @@ package com.luti.travel.service;
 
 import com.amadeus.Amadeus;
 import com.amadeus.Params;
+import com.amadeus.resources.Hotel;
 import com.amadeus.resources.HotelBooking;
 import com.amadeus.resources.HotelOfferSearch;
 import com.google.gson.JsonArray;
@@ -10,9 +11,12 @@ import com.luti.travel.dto.TripPlanDto;
 import com.luti.travel.executor.AmadeusExecutor;
 import com.luti.travel.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.stream.*;
 import java.util.NoSuchElementException;
 
 /**
@@ -21,9 +25,37 @@ import java.util.NoSuchElementException;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AmadeusHotelService {
 
     private final Amadeus amadeus;
+
+    /**
+     * cityCode(예: SEL, PAR) 로 조회 가능한 호텔들의 ID 목록을 얻는다.
+     * Amadeus /v1/reference-data/locations/hotels/by-city 엔드포인트 사용.
+     *
+     * @return 호텔 ID 배열 (null·빈 배열이면 NOT_FOUND 예외)
+     */
+    /** ① 도시 코드 → hotelId[] */
+    public String[] hotelIdsByCity(String cityCode) {
+        Hotel[] hotels = AmadeusExecutor.execute("호텔ID 조회", () ->
+                amadeus.referenceData.locations.hotels.byCity.get(
+                        Params.with("cityCode", cityCode)
+                )
+        );
+        if (hotels == null || hotels.length == 0) {
+            throw new ExternalApiException(
+                    ExternalApiException.ApiSource.AMADEUS,
+                    HttpStatus.NOT_FOUND,
+                    "해당 도시의 호텔ID를 찾을 수 없습니다.",
+                    null
+            );
+        }
+        return java.util.Arrays.stream(hotels)
+                .map(Hotel::getHotelId)
+                .map(id -> id.replace("HOTEL-", ""))  // 필요시 prefix 제거
+                .toArray(String[]::new);
+    }
 
     /** 도시/공항 코드 + 날짜 + 투숙 인원으로 최저가 호텔 목록 조회 */
     public HotelOfferSearch[] search(String cityCode,
@@ -31,13 +63,24 @@ public class AmadeusHotelService {
                                      String checkOut,
                                      int adults) {
 
+        String[] hotelIds = hotelIdsByCity(cityCode);
+
+        String joinedIds  = String.join(",", hotelIds);
+
+        log.debug("HotelOffersSearch params = hotelIds={}&checkInDate={}&checkOutDate={}&adults={}",
+                joinedIds, checkIn, checkOut, adults);
+
+        Params params = Params.with("hotelIds", joinedIds)
+                .and("checkInDate",  checkIn)
+                .and("checkOutDate", checkOut)
+                .and("adults",       adults)
+                .and("roomQuantity", 1)
+                .and("bestRateOnly", "true");
+
+        log.debug("HotelOffersSearch params = {}", params);
+
         return AmadeusExecutor.execute("호텔 검색", () ->
-                amadeus.shopping.hotelOffersSearch.get(
-                        Params.with("cityCodes", cityCode)
-                                .and("checkInDate",  checkIn)
-                                .and("checkOutDate", checkOut)
-                                .and("adults",       adults)
-                )
+                amadeus.shopping.hotelOffersSearch.get(params)
         );
     }
 
@@ -47,13 +90,16 @@ public class AmadeusHotelService {
                                       String checkOut,
                                       int adults) {
 
+        Params params = Params.with("hotelIds", hotelId)
+                .and("checkInDate",  checkIn)
+                .and("checkOutDate", checkOut)
+                .and("adults",       adults)
+                .and("roomQuantity", "1");
+
+        log.debug("HotelOffersSearch byHotel params = {}", params);
+
         return AmadeusExecutor.execute("호텔 상세 조회", () ->
-                amadeus.shopping.hotelOffersSearch.get(
-                        Params.with("hotelIds", hotelId)
-                                .and("checkInDate",  checkIn)
-                                .and("checkOutDate", checkOut)
-                                .and("adults",       adults)
-                )
+                amadeus.shopping.hotelOffersSearch.get(params)
         );
     }
 
