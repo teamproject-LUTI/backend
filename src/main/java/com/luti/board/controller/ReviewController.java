@@ -85,4 +85,18 @@ public class ReviewController {
         long totalViews = service.getTotalViewCount(userId);
         return ResponseEntity.ok(totalViews);
     }
+    // 이미 필요한 import는 되어 있다고 가정
+
+    // 내 리뷰만 조회 (인증된 사용자만)
+    @GetMapping("/myreviews")
+    public MultiResponseDto<ReviewListDto> getMyReviews(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal Long userId
+    )    {
+        return service.getMyReviews(page, size, userId);
+    }
+
+
+
 }

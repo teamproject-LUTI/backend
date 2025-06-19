@@ -13,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,28 @@ public class ReviewService {
 
         return new MultiResponseDto<>(dtos, reviews);
     }
+    /** 1-1. 페이징된 나의 리뷰 목록 조회 */
+    public MultiResponseDto<ReviewListDto> getMyReviews(int page, int size, Long currentUserId) {
+        Page<Review> reviews = reviewRepo.findByUserUserId(
+                currentUserId,
+                PageRequest.of(page - 1, size, Sort.by("createdAt").descending())
+        );
 
+        List<ReviewListDto> dtos = reviews.stream()
+                .map(r -> ReviewListDto.builder()
+                        .reviewId(r.getReviewId())
+                        .title(r.getTitle())
+                        .userName(r.getUser().getNickname())
+                        .createdAt(r.getCreatedAt())
+                        .likeCount(r.getLikeCount())
+                        .liked(likeRepo.existsByReviewReviewIdAndUserUserId(r.getReviewId(), currentUserId))
+                        .thumbnailPath(extractFirstImageUrl(r.getContent()))
+                        .build()
+                )
+                .collect(Collectors.toList());
+
+        return new MultiResponseDto<>(dtos, reviews);
+    }
     /** 2. 생성 */
     @Transactional
     public Long createReview(ReviewRequestDto req, Long userId) {

@@ -1,6 +1,8 @@
 package com.luti.board.repository;
 
 import com.luti.board.entity.Review;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,12 +26,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @return Optional로 감싼 후기글 (없으면 빈 Optional)
      */
     Optional<Review> findByReviewId(Long reviewId);
-
+    /** 나의 리뷰 */
+    Page<Review> findByUserUserId(Long userId, Pageable pageable);
     /** 특정 사용자가 작성한 리뷰 총 개수 */
     long countByUserUserId(Long userId);
 
     /** 내가 쓴 모든 리뷰의 viewCount 합계 */
     @Query("SELECT COALESCE(SUM(r.viewCount), 0) FROM Review r WHERE r.user.userId = :userId")
     long sumViewCountByUserUserId(@Param("userId") Long userId);
+
 }
 
