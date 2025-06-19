@@ -13,12 +13,10 @@ import lombok.NoArgsConstructor;
 public class PaymentMethodResponseDTO {
 
     private Long paymentId;
-    private Long paymentCd;
     private String paymentMethod;
 
     public static PaymentMethodResponseDTO from(PaymentMethod entity) {
         return PaymentMethodResponseDTO.builder()
-                .paymentCd(entity.getPaymentCd())
                 .paymentMethod(entity.getPaymentMethod())
                 .build();
     }

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,14 +77,19 @@ public class LikeService {
     /** 내가 좋아요 누른 게시글 목록 */
     @Transactional(readOnly = true)
     public List<LikedReviewDto> getLikedReviews(Long userId) {
-        return likeRepository.findAllByUserUserId(userId).stream()
-                .map(like -> {
-                    Review r = like.getReview();
+        return likeRepository.findLikedReviewsByUserId(userId).stream()
+                .map(review -> {
                     return LikedReviewDto.builder()
-                            .reviewId(r.getReviewId())
-                            .title(r.getTitle())
-                            .authorName(r.getUser().getDisplayName()) // 작성자 필드명 author 기준
-                            .likeCount(r.getLikeCount())
+                            .reviewId(review.getReviewId())
+                            .title(review.getTitle())
+                            .authorName(review.getUser().getDisplayName()) // 작성자 필드명 author 기준
+                            .likeCount(review.getLikeCount())
+                            .liked(true)  // 이미 좋아요 누른 글들이니까 항상 true
+                            .thumbnailPath(extractFirstImageUrl(review.getContent()))
+                            .content(review.getContent())  // 추가 정보
+                            .viewCount(review.getViewCount())  // 추가 정보
+                            .travelRegion(review.getTravelRegion())  // 추가 정보
+                            .travelPeriod(review.getTravelPeriod())  // 추가 정보
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -98,6 +105,17 @@ public class LikeService {
     public long getTotalReceivedLikes(Long userId) {
         return likeRepository.countByReviewUserUserId(userId);
     }
+
+    private String extractFirstImageUrl(String html) {
+        if (html == null) return null;
+        Pattern p = Pattern.compile(
+                "<img[^>]*src=[\"']?([^\"'>]+)[\"']?",
+                Pattern.CASE_INSENSITIVE
+        );
+        Matcher m = p.matcher(html);
+        if (m.find()) {
+            return m.group(1);
+        }
+        return null;
+    }
 }
-
-

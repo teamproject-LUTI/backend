@@ -1,7 +1,11 @@
 package com.luti.board.repository;
 
 import com.luti.board.entity.Like;
+import com.luti.board.entity.Review;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -39,5 +43,11 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
      * 사용자가 누른 전체 좋아요 레코드
      */
     List<Like> findAllByUserUserId(Long userId);
+
+    /**
+     * 특정 사용자가 좋아요 누른 리뷰들을 조인으로 한 번에 가져오기
+     */
+    @Query("SELECT r FROM Like l JOIN l.review r WHERE l.user.userId = :userId")
+    List<Review> findLikedReviewsByUserId(@Param("userId") Long userId);
 
 }

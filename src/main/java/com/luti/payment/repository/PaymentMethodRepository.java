@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
 
-    // paymentCd로 조회
+    // PaymentMethodId로 조회
     Optional<PaymentMethod> findByPaymentMethodId(Long paymentMethodId);
 
     // 결제방식 이름으로 조회
@@ -19,24 +19,21 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
     // LIKE 검색
     List<PaymentMethod> findByPaymentMethodContaining(String keyword);
 
-    // paymentCd IN
-    List<PaymentMethod> findByPaymentCdIn(List<Integer> codes);
-
     // 정렬 조회
-    List<PaymentMethod> findAllByOrderByPaymentCdAsc();
-    List<PaymentMethod> findAllByOrderByPaymentCdDesc();
+    List<PaymentMethod> findAllByOrderByPaymentMethodIdAsc();
+    List<PaymentMethod> findAllByOrderByPaymentMethodIdDesc();
     List<PaymentMethod> findAllByOrderByPaymentMethodAsc();
     List<PaymentMethod> findAllByOrderByPaymentMethodDesc();
 
     // 중복 체크
     boolean existsByPaymentMethod(String paymentMethod);
-    boolean existsByPaymentCd(Integer paymentCd);
+    boolean existsByPaymentMethodId(Long PaymentMethodId);
 
     // 이름 IN 조회
     List<PaymentMethod> findByPaymentMethodIn(List<String> names);
 
     // 가장 큰 코드
-    PaymentMethod findTopByOrderByPaymentCdDesc();
+    PaymentMethod findTopByOrderByPaymentMethodIdDesc();
 
     // 이름 포함 + 정렬
     List<PaymentMethod> findByPaymentMethodContainingOrderByPaymentMethodAsc(String keyword);
