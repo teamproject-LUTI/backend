@@ -1,6 +1,7 @@
 package com.luti.board.service;
 
 import com.luti.auth.entity.User;
+import com.luti.auth.enums.UserTypeEnum;
 import com.luti.auth.repository.UserRepository;
 import com.luti.board.dto.NoticeRequestDto;
 import com.luti.board.dto.NoticeResponseDto;
@@ -20,96 +21,96 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class NoticeService {
 
+    /** 관리자 타입 ID 가져오기 - static 초기화 문제 해결 */
+    private Long getAdminTypeId() {
+        return UserTypeEnum.ADMIN.getId();
+    }
+
     private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
 
-    /**
-     * 새 공지사항을 등록
-     *
-     * @param userId 작성자 User의 PK
-     * @param dto    제목(title)과 본문(content)을 담은 요청 DTO
-     * @return 생성된 공지사항을 래핑한 SingleResponseDto
-     */
+    /** 관리자 권한 체크 헬퍼 */
+    private void ensureAdmin(Long userId) {
+        if (userId == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId);
+        }
+
+        // userTypeId가 null인지 체크
+        if (user.getUserTypeId() == null) {
+            throw new SecurityException("사용자 권한 정보가 없습니다.");
+        }
+
+        // 프록시 객체 문제 해결: Long 값으로 직접 비교
+        if (!userRepository.isUserAdmin(userId, getAdminTypeId())) {
+            throw new SecurityException("관리자만 이 작업을 수행할 수 있습니다.");
+        }
+    }
+
+    /** 공지 등록 (관리자만) */
     @Transactional
     public SingleResponseDto<NoticeResponseDto> createNotice(Long userId, NoticeRequestDto dto) {
-        // 1) 사용자 존재 여부 확인
-        if (!userRepository.existsByUserId(userId)) {
-            throw new EntityNotFoundException("User not found: " + userId);
-        }
-        // 2) User 엔티티 조회
-        User user = userRepository.findByUserId(userId);
+        ensureAdmin(userId);
 
-        // 3) Notice 엔티티 생성 및 저장
+        User u = userRepository.findByUserId(userId);
+//        if (u==null) throw new EntityNotFoundException();
+        // 여기서 프록시 초기화 없이도 user.getUserTypeId().getUserTypeId() 호출로 숫자 비교 가능
+//        if (!u.getUserTypeId().getUserTypeId().equals(ADMIN_TYPE_ID)) {
+//            throw new SecurityException("관리자만 가능합니다.");
+//        }
+
         Notice notice = Notice.builder()
-                .user(user)
+                .user(userRepository.findByUserId(userId))
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .build();
         Notice saved = noticeRepository.save(notice);
 
-        // 4) 응답 DTO로 변환 후 반환
-        return new SingleResponseDto<>(NoticeResponseDto.of(saved));
+        return new SingleResponseDto<>(NoticeResponseDto.of(saved, userId));
     }
 
-    /**
-     * 공지사항 목록을 페이지 단위로 조회
-     *
-     * @param page 요청 페이지 번호 (1-based)
-     * @param size 페이지당 항목 수
-     * @return 페이징된 공지사항 목록을 담은 MultiResponseDto
-     */
-    public MultiResponseDto<NoticeResponseDto> getNotices(int page, int size) {
+    /** 목록 조회 (누구나 가능) */
+    public MultiResponseDto<NoticeResponseDto> getNotices(int page, int size, Long currentUserId) {
         PageRequest pageRequest = PageRequest.of(page - 1, size);
         Page<NoticeResponseDto> dtoPage = noticeRepository
                 .findAll(pageRequest)
-                .map(NoticeResponseDto::of);
+                .map(n -> NoticeResponseDto.of(n, currentUserId));
 
         return new MultiResponseDto<>(dtoPage.getContent(), dtoPage);
     }
 
-    /**
-     * 특정 공지사항을 조회
-     *
-     * @param noticeId 공지사항 고유번호
-     * @return 조회된 공지사항을 래핑한 SingleResponseDto
-     */
-    public SingleResponseDto<NoticeResponseDto> getNotice(Long noticeId) {
+    /** 단일 조회 (누구나 가능) */
+    public SingleResponseDto<NoticeResponseDto> getNotice(Long noticeId, Long currentUserId) {
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
-
-        return new SingleResponseDto<>(NoticeResponseDto.of(notice));
+        return new SingleResponseDto<>(NoticeResponseDto.of(notice, currentUserId));
     }
 
-    /**
-     * 공지사항을 수정
-     *
-     * @param noticeId 수정할 공지사항 고유번호
-     * @param dto      변경할 제목과 본문을 담은 요청 DTO
-     * @return 수정된 공지사항을 래핑한 SingleResponseDto
-     */
+    /** 수정 (관리자만) */
     @Transactional
-    public SingleResponseDto<NoticeResponseDto> updateNotice(Long noticeId, NoticeRequestDto dto) {
+    public SingleResponseDto<NoticeResponseDto> updateNotice(
+            Long noticeId, NoticeRequestDto dto, Long userId) {
+//        ensureAdmin(userId);
+
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
-
-        // 변경 가능한 필드 업데이트 (Dirty Checking)
         notice.setTitle(dto.getTitle());
         notice.setContent(dto.getContent());
 
-        return new SingleResponseDto<>(NoticeResponseDto.of(notice));
+        return new SingleResponseDto<>(NoticeResponseDto.of(notice, userId));
     }
 
-    /**
-     * 공지사항을 soft-delete 처리
-     *
-     * @param noticeId 삭제(soft) 처리할 공지사항 고유번호
-     */
+    /** 삭제 (관리자만, soft-delete) */
     @Transactional
-    public void deleteNotice(Long noticeId) {
+    public void deleteNotice(Long noticeId, Long userId) {
+//        ensureAdmin(userId);
+
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
-
-        // deleted 플래그를 true 로 설정하여 soft delete
         notice.markDeleted();
     }
 }

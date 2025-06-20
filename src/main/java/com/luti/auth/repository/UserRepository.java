@@ -130,4 +130,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query("SELECT COUNT(u) FROM User u WHERE u.password = 'SOCIAL_LOGIN' AND (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
 	long countSocialLoginUsers();
 
+	/**
+	 * 관리자 권한 체크 - 프록시 문제 해결을 위한 직접 쿼리
+	 *
+	 * @param userId 확인할 사용자 ID
+	 * @param adminTypeId 관리자 타입 ID (2L)
+	 * @return 관리자 여부
+	 */
+	@Query("SELECT COUNT(u) > 0 FROM User u WHERE u.userId = :userId AND u.userTypeId.userTypeId = :adminTypeId")
+	boolean isUserAdmin(@Param("userId") Long userId, @Param("adminTypeId") Long adminTypeId);
 }

@@ -33,22 +33,28 @@ public class AskResponseDto {
     /** 수정 시각 */
     private LocalDateTime modifiedAt;
 
+    /** 본인 작성 여부 */
+    private Boolean owner;
+
     /**
-     * Entity → DTO 변환 메서드
+     * Entity → DTO 변환
      *
-     * @param ask 변환할 Ask 엔티티
+     * @param ask              변환할 Ask 엔티티
+     * @param userId    현재 로그인한 사용자 ID (SecurityContext 에서 꺼내온 값)
      * @return AskResponseDto 인스턴스
      */
-    public static AskResponseDto of(Ask ask) {
+    public static AskResponseDto of(Ask ask, Long userId) {
+        boolean isOwner = userId != null && ask.getUser().getUserId().equals(userId);
         return new AskResponseDto(
-                ask.getAskId(),                          // Ask 엔티티 PK
-                ask.getUser().getUserId(),          // User 엔티티의 userId
+                ask.getAskId(),
+                ask.getUser().getUserId(),
                 ask.getUser().getName(),
-                ask.getTitle(),                       // 문의 제목
-                ask.getContent(),                     // 문의 내용
-                ask.getAnswered(),                    // 답변 여부
-                ask.getCreatedAt(),                   // 생성 시각 (Auditable 상속)
-                ask.getModifiedAt()                   // 수정 시각 (Auditable 상속)
+                ask.getTitle(),
+                ask.getContent(),
+                ask.getAnswered(),
+                ask.getCreatedAt(),
+                ask.getModifiedAt(),
+                isOwner
         );
     }
 }
