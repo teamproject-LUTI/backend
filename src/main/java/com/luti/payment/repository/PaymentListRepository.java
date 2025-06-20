@@ -30,4 +30,5 @@ public interface PaymentListRepository extends JpaRepository<PaymentList, Long> 
 
     // 사용자 + 결제일 범위 필터링 (최근 1달/3달 등)
     List<PaymentList> findByUserIdAndPaymentDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+
 }
