@@ -1,6 +1,5 @@
-package com.luti.menuManagement.service;
+package com.luti.management.service;
 
-import com.luti.auth.entity.User;
 import com.luti.auth.repository.UserRepository;
 import com.luti.auth.enums.UserTypeEnum;
 import com.luti.auth.security.JwtAuthenticationToken;

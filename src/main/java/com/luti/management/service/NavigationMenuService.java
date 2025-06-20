@@ -1,17 +1,16 @@
-package com.luti.menuManagement.service;
+package com.luti.management.service;
 
 import com.luti.dto.SingleResponseDto;
-import com.luti.menuManagement.dto.NavigationMenuRequestDto;
-import com.luti.menuManagement.dto.NavigationMenuResponseDto;
-import com.luti.menuManagement.entity.NavigationMenu;
-import com.luti.menuManagement.repository.NavigationMenuRepository;
+import com.luti.management.dto.NavigationMenuRequestDto;
+import com.luti.management.dto.NavigationMenuResponseDto;
+import com.luti.management.entity.NavigationMenu;
+import com.luti.management.repository.NavigationMenuRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,15 +33,12 @@ public class NavigationMenuService {
             Integer currentUserTypeId = adminPermissionService.getCurrentUserTypeId();
             boolean isAdmin = adminPermissionService.isCurrentUserAdmin();
 
-            log.info("🔍 권한별 메뉴 조회 - 관리자: {}, 사용자타입: {}", isAdmin, currentUserTypeId);
-
             List<NavigationMenu> topLevelMenus = getTopLevelMenus(isAdmin, currentUserTypeId);
 
             List<NavigationMenuResponseDto> menuTree = topLevelMenus.stream()
                     .map(menu -> buildMenuWithChildren(menu, isAdmin, currentUserTypeId))
                     .collect(Collectors.toList());
 
-            log.info("✅ 권한별 메뉴 조회 완료 - 총 메뉴 트리: {}", menuTree.size());
             return new SingleResponseDto<>(menuTree);
 
         } catch (Exception e) {
@@ -58,7 +54,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 관리");
 
         try {
-            log.info("👑 관리자용 전체 메뉴 조회");
 
             List<NavigationMenu> topLevelMenus = menuRepository.findAllByOrderByMenuOrderAsc();
 
@@ -66,7 +61,6 @@ public class NavigationMenuService {
                     .map(menu -> buildAdminMenuWithChildren(menu))
                     .collect(Collectors.toList());
 
-            log.info("✅ 관리자용 전체 메뉴 조회 완료 - 총 메뉴: {}", menuTree.size());
             return new SingleResponseDto<>(menuTree);
 
         } catch (Exception e) {
@@ -131,9 +125,7 @@ public class NavigationMenuService {
         }
     }
 
-    /**
-     * CREATE
-     */
+
     /**
      * 메뉴 생성 (CREATE)
      */
@@ -142,7 +134,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 생성");
 
         try {
-            log.info("📝 메뉴 생성 시작 - 메뉴명: {}", requestDto.getName());
 
             // 입력 데이터 정리
             requestDto.sanitize();
@@ -186,8 +177,6 @@ public class NavigationMenuService {
 
             // 부모 메뉴의 hasChildren 업데이트
             updateParentHasChildren(requestDto.getParentId());
-
-            log.info("✅ 메뉴 생성 완료 - ID: {}, 메뉴명: {}", savedMenu.getNavigationMenuId(), savedMenu.getName());
 
             NavigationMenuResponseDto responseDto = NavigationMenuResponseDto.forAdmin(savedMenu);
             return new SingleResponseDto<>(responseDto);
@@ -281,7 +270,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 수정");
 
         try {
-            log.info("✏️ 메뉴 수정 시작 - ID: {}, 메뉴명: {}", id, requestDto.getName());
 
             // 기존 메뉴 조회
             NavigationMenu existingMenu = menuRepository.findById(id)
@@ -324,7 +312,6 @@ public class NavigationMenuService {
                 updateParentHasChildren(requestDto.getParentId());
             }
 
-            log.info("✅ 메뉴 수정 완료 - ID: {}, 메뉴명: {}", updatedMenu.getNavigationMenuId(), updatedMenu.getName());
 
             NavigationMenuResponseDto responseDto = NavigationMenuResponseDto.forAdmin(updatedMenu);
             return new SingleResponseDto<>(responseDto);
@@ -382,7 +369,6 @@ public class NavigationMenuService {
         adminPermissionService.requireAdminPermission("메뉴 삭제");
 
         try {
-            log.info("🗑️ 메뉴 삭제 시작 - ID: {}", id);
 
             // 기존 메뉴 조회
             NavigationMenu menu = menuRepository.findById(id)
@@ -391,7 +377,6 @@ public class NavigationMenuService {
             // 하위 메뉴가 있는지 확인
             List<NavigationMenu> childMenus = menuRepository.findByParentIdOrderByMenuOrderAsc(id);
             if (!childMenus.isEmpty()) {
-                log.info("💡 하위 메뉴와 함께 삭제 - 상위 메뉴: {}, 하위 메뉴 수: {}", menu.getName(), childMenus.size());
                 // 하위 메뉴들 먼저 삭제 (재귀적)
                 for (NavigationMenu child : childMenus) {
                     deleteMenuRecursively(child.getNavigationMenuId());
@@ -407,7 +392,6 @@ public class NavigationMenuService {
             // 부모 메뉴의 hasChildren 업데이트
             updateParentHasChildren(parentId);
 
-            log.info("✅ 메뉴 삭제 완료 - 메뉴명: {}", menuName);
             return new SingleResponseDto<>("메뉴가 성공적으로 삭제되었습니다: " + menuName);
 
         } catch (Exception e) {
@@ -430,4 +414,165 @@ public class NavigationMenuService {
         // 자신 삭제
         menuRepository.deleteById(menuId);
     }
+
+    /**
+     * 메뉴 순서 재정렬 (드래그 앤 드롭 API)
+     */
+    @Transactional
+    public SingleResponseDto<String> reorderMenus(Long menuId, Integer newOrder, Long parentId) {
+        adminPermissionService.requireAdminPermission("메뉴 순서 변경");
+
+        try {
+            NavigationMenu menu = menuRepository.findById(menuId)
+                    .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다. ID: " + menuId));
+
+            Integer oldOrder = menu.getMenuOrder();
+            Long currentParentId = menu.getParentId();
+
+            // 부모 변경과 순서 변경이 동시에 일어나는 경우
+            if (!java.util.Objects.equals(currentParentId, parentId)) {
+                handleParentChangeWithReorder(menu, parentId, newOrder);
+            }
+            // 같은 부모 내에서 순서만 변경
+            else {
+                handleSameParentReorder(menu, newOrder);
+            }
+
+            return new SingleResponseDto<>("메뉴 순서가 성공적으로 변경되었습니다.");
+
+        } catch (Exception e) {
+            log.error("❌ 메뉴 순서 변경 실패 - 메뉴ID: {}, 새순서: {}", menuId, newOrder, e);
+            throw new RuntimeException("메뉴 순서 변경 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * 메뉴 삽입을 위한 순서 조정
+     */
+    /**
+     * 부모 변경과 함께 순서 변경 처리
+     */
+    private void handleParentChangeWithReorder(NavigationMenu menu, Long newParentId, Integer newOrder) {
+        Long oldParentId = menu.getParentId();
+        Integer oldOrder = menu.getMenuOrder();
+
+        // 1. 기존 위치에서 제거하고 순서 정리
+        menuRepository.decrementMenuOrderFrom(oldParentId, oldOrder);
+
+        // 2. 새로운 부모에서 적절한 순서 계산 및 공간 확보
+        Integer finalOrder = calculateAndPrepareOrderForNewParent(newParentId, newOrder, menu.getNavigationMenuId());
+
+        // 3. 메뉴 정보 업데이트
+        menu.setParentId(newParentId);
+        menu.setLevel(calculateMenuLevel(newParentId));
+        menu.setMenuOrder(finalOrder);
+        menu.setUpdatedAt(LocalDateTime.now());
+        menu.setUpdatedBy(adminPermissionService.getCurrentUserId());
+
+        menuRepository.save(menu);
+
+        // 4. hasChildren 업데이트
+        updateParentHasChildren(oldParentId);
+        updateParentHasChildren(newParentId);
+
+    }
+
+    /**
+     * 같은 부모 내에서 순서 변경 처리
+     */
+    private void handleSameParentReorder(NavigationMenu menu, Integer newOrder) {
+        Long parentId = menu.getParentId();
+        Integer oldOrder = menu.getMenuOrder();
+
+        if (oldOrder.equals(newOrder)) {
+            return;
+        }
+
+        // 같은 부모의 형제 메뉴들 조회
+        List<NavigationMenu> siblings = menuRepository.findByParentIdOrderByMenuOrderAsc(parentId);
+
+        // 새로운 순서가 유효한 범위인지 확인
+        int maxOrder = siblings.size();
+        if (newOrder < 1 || newOrder > maxOrder) {
+            newOrder = Math.max(1, Math.min(newOrder, maxOrder));
+            log.warn("⚠️ 순서 범위 조정 - 요청: {} → 조정: {}", newOrder, newOrder);
+        }
+
+        // 순서 재정렬 실행
+        reorderSiblingsForMove(siblings, menu, newOrder);
+
+    }
+
+    /**
+     * 새로운 부모에서 순서 계산 및 공간 확보
+     */
+    private Integer calculateAndPrepareOrderForNewParent(Long parentId, Integer requestedOrder, Long excludeMenuId) {
+        List<NavigationMenu> siblings = menuRepository.findByParentIdOrderByMenuOrderAsc(parentId);
+
+        // 요청된 순서가 없거나 유효하지 않으면 마지막에 추가
+        if (requestedOrder == null || requestedOrder <= 0) {
+            return siblings.isEmpty() ? 1 : siblings.get(siblings.size() - 1).getMenuOrder() + 1;
+        }
+
+        // 요청된 순서가 기존 메뉴들보다 크면 마지막에 추가
+        if (requestedOrder > siblings.size()) {
+            return siblings.isEmpty() ? 1 : siblings.get(siblings.size() - 1).getMenuOrder() + 1;
+        }
+
+        // 요청된 위치부터 뒤의 메뉴들을 1씩 뒤로 밀기
+        menuRepository.shiftMenuOrdersForInsert(parentId, requestedOrder, excludeMenuId);
+
+        return requestedOrder;
+    }
+
+    /**
+     * 형제 메뉴들의 순서 재정렬 (같은 부모 내 이동)
+     */
+    private void reorderSiblingsForMove(List<NavigationMenu> siblings, NavigationMenu movedMenu, Integer newOrder) {
+        Integer oldOrder = movedMenu.getMenuOrder();
+
+        // 이동 방향에 따라 다른 처리
+        if (oldOrder < newOrder) {
+            // 뒤로 이동: oldOrder+1 ~ newOrder 사이의 메뉴들을 앞으로 1칸씩
+            for (NavigationMenu sibling : siblings) {
+                if (sibling.getNavigationMenuId().equals(movedMenu.getNavigationMenuId())) {
+                    continue;
+                }
+
+                Integer siblingOrder = sibling.getMenuOrder();
+                if (siblingOrder > oldOrder && siblingOrder <= newOrder) {
+                    sibling.setMenuOrder(siblingOrder - 1);
+                    sibling.setUpdatedAt(LocalDateTime.now());
+                    sibling.setUpdatedBy(adminPermissionService.getCurrentUserId());
+                    menuRepository.save(sibling);
+                    log.debug("  📦 {}순서 조정: {} → {}", sibling.getName(), siblingOrder, siblingOrder - 1);
+                }
+            }
+        } else {
+            // 앞으로 이동: newOrder ~ oldOrder-1 사이의 메뉴들을 뒤로 1칸씩
+            for (NavigationMenu sibling : siblings) {
+                if (sibling.getNavigationMenuId().equals(movedMenu.getNavigationMenuId())) {
+                    continue;
+                }
+
+                Integer siblingOrder = sibling.getMenuOrder();
+                if (siblingOrder >= newOrder && siblingOrder < oldOrder) {
+                    sibling.setMenuOrder(siblingOrder + 1);
+                    sibling.setUpdatedAt(LocalDateTime.now());
+                    sibling.setUpdatedBy(adminPermissionService.getCurrentUserId());
+                    menuRepository.save(sibling);
+                    log.debug("  📦 {}순서 조정: {} → {}", sibling.getName(), siblingOrder, siblingOrder + 1);
+                }
+            }
+        }
+
+        // 마지막으로 이동된 메뉴의 순서 업데이트
+        movedMenu.setMenuOrder(newOrder);
+        movedMenu.setUpdatedAt(LocalDateTime.now());
+        movedMenu.setUpdatedBy(adminPermissionService.getCurrentUserId());
+        menuRepository.save(movedMenu);
+
+    }
+
 }

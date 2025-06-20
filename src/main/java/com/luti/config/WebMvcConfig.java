@@ -21,8 +21,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
         // 1. 프로필 이미지용
+        String profileUploadPath = Paths.get(profileUploadDir).toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/files/**")
-                .addResourceLocations("file:" + profileUploadDir + "/")
+                .addResourceLocations(profileUploadPath)
                 .setCachePeriod(3600) // 1시간 캐시
                 .resourceChain(true);
 
@@ -33,8 +34,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         // 로그로 설정 확인
         System.out.println("정적 리소스 설정 완료:");
-        System.out.println("- 프로필 이미지: /files/** -> " + profileUploadDir);
-        System.out.println("- 일반 파일: /uploads/** -> " + generalUploadPath);
+        System.out.println("- 프로필 이미지: -> " + profileUploadPath);
+        System.out.println("- 일반 파일: -> " + generalUploadPath);
     }
 
 }

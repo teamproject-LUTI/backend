@@ -10,7 +10,8 @@ import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,8 +31,11 @@ public class ReviewAttachmentService {
     private final ReviewAttachmentRepository attachmentRepository;
 
     // 기본 업로드 경로 (프로젝트 루트 기준)
-    private static final String UPLOAD_DIR = "uploads";
+    // private static final String UPLOAD_DIR = "uploads";
 
+    // 기본 업로드 경로 (강사님 PC 드라이브 기준)
+    @Value("${file.upload.general.dir}")
+    private String uploadDir;
     /**
      * 특정 리뷰의 첨부파일 목록 조회
      */
@@ -65,7 +69,9 @@ public class ReviewAttachmentService {
             String ext = original.substring(original.lastIndexOf('.') + 1);
             String uuid = UUID.randomUUID().toString();
             String storedName = uuid + "." + ext;
-            File dest = new File(UPLOAD_DIR, storedName);
+            // File dest = new File(UPLOAD_DIR, storedName);    // 프로젝트 내부 경로
+            File dest = new File(uploadDir, storedName);        // 강사님 PC 드라이브 경로
+            System.out.println("저장될 파일 경로: " + dest.getAbsolutePath());
             if (!dest.getParentFile().exists()) {
                 dest.getParentFile().mkdirs();
             }
@@ -104,6 +110,3 @@ public class ReviewAttachmentService {
         attachmentRepository.delete(attachment);
     }
 }
-
-
-

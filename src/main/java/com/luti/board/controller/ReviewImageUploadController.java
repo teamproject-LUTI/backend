@@ -1,5 +1,6 @@
 package com.luti.board.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,10 @@ import java.util.UUID;
 @RequestMapping("/api/review-attachments")
 public class ReviewImageUploadController {
 
+    //강사님 pc 드라이브
+    @Value("${file.upload.general.dir}")
+    private String uploadDir;
+
     @PostMapping("/image")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, String> uploadImage(@RequestPart MultipartFile image) {
@@ -23,7 +28,8 @@ public class ReviewImageUploadController {
         }
 
         // 프로젝트 루트 경로에 uploads 폴더 생성
-        String uploadDir = System.getProperty("user.dir") + "/uploads";
+        // String uploadDir = System.getProperty("user.dir") + "/uploads";
+
         String ext = image.getOriginalFilename().substring(image.getOriginalFilename().lastIndexOf('.') + 1);
         String uuid = UUID.randomUUID().toString();
         String storedName = uuid + "." + ext;

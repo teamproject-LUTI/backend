@@ -1,6 +1,6 @@
 // NavigationMenuRequestDto.java - requiredRole 필드 추가
 
-package com.luti.menuManagement.dto;
+package com.luti.management.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.*;

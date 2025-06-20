@@ -34,7 +34,7 @@ public class ReviewService {
 
     /** 1. 페이징된 목록 조회 */
     public MultiResponseDto<ReviewListDto> getReviews(int page, int size, Long currentUserId) {
-        Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size));
+        Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<ReviewListDto> dtos = reviews.stream()
                 .map(r -> ReviewListDto.builder()
                         .reviewId(r.getReviewId())

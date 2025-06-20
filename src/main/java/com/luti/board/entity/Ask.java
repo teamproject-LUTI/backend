@@ -50,6 +50,7 @@ public class Ask extends Auditable {
      * - true: 답변 완료
      * </p>
      */
+    @Builder.Default
     @Column(name = "reply_yn", nullable = false)
     private Boolean answered = false;
 
