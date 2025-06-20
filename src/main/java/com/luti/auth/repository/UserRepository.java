@@ -150,4 +150,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	User findByUserIdWithUserType(@Param("userId") Long userId);
 
     Optional<User> findByNameAndPhoneNumber(String name, String phoneNumber);
+
+	Optional<User> findByNameAndEmail(String name, String email);
 }
