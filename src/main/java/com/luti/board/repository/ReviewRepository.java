@@ -4,7 +4,7 @@ import com.luti.board.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -35,5 +35,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT COALESCE(SUM(r.viewCount), 0) FROM Review r WHERE r.user.userId = :userId")
     long sumViewCountByUserUserId(@Param("userId") Long userId);
 
+    //사용자가 받은 총 좋아요 수
+    @Query("SELECT COALESCE(SUM(r.likeCount), 0) FROM Review r WHERE r.user.userId = :userId")
+    long sumLikeCountByUserUserId(@Param("userId") Long userId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)   // ★
+    @Query("UPDATE Review r SET r.viewCount = r.viewCount + 1 WHERE r.reviewId = :id")
+    int incrementView(@Param("id") Long reviewId);
 }
 

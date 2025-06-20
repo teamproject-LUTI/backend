@@ -10,6 +10,7 @@ import com.luti.board.repository.LikeRepository;
 import com.luti.board.repository.ReviewRepository;
 import com.luti.dto.MultiResponseDto;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +63,7 @@ public class ReviewService {
                         .userName(r.getUser().getNickname())
                         .createdAt(r.getCreatedAt())
                         .likeCount(r.getLikeCount())
+                        .viewCount(r.getViewCount())
                         .liked(likeRepo.existsByReviewReviewIdAndUserUserId(r.getReviewId(), currentUserId))
                         .thumbnailPath(extractFirstImageUrl(r.getContent()))
                         .build()
@@ -149,7 +152,27 @@ public class ReviewService {
     public long getTotalViewCount(Long userId) {
         return reviewRepo.sumViewCountByUserUserId(userId);
     }
+    /** 특정 사용자가 작성한 리뷰의 좋아요 총 개수 */
+    public long getTotalLikeCount(Long userId) {
+        return reviewRepo.sumLikeCountByUserUserId(userId);
+    }
+    /** 특정 사용자가 작성한 리뷰의 단일 조회수 개수 */
+    public ReviewResponseDto readAndCount(Long id) {
 
+        Review r = reviewRepo.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "리뷰 없음"));
+
+        r.incrementViewCount();
+
+        // ② DTO 변환 — 필요 최소 필드만 매핑
+        return ReviewResponseDto.builder()
+                .reviewId(r.getReviewId())
+                .title(r.getTitle())
+                .content(r.getContent())
+                .viewCount(r.getViewCount())   // +1 된 값
+                .build();
+    }
     /** 에디터 썸네일 추출 */
     private String extractFirstImageUrl(String html) {
         if (html == null) return null;
@@ -166,5 +189,7 @@ public class ReviewService {
         }
         return null;
     }
+
 }
+
 

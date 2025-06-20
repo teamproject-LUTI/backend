@@ -8,11 +8,7 @@ import lombok.*;
  * 후기(Review) 첨부파일 엔티티
  */
 @Entity
-<<<<<<< HEAD
 @Table(name = "review_attachment")
-=======
-@Table(name = "review_Attachment")
->>>>>>> 7fd23416cbbb8a733f0f0caf9036447d7a57e4d3
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
