@@ -7,8 +7,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Builder
@@ -21,11 +23,19 @@ public class PaymentListResponseDTO {
     private Long userId;                // 사용자 ID
     private Integer totalPrice;         // 총 결제 금액
     private Integer paymentState;       // 결제 상태
-    private LocalDateTime paymentDate;      // 결제 일자 (한국 기준)
-    private LocalDateTime cancelDate;       // 결제 취소 일자 (한국 기준)
+    private String paymentDate;         // 결제 일자 (String, 한국시간 yyyy-MM-dd HH:mm:ss)
+    private String cancelDate;          // 결제 취소 일자 (String, 한국시간 yyyy-MM-dd HH:mm:ss)
     private String receiptUrl;          // 영수증 URL
     private String impUid;              // 아임포트 UID
     private String paymentMethodName;   // 결제 방식 이름
+
+    private static final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private static String formatKorean(LocalDateTime dateTime) {
+        if (dateTime == null) return null;
+        return ZonedDateTime.of(dateTime, ZoneId.of("Asia/Seoul")).format(formatter);
+    }
 
     public static PaymentListResponseDTO from(PaymentList entity) {
         PaymentMethod method = entity.getPaymentMethod();
@@ -36,8 +46,8 @@ public class PaymentListResponseDTO {
                 .userId(entity.getUserId())
                 .totalPrice(entity.getTotalPrice())
                 .paymentState(entity.getPaymentState())
-                .paymentDate(entity.getPaymentDate())
-                .cancelDate(entity.getCancelDate())
+                .paymentDate(formatKorean(entity.getPaymentDate()))
+                .cancelDate(formatKorean(entity.getCancelDate()))
                 .receiptUrl(entity.getReceiptUrl())
                 .impUid(entity.getImpUid())
                 .paymentMethodName(method != null ? method.getPaymentMethod() : "카드")

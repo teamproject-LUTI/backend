@@ -13,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ public class ReviewService {
 
     /** 1. 페이징된 목록 조회 */
     public MultiResponseDto<ReviewListDto> getReviews(int page, int size, Long currentUserId) {
-        Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size));
+        Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<ReviewListDto> dtos = reviews.stream()
                 .map(r -> ReviewListDto.builder()
                         .reviewId(r.getReviewId())
