@@ -6,6 +6,8 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,6 +65,7 @@ public class EmailService {
         return code;
     }
 
+    // 임시 비밀번호 전송
     public void sendTempPassword(String email, String tempPassword) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
@@ -78,6 +81,13 @@ public class EmailService {
         message.setContent(body, "text/html; charset=utf-8");
         message.setFrom(new InternetAddress("noreply@luti.com", "LUTI 관리자"));
         mailSender.send(message);
+    }
+
+    public void saveVerificationSession(HttpServletRequest request, String authCode, String email) {
+        HttpSession session = request.getSession();
+        session.setAttribute("authCode", authCode);
+        session.setAttribute("authEmail", email);
+        session.setMaxInactiveInterval(300); //5분 유효
     }
 
     private String generateSecureCode() {
