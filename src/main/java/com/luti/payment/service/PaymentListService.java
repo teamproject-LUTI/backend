@@ -94,4 +94,5 @@ public class PaymentListService {
                 .map(PaymentListResponseDTO::from)
                 .collect(Collectors.toList());
     }
+
 }
