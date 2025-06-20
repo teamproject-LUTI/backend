@@ -49,6 +49,7 @@ public class ReviewService {
 
         return new MultiResponseDto<>(dtos, reviews);
     }
+    
     /** 1-1. 페이징된 나의 리뷰 목록 조회 */
     public MultiResponseDto<ReviewListDto> getMyReviews(int page, int size, Long currentUserId) {
         Page<Review> reviews = reviewRepo.findByUserUserId(
