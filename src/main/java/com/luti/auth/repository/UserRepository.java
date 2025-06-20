@@ -130,4 +130,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query("SELECT COUNT(u) FROM User u WHERE u.password = 'SOCIAL_LOGIN' AND (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
 	long countSocialLoginUsers();
 
+
+	/**
+	 * 권한별 사용자 검색 (검색어 + 권한 필터 조합)
+	 * @param keyword 검색 키워드
+	 * @param userTypeId 사용자 타입 ID
+	 * @param pageable 페이징 정보
+	 * @return 검색된 사용자 페이지
+	 */
+	@Query("SELECT u FROM User u WHERE u.withdrawYn != 'Y' " +
+			"AND u.userTypeId.userTypeId = :userTypeId " +
+			"AND (LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+			"OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+			"OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+	Page<User> searchUsersByRole(@Param("keyword") String keyword,
+								 @Param("userTypeId") Long userTypeId,
+								 Pageable pageable);
+
+
 }
