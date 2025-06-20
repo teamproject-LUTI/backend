@@ -28,10 +28,7 @@ public class SignupController {
             emailService.checkDuplicate(requestDto);
             String code = emailService.sendEmail(requestDto); // 6자리 코드 전송
 
-            HttpSession session = request.getSession();
-            session.setAttribute("authCode", code);
-            session.setAttribute("authEmail", requestDto.getEmail());
-            session.setMaxInactiveInterval(300); // 5분
+            emailService.saveVerificationSession(request, code, requestDto.getEmail());
 
             return ResponseEntity.ok("인증코드가 이메일로 전송되었습니다.");
         } catch (IllegalArgumentException e) {
