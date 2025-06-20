@@ -63,6 +63,23 @@ public class EmailService {
         return code;
     }
 
+    public void sendTempPassword(String email, String tempPassword) throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
+
+        String body = "<div style='font-family: Arial, sans-serif; padding: 20px;'>"
+                + "<h2>임시 비밀번호 발급</h2>"
+                + "<p>아래 임시 비밀번호로 로그인 후, 반드시 비밀번호를 변경해주세요.</p>"
+                + "<div style='font-size: 24px; font-weight: bold; color: #F76B59; margin: 10px 0;'>"
+                + tempPassword + "</div>"
+                + "<p style='margin-top: 20px;'>감사합니다.<br>LUTI 팀 드림</p>"
+                + "</div>";
+
+        message.setContent(body, "text/html; charset=utf-8");
+        message.setFrom(new InternetAddress("noreply@luti.com", "LUTI 관리자"));
+        mailSender.send(message);
+    }
+
     private String generateSecureCode() {
         SecureRandom random = new SecureRandom();
         int code = random.nextInt(900000) + 100000;
