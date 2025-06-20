@@ -20,12 +20,14 @@ public class PaymentMethod {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "payment_method_id") // DB PK 컬럼과 일치
+	@Column(name = "payment_method_id")
 	private Long paymentMethodId;
 
+	// 카드, 카카오페이, 네이버페이 등
 	@Column(name = "payment_method", length = 50)
-	private String paymentMethod; // 카드, 카카오페이, 네이버페이 등
+	private String paymentMethod;
 
+	// 이 결제방식을 참조하는 결제내역들
 	@OneToMany(mappedBy = "paymentMethod")
-	private List<PaymentList> paymentLists = new ArrayList<>(); // 이 결제방식을 참조하는 결제내역들
+	private List<PaymentList> paymentLists = new ArrayList<>();
 }
