@@ -67,13 +67,10 @@ public class AccountController {
     }
 
     @PostMapping("/email/code")
-    public ResponseEntity<String> sendEmail(@RequestBody EmailRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<String> sendEmail(@RequestBody EmailVerificationRequestDto requestDto, HttpServletRequest request) {
         try {
-            emailService.checkDuplicate(requestDto);
             String code = emailService.sendEmail(requestDto); // 6자리 코드 전송
-
             emailService.saveVerificationSession(request, code, requestDto.getEmail());
-
             return ResponseEntity.ok("인증코드가 이메일로 전송되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -83,7 +80,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/email/verify")
+    @GetMapping("/email/verify")
     public ResponseEntity<String> verifyCode(@RequestParam("code") String code, HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
