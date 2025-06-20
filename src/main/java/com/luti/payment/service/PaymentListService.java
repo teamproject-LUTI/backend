@@ -8,10 +8,8 @@ import com.luti.payment.repository.PaymentListRepository;
 import com.luti.payment.repository.PaymentMethodRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,25 +24,21 @@ public class PaymentListService {
 
     // 결제 정보 저장
     public PaymentListResponseDTO savePayment(PaymentListRequestDTO dto) {
-
         PaymentMethod paymentMethod = paymentMethodRepository.findByPaymentMethodId(dto.getPaymentMethodId())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 결제 방식 ID입니다."));
 
-        // 연관관계 객체 없이 먼저 build
         PaymentList payment = PaymentList.builder()
                 .userId(dto.getUserId())
                 .totalPrice(dto.getTotalPrice())
-                .paymentState(0) // 0: 결제완료
-                .paymentDate(dto.getPaymentDate())
+                .paymentState(0) // 0: 결제 완료
+                .paymentDate(LocalDateTime.now())
                 .impUid(dto.getImpUid())
                 .merchantUid(dto.getMerchantUid())
                 .build();
 
-        // 연관관계 주입 (중요!)
         payment.setPaymentMethod(paymentMethod);
 
         PaymentList saved = paymentListRepository.save(payment);
-
         return PaymentListResponseDTO.from(saved);
     }
 
@@ -65,4 +59,55 @@ public class PaymentListService {
                 .map(PaymentListResponseDTO::from)
                 .collect(Collectors.toList());
     }
+
+    // 금액 높은 순 정렬
+    public List<PaymentListResponseDTO> findByUserIdOrderByTotalPriceDesc(Long userId) {
+        return paymentListRepository.findByUserIdOrderByTotalPriceDesc(userId).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 금액 낮은 순 정렬
+    public List<PaymentListResponseDTO> findByUserIdOrderByTotalPriceAsc(Long userId) {
+        return paymentListRepository.findByUserIdOrderByTotalPriceAsc(userId).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 결제 상태 필터링 (0=결제, 1=환불)
+    public List<PaymentListResponseDTO> findByUserIdAndPaymentState(Long userId, Integer paymentState) {
+        return paymentListRepository.findByUserIdAndPaymentState(userId, paymentState).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 기간 필터링 (최근 1달/3달 등)
+    public List<PaymentListResponseDTO> findByUserIdAndPaymentDateBetween(Long userId, LocalDateTime start, LocalDateTime end) {
+        return paymentListRepository.findByUserIdAndPaymentDateBetween(userId, start, end).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 결제일 기준 최신순 정렬
+    public List<PaymentListResponseDTO> findByUserIdOrderByPaymentDateDesc(Long userId) {
+        return paymentListRepository.findByUserIdOrderByPaymentDateDesc(userId).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 결제 상태 기준 전체 조회 (관리자용)
+    public List<PaymentListResponseDTO> findByPaymentState(Integer paymentState) {
+        return paymentListRepository.findByPaymentState(paymentState).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 결제 상태 + 날짜 범위로 조회 (관리자용)
+    public List<PaymentListResponseDTO> findByPaymentStateAndDateRange(Integer state, LocalDateTime start, LocalDateTime end) {
+        return paymentListRepository.findByPaymentStateAndPaymentDateBetween(state, start, end).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+
 }
