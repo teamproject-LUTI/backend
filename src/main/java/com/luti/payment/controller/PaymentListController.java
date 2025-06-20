@@ -70,4 +70,26 @@ public class PaymentListController {
     public ResponseEntity<List<PaymentListResponseDTO>> getByUserIdOrderByDateDesc(@PathVariable Long userId) {
         return ResponseEntity.ok(paymentListService.findByUserIdOrderByPaymentDateDesc(userId));
     }
+
+    // 결제 상태 전체 조회 (관리자용)
+    @GetMapping("/state/{state}")
+    public ResponseEntity<List<PaymentListResponseDTO>> getByPaymentState(@PathVariable Integer state) {
+        List<PaymentListResponseDTO> result = paymentListService.findByPaymentState(state);
+        return ResponseEntity.ok(result);
+    }
+
+    // 결제 상태 전체 조회 + 선택적 날짜 필터 (관리자용)
+    @GetMapping("/state/{state}/range")
+    public ResponseEntity<List<PaymentListResponseDTO>> getByPaymentStateWithOptionalDateRange(
+            @PathVariable Integer state,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+
+        if (start != null && end != null) {
+            return ResponseEntity.ok(paymentListService.findByPaymentStateAndDateRange(state, start, end));
+        } else {
+            return ResponseEntity.ok(paymentListService.findByPaymentState(state));
+        }
+    }
+
 }
