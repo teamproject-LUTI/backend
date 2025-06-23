@@ -7,6 +7,9 @@ public record TripPlanDto(
         String checkInDate,
         String checkOutDate,
         int    adults,
-        String offerId,          // (선택) 이미 고른 객실 오퍼 ID
+        String offerId,
         JsonArray guests,
-        JsonArray payments) {}
+        JsonArray payments,
+        String comment
+        ) {
+}

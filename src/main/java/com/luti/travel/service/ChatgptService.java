@@ -66,7 +66,7 @@ public class ChatgptService {
                   "messages": [
                     {"role":"system",
                      "content":"너는 한국어 여행 플래너야. 반드시 JSON 한 개만 출력해. \
-checkInDate, checkOutDate 는 오늘(한국시간) 이후여야 한다."},
+                     checkInDate, checkOutDate 는 오늘(한국시간) 이후여야 한다. 일정을 JSON 으로, 설명은 comment 필드에 한국어 텍스트로 넣어라"},
                     {"role":"user","content":"%s"}
                   ],
                   "functions": %s,
@@ -104,16 +104,6 @@ checkInDate, checkOutDate 는 오늘(한국시간) 이후여야 한다."},
             obj.put("cityCode", resolved);
             log.debug("cityCode 보정: {} → {}", original, resolved);
         }
-//        if (cityCode.length() != 3) {
-//            String resolved = resolveCityCode(cityCode);
-//            if (!resolved.isBlank()) {
-//                obj.put("cityCode", resolved);
-//                log.debug("cityCode 보정: {} → {}", cityCode, resolved);
-//            } else {
-//                log.warn("cityCode 보정 실패 – 원본 유지: {}", cityCode);
-//            }
-//        }
-
         /*  6. 과거 날짜 보정  */
         LocalDate today        = LocalDate.now();                // KST
         LocalDate checkInDate  = LocalDate.parse(obj.path("checkInDate").asText());
@@ -130,6 +120,7 @@ checkInDate, checkOutDate 는 오늘(한국시간) 이후여야 한다."},
         log.debug("getChatResponse() return = {}", obj.toString());
         return obj.toString();
     }
+    //도시 코드 매칭
     private String resolveCityCode(String keyword) {
         if (keyword != null && keyword.matches("^[A-Z]{3}$")) {
             return keyword;

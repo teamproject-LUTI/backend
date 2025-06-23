@@ -95,4 +95,19 @@ public class PaymentListService {
                 .collect(Collectors.toList());
     }
 
+    // 결제 상태 기준 전체 조회 (관리자용)
+    public List<PaymentListResponseDTO> findByPaymentState(Integer paymentState) {
+        return paymentListRepository.findByPaymentState(paymentState).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    // 결제 상태 + 날짜 범위로 조회 (관리자용)
+    public List<PaymentListResponseDTO> findByPaymentStateAndDateRange(Integer state, LocalDateTime start, LocalDateTime end) {
+        return paymentListRepository.findByPaymentStateAndPaymentDateBetween(state, start, end).stream()
+                .map(PaymentListResponseDTO::from)
+                .collect(Collectors.toList());
+    }
+
+
 }
