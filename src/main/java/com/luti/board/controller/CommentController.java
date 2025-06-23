@@ -9,6 +9,7 @@ import com.luti.dto.SingleResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,19 +23,14 @@ public class CommentController {
 
     /**
      * 댓글 등록
-     *
-     * @param userId     작성자 사용자 ID
-     * @param parentType 댓글 대상 타입(ASK or REVIEW)
-     * @param parentId   댓글 대상 글 ID
-     * @param dto        댓글 내용 DTO
-     * @return 생성된 댓글 ID
+     * URL: POST /api/comments/{parentType}/{parentId}
      */
-    @PostMapping
+    @PostMapping("/{parentType}/{parentId}")
     @ResponseStatus(HttpStatus.CREATED)
     public SingleResponseDto<Long> createComment(
-            @RequestParam Long userId,
-            @RequestParam ParentType parentType,
-            @RequestParam Long parentId,
+            @AuthenticationPrincipal Long userId,  // JWT에서 자동 추출
+            @PathVariable ParentType parentType,   // URL 경로에서 추출
+            @PathVariable Long parentId,           // URL 경로에서 추출
             @RequestBody @Valid CommentRequestDto dto
     ) {
         Long commentId = commentService.createComment(parentType, parentId, userId, dto);
@@ -43,33 +39,27 @@ public class CommentController {
 
     /**
      * 댓글 목록 조회
-     *
-     * @param parentType 댓글 대상 타입
-     * @param parentId   댓글 대상 글 ID
-     * @return 해당 글에 달린 댓글 리스트
+     * URL: GET /api/comments/{parentType}/{parentId}
      */
-    @GetMapping
+    @GetMapping("/{parentType}/{parentId}")
     public MultiResponseDto<CommentResponseDto> getComments(
-            @RequestParam ParentType parentType,
-            @RequestParam Long parentId
+            @PathVariable ParentType parentType,
+            @PathVariable Long parentId,
+            @AuthenticationPrincipal Long currentUserId  // JWT에서 현재 사용자 ID 추출 (null 가능)
     ) {
-        List<CommentResponseDto> comments = commentService.getComments(parentType, parentId);
-        // 두 번째 인자로 Page 객체를 넘겨주면 페이징 가능, 여기서는 전체 리스트만 반환
+        // currentUserId가 null이어도 처리 가능하도록 수정
+        List<CommentResponseDto> comments = commentService.getComments(parentType, parentId, currentUserId);
         return new MultiResponseDto<>(comments, null);
     }
 
     /**
      * 댓글 수정
-     *
-     * @param commentId 댓글 ID
-     * @param userId    요청 사용자 ID
-     * @param dto       수정할 댓글 내용 DTO
-     * @return 수정된 댓글 정보
+     * URL: PATCH /api/comments/{commentId}
      */
     @PatchMapping("/{commentId}")
     public SingleResponseDto<CommentResponseDto> updateComment(
             @PathVariable Long commentId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal Long userId,  // JWT에서 자동 추출
             @RequestBody @Valid CommentRequestDto dto
     ) {
         CommentResponseDto updated = commentService.updateComment(commentId, userId, dto);
@@ -77,16 +67,14 @@ public class CommentController {
     }
 
     /**
-     * 댓글 삭제 (soft delete 아님, 완전 삭제)
-     *
-     * @param commentId 댓글 ID
-     * @param userId    요청 사용자 ID
+     * 댓글 삭제
+     * URL: DELETE /api/comments/{commentId}
      */
     @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(
             @PathVariable Long commentId,
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId  // JWT에서 자동 추출
     ) {
         commentService.deleteComment(commentId, userId);
     }
