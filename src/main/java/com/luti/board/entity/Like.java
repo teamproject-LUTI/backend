@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class Like {
+public class Like extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
