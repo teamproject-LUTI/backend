@@ -92,11 +92,6 @@ public class ReviewController {
     public ResponseEntity<Long> getMyLikeCount(@AuthenticationPrincipal Long userId) {
         return ResponseEntity.ok(service.getTotalLikeCount(userId));
     }
-    // /* 내 리뷰 조회수 조회 */
-    // @GetMapping("/{id}")
-    // public ReviewResponseDto read(@PathVariable Long id) {
-    //     return service.readAndCount(id);
-    // }
 
 
 }
