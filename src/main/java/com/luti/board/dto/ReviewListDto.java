@@ -28,7 +28,11 @@ public class ReviewListDto {
 
     /** 전체 좋아요 수 */
     private final int likeCount;
-
+    
+    /** 게시물 조회수 */
+    private final int     viewCount;
+    
     /** 썸네일 이미지 경로 */
     private final String thumbnailPath;
+    
 }

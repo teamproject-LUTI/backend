@@ -48,7 +48,7 @@ public class User extends Auditable {
 	private String name;
 
 	@Column(name = "birthday", length = 15)
-	private String birthday; // 소셜 로그인 제공자 저장 (google, kakao)
+	private String birthday;
 
 	@Column(name = "hp", length = 15)
 	private String phoneNumber;
@@ -107,20 +107,22 @@ public class User extends Auditable {
 	}
 
 	/**
-	 * 소셜 로그인용 정적 팩토리 메서드
-	 * 기존 컬럼 활용:
-	 * - birthday: 소셜 제공자 (google, kakao)
+	 * 소셜 로그인용 정적 팩토리 메서드 (Google, Kakao 공통)
 	 * - profileLogicalPath: 프로필 이미지 URL
 	 * - profileExtension: 소셜 ID
 	 * - password: "SOCIAL_LOGIN"
+	 * - provider: "GOOGLE", "KAKAO" 등
 	 */
-	public static User createSocialUser(String email, String name, String profileImageUrl, UserType userType) {
+	public static User createSocialUser(String email, String name, String nickname,
+			String birthday, String gender, String profileImageUrl, UserType userType) {
 		return User.builder()
 				.email(email)
 				.password("SOCIAL_LOGIN") // 소셜 로그인 구분자
 				.name(name)
-				.nickname(name)
-				.profileLogicalPath(profileImageUrl) // 프로필 이미지 URL
+				.nickname(nickname)
+				.birthday(birthday) // 카카오의 경우 생년월일 포함
+				.gender(gender)     // 카카오의 경우 성별 포함
+				.profileLogicalPath(profileImageUrl)
 				.provider("LOCAL")
 				.withdrawYn("N")
 				.userTypeId(userType)
@@ -147,24 +149,36 @@ public class User extends Auditable {
 	}
 
 	/**
-	 * 소셜 정보 업데이트
+	 * 소셜 정보 업데이트 (Google, Kakao 공통)
 	 */
-	public void updateSocialInfo(String name, String profileImageUrl) {
+	public void updateSocialInfo(String name, String nickname, String profileImageUrl,
+			String birthday, String gender) {
 		if (name != null && !name.trim().isEmpty()) {
 			this.name = name;
-			if (this.nickname == null || this.nickname.equals(this.name)) {
-				this.nickname = name;
-			}
 		}
+
+		if (nickname != null && !nickname.trim().isEmpty()) {
+			this.nickname = nickname;
+		}
+
 		if (profileImageUrl != null && !profileImageUrl.trim().isEmpty()) {
 			this.profileLogicalPath = profileImageUrl;
 		}
-	}
 
+		// 카카오 전용: 생년월일 업데이트 (기존에 없는 경우)
+		if (birthday != null && (this.birthday == null || this.birthday.trim().isEmpty())) {
+			this.birthday = birthday;
+		}
+
+		// 카카오 전용: 성별 업데이트 (기존에 없는 경우)
+		if (gender != null && (this.gender == null || this.gender.trim().isEmpty())) {
+			this.gender = gender;
+		}
+	}
 	/**
 	 * 소셜 제공자 정보 설정
-	 * birthday 컬럼을 소셜 제공자로 활용
-	 * profileExtension 컬럼을 소셜 ID로 활용
+	 * provider 컬럼에 소셜 제공자 저장
+	 * profileExtension 컬럼에 소셜 ID 저장
 	 */
 	public void setSocialProvider(String provider, String socialId) {
 		this.provider = provider.toUpperCase(); // GOOGLE, KAKAO, NAVER
@@ -222,4 +236,10 @@ public class User extends Auditable {
 		return password != null && !password.trim().isEmpty() && !"SOCIAL_LOGIN".equals(password);
 	}
 
+	/**
+	 * provider 필드 직접 반환 (JWT 토큰 생성용)
+	 */
+	public String getProvider() {
+		return this.provider;
+	}
 }
