@@ -139,4 +139,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 */
 	@Query("SELECT COUNT(u) > 0 FROM User u WHERE u.userId = :userId AND u.userTypeId.userTypeId = :adminTypeId")
 	boolean isUserAdmin(@Param("userId") Long userId, @Param("adminTypeId") Long adminTypeId);
+
+	/**
+	 * 사용자와 권한 정보를 함께 조회 (FETCH JOIN 사용)
+	 *
+	 * @param userId 조회할 사용자 ID
+	 * @return User 엔티티 (권한 정보 포함)
+	 */
+	@Query("SELECT u FROM User u LEFT JOIN FETCH u.userTypeId WHERE u.userId = :userId")
+	User findByUserIdWithUserType(@Param("userId") Long userId);
 }

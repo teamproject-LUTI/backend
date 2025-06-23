@@ -23,8 +23,7 @@ public class AskController {
     public MultiResponseDto<AskResponseDto> listAsks(
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         return askService.getAsks(page, size, userId);
     }
 
@@ -32,8 +31,7 @@ public class AskController {
     @GetMapping("/{askId}")
     public SingleResponseDto<AskResponseDto> getAsk(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long askId
-    ) {
+            @PathVariable Long askId) {
         return askService.getAsk(askId, userId);
     }
 
@@ -42,8 +40,7 @@ public class AskController {
     @ResponseStatus(HttpStatus.CREATED)
     public SingleResponseDto<AskResponseDto> createAsk(
             @AuthenticationPrincipal Long userId,
-            @RequestBody @Valid AskRequestDto dto
-    ) {
+            @RequestBody @Valid AskRequestDto dto) {
         return askService.createAsk(userId, dto);
     }
 
@@ -52,8 +49,7 @@ public class AskController {
     public SingleResponseDto<AskResponseDto> updateAsk(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long askId,
-            @RequestBody @Valid AskRequestDto dto
-    ) {
+            @RequestBody @Valid AskRequestDto dto) {
         return askService.updateAsk(askId, dto, userId);
     }
 
@@ -62,8 +58,7 @@ public class AskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAsk(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long askId
-    ) {
+            @PathVariable Long askId) {
         askService.deleteAsk(askId, userId);
     }
 }

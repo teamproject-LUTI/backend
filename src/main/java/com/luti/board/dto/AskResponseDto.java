@@ -44,7 +44,7 @@ public class AskResponseDto {
      * @return AskResponseDto 인스턴스
      */
     public static AskResponseDto of(Ask ask, Long userId) {
-        boolean isOwner = userId != null && ask.getUser().getUserId().equals(userId);
+        boolean isOwner = ask.getUser().getUserId().equals(userId);
         return new AskResponseDto(
                 ask.getAskId(),
                 ask.getUser().getUserId(),

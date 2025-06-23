@@ -6,6 +6,7 @@ import com.luti.auth.repository.UserRepository;
 import com.luti.board.dto.NoticeRequestDto;
 import com.luti.board.dto.NoticeResponseDto;
 import com.luti.board.entity.Notice;
+import com.luti.management.service.AdminPermissionService;
 import com.luti.board.repository.NoticeRepository;
 import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
@@ -13,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,42 +23,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class NoticeService {
 
-    /** 관리자 타입 ID 가져오기 - static 초기화 문제 해결 */
-    private Long getAdminTypeId() {
-        return UserTypeEnum.ADMIN.getId();
-    }
-
+    private final AdminPermissionService adminPermissionService;
     private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
 
     /** 관리자 권한 체크 헬퍼 */
-    private void ensureAdmin(Long userId) {
-        if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
-        }
-
-        User user = userRepository.findByUserId(userId);
-        if (user == null) {
-            throw new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId);
-        }
-
-        // userTypeId가 null인지 체크
-        if (user.getUserTypeId() == null) {
-            throw new SecurityException("사용자 권한 정보가 없습니다.");
-        }
-
-        // 프록시 객체 문제 해결: Long 값으로 직접 비교
-        if (!userRepository.isUserAdmin(userId, getAdminTypeId())) {
-            throw new SecurityException("관리자만 이 작업을 수행할 수 있습니다.");
-        }
+    /** 관리자 타입 ID 가져오기 - static 초기화 문제 해결 */
+    private void ensureAdmin() {
+        adminPermissionService.requireAdminPermission("공지사항 관리");
     }
 
     /** 공지 등록 (관리자만) */
     @Transactional
     public SingleResponseDto<NoticeResponseDto> createNotice(Long userId, NoticeRequestDto dto) {
-        ensureAdmin(userId);
+        ensureAdmin();
 
-        User u = userRepository.findByUserId(userId);
+        Long currentUserId = adminPermissionService.getCurrentUserId();
+        User user = userRepository.findByUserIdWithUserType(currentUserId);
+
+//        User u = userRepository.findByUserId(userId);
 //        if (u==null) throw new EntityNotFoundException();
         // 여기서 프록시 초기화 없이도 user.getUserTypeId().getUserTypeId() 호출로 숫자 비교 가능
 //        if (!u.getUserTypeId().getUserTypeId().equals(ADMIN_TYPE_ID)) {
@@ -64,18 +49,18 @@ public class NoticeService {
 //        }
 
         Notice notice = Notice.builder()
-                .user(userRepository.findByUserId(userId))
+                .user(user)
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .build();
         Notice saved = noticeRepository.save(notice);
 
-        return new SingleResponseDto<>(NoticeResponseDto.of(saved, userId));
+        return new SingleResponseDto<>(NoticeResponseDto.of(saved, currentUserId));
     }
 
     /** 목록 조회 (누구나 가능) */
     public MultiResponseDto<NoticeResponseDto> getNotices(int page, int size, Long currentUserId) {
-        PageRequest pageRequest = PageRequest.of(page - 1, size);
+        PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<NoticeResponseDto> dtoPage = noticeRepository
                 .findAll(pageRequest)
                 .map(n -> NoticeResponseDto.of(n, currentUserId));
@@ -84,10 +69,14 @@ public class NoticeService {
     }
 
     /** 단일 조회 (누구나 가능) */
-    public SingleResponseDto<NoticeResponseDto> getNotice(Long noticeId, Long currentUserId) {
+    @Transactional
+    public SingleResponseDto<NoticeResponseDto> getNotice(Long noticeId, Long userId) {
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new EntityNotFoundException("Notice not found: " + noticeId));
-        return new SingleResponseDto<>(NoticeResponseDto.of(notice, currentUserId));
+        // 조회수 증가
+        notice.increaseViewCount();
+
+        return new SingleResponseDto<>(NoticeResponseDto.of(notice, userId));
     }
 
     /** 수정 (관리자만) */

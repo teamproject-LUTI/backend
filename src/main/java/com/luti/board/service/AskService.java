@@ -41,7 +41,6 @@ public class AskService {
 
         return new MultiResponseDto<>(dtos, asks);
     }
-
     /**
      * 단일 문의글 조회
      *
@@ -54,6 +53,7 @@ public class AskService {
 
         return new SingleResponseDto<>(AskResponseDto.of(ask, userId));
     }
+
 
     /**
      * 문의글 등록
