@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/menus")
@@ -104,4 +105,69 @@ public class NavigationMenuController {
         menuService.deleteMenu(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 메뉴 순서 변경 (드래그 앤 드롭)
+     * 요청 본문: { "newOrder": 3, "parentId": 1 }
+     */
+    @PutMapping("/{id}/reorder")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SingleResponseDto<String>> reorderMenu(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+
+        try {
+            Integer newOrder = (Integer) request.get("newOrder");
+            Long parentId = request.get("parentId") != null ?
+                    Long.valueOf(request.get("parentId").toString()) : null;
+
+            if (newOrder == null || newOrder <= 0) {
+                return ResponseEntity.badRequest()
+                        .body(new SingleResponseDto<>("잘못된 순서 값입니다."));
+            }
+
+            SingleResponseDto<String> response = menuService.reorderMenus(id, newOrder, parentId);
+            return ResponseEntity.ok(response);
+
+        } catch (ClassCastException e) {
+            log.error("❌ 메뉴 순서 변경 요청 파라미터 오류", e);
+            return ResponseEntity.badRequest()
+                    .body(new SingleResponseDto<>("요청 파라미터 형식이 올바르지 않습니다."));
+        } catch (Exception e) {
+            log.error("❌ 메뉴 순서 변경 실패 - ID: {}", id, e);
+            return ResponseEntity.status(500)
+                    .body(new SingleResponseDto<>("메뉴 순서 변경 중 오류가 발생했습니다: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 메뉴 순서 일괄 변경 (여러 메뉴 순서를 한번에 변경)
+     * 요청 본문: [{ "id": 1, "order": 1 }, { "id": 2, "order": 2 }]
+     */
+    @PutMapping("/reorder-batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SingleResponseDto<String>> reorderMenusBatch(
+            @RequestBody List<Map<String, Object>> menuOrders) {
+
+        try {
+            for (Map<String, Object> item : menuOrders) {
+                Long menuId = Long.valueOf(item.get("id").toString());
+                Integer newOrder = (Integer) item.get("order");
+                Long parentId = item.get("parentId") != null ?
+                        Long.valueOf(item.get("parentId").toString()) : null;
+
+                if (newOrder != null && newOrder > 0) {
+                    menuService.reorderMenus(menuId, newOrder, parentId);
+                }
+            }
+
+            return ResponseEntity.ok(new SingleResponseDto<>("메뉴 순서가 일괄 변경되었습니다."));
+
+        } catch (Exception e) {
+            log.error("❌ 메뉴 순서 일괄 변경 실패", e);
+            return ResponseEntity.status(500)
+                    .body(new SingleResponseDto<>("메뉴 순서 일괄 변경 중 오류가 발생했습니다: " + e.getMessage()));
+        }
+    }
+
 }

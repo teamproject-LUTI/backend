@@ -16,7 +16,6 @@ import java.time.LocalTime;
 @Table(name = "payment_list")
 public class PaymentList {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id", nullable = false)
@@ -31,11 +30,13 @@ public class PaymentList {
     @Column(name = "payment_state")
     private Integer paymentState;
 
+    // 결제 일시(한국 시간, 날짜+시간)
     @Column(name = "payment_date")
-    private LocalDateTime paymentDate; // 결제 일시(한국 시간, 날짜+시간)
+    private LocalDateTime paymentDate;
 
+    // 취소 일시(한국 시간, 날짜+시간)
     @Column(name = "cancel_date")
-    private LocalDateTime cancelDate; // 취소 일시(한국 시간, 날짜+시간)
+    private LocalDateTime cancelDate;
 
     @Column(name = "receipturl", length = 500)
     private String receiptUrl;

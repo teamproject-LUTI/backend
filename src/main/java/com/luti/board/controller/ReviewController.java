@@ -70,21 +70,35 @@ public class ReviewController {
         service.deleteReview(reviewId, userId);
     }
 
-    /** 특정 사용자가 작성한 리뷰 총 개수 조회(마이페이지에서 사용) */
-    @GetMapping("/user/{userId}/count")
-    public ResponseEntity<Long> getMyReviewCount(
-            @PathVariable Long userId
-    ) {
-        long count = service.getMyReviewCount(userId);
-        return ResponseEntity.ok(count);
+    /* 내 리뷰만 조회 (인증된 사용자만)*/
+    @GetMapping("/myreviews/list")
+    public MultiResponseDto<ReviewListDto> getMyReviews(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal Long userId
+    )    {
+        return service.getMyReviews(page, size, userId);
+    }
+    /* 내 리뷰 조회수 조회 */
+    @GetMapping("/myreviews/count")
+    public ResponseEntity<Long> getMyReviewCount(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(service.getMyReviewCount(userId));
+    }
+    /* 내 리뷰 조회수 조회 */
+    @GetMapping("/myreviews/views")
+    public ResponseEntity<Long> getMyViewCount(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(service.getTotalViewCount(userId));
+    }
+    /* 내 리뷰 조회수 조회 */
+    @GetMapping("/myreviews/likes")
+    public ResponseEntity<Long> getMyLikeCount(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(service.getTotalLikeCount(userId));
+    }
+    /* 내 리뷰 조회수 조회 */
+    @GetMapping("/{id}")
+    public ReviewResponseDto read(@PathVariable Long id) {
+        return service.readAndCount(id);
     }
 
-    /** 특정 사용자가 작성한 모든 리뷰의 조회수 총합 조회(마이페이지에서 사용) */
-    @GetMapping("/user/{userId}/views")
-    public ResponseEntity<Long> getTotalViewCount(
-            @PathVariable Long userId
-    ) {
-        long totalViews = service.getTotalViewCount(userId);
-        return ResponseEntity.ok(totalViews);
-    }
+
 }
