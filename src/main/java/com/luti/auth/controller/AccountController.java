@@ -98,7 +98,6 @@ public class AccountController {
 
         // 인증 완료 시 세션에서 제거
         session.removeAttribute("authCode");
-        session.removeAttribute("authEmail");
 
         return ResponseEntity.ok("이메일 인증 완료");
     }

@@ -1,6 +1,5 @@
 package com.luti.auth.service;
 
-import com.luti.auth.dto.EmailRequestDto;
 import com.luti.auth.dto.FindEmailRequestDto;
 import com.luti.auth.dto.FindEmailResponseDto;
 import com.luti.auth.dto.FindPasswordRequestDto;
