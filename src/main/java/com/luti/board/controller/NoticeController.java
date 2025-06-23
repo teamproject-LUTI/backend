@@ -1,3 +1,4 @@
+// src/main/java/com/luti/board/controller/NoticeController.java
 package com.luti.board.controller;
 
 import com.luti.board.dto.NoticeRequestDto;
@@ -8,16 +9,9 @@ import com.luti.dto.SingleResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * {@code NoticeController}는 공지사항 게시판 REST API를 제공
- * - 공지사항 등록(Create)
- * - 공지사항 목록 조회(Read, 페이징)
- * - 단일 공지사항 조회(Read)
- * - 공지사항 수정(Update)
- * - 공지사항 삭제(soft delete)
- */
 @RestController
 @RequestMapping("/api/notices")
 @RequiredArgsConstructor
@@ -25,69 +19,50 @@ public class NoticeController {
 
     private final NoticeService noticeService;
 
-    /**
-     * 공지사항 등록
-     *
-     * @param userId 작성자 User의 PK
-     * @param dto    공지사항 제목과 내용을 담은 요청 DTO
-     * @return 생성된 공지사항 정보
-     */
+    /** 공지 작성 (관리자만) */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SingleResponseDto<NoticeResponseDto> create(
-            @RequestParam Long userId,
-            @RequestBody @Valid NoticeRequestDto dto) {
+            @AuthenticationPrincipal Long userId,        // ← JWT 토큰에서 꺼낸 userId
+            @RequestBody @Valid NoticeRequestDto dto
+    ) {
         return noticeService.createNotice(userId, dto);
     }
 
-    /**
-     * 공지사항 목록 조회 (페이징)
-     *
-     * @param page 요청 페이지 번호 (1-based, default = 1)
-     * @param size 페이지당 항목 수 (default = 10)
-     * @return 페이징된 공지사항 목록
-     */
+    /** 공지 목록 (누구나) */
     @GetMapping
     public MultiResponseDto<NoticeResponseDto> list(
+            @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return noticeService.getNotices(page, size);
+        return noticeService.getNotices(page, size, userId);
     }
 
-    /**
-     * 단일 공지사항 상세 조회
-     *
-     * @param noticeId 공지사항 고유번호
-     * @return 요청한 공지사항 정보
-     */
+    /** 공지 상세 (누구나) */
     @GetMapping("/{noticeId}")
     public SingleResponseDto<NoticeResponseDto> detail(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long noticeId) {
-        return noticeService.getNotice(noticeId);
+        return noticeService.getNotice(noticeId, userId);
     }
 
-    /**
-     * 공지사항 수정
-     *
-     * @param noticeId 수정할 공지사항 고유번호
-     * @param dto      변경할 제목과 내용을 담은 요청 DTO
-     * @return 수정된 공지사항 정보
-     */
+    /** 공지 수정 (관리자만) */
     @PatchMapping("/{noticeId}")
     public SingleResponseDto<NoticeResponseDto> update(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long noticeId,
-            @RequestBody @Valid NoticeRequestDto dto) {
-        return noticeService.updateNotice(noticeId, dto);
+            @RequestBody @Valid NoticeRequestDto dto
+    ) {
+        return noticeService.updateNotice(noticeId, dto, userId);
     }
 
-    /**
-     * 공지사항 삭제 (soft delete)
-     *
-     * @param noticeId 삭제할 공지사항 고유번호
-     */
+    /** 공지 삭제 (관리자만) */
     @DeleteMapping("/{noticeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long noticeId) {
-        noticeService.deleteNotice(noticeId);
+    public void delete(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long noticeId
+    ) {
+        noticeService.deleteNotice(noticeId, userId);
     }
 }

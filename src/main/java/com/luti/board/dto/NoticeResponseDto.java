@@ -1,51 +1,53 @@
+// src/main/java/com/luti/board/dto/NoticeResponseDto.java
 package com.luti.board.dto;
 
 import com.luti.board.entity.Notice;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 /**
- * Notice 엔티티 응답용 DTO
+ * 공지사항 응답 DTO
  */
 @Getter
-@AllArgsConstructor
+@Builder
 public class NoticeResponseDto {
-    /** 공지글 고유번호 */
-    private Long noticeId;
 
-    /** 작성자 userId */
-    private Long userId;
+    private final Long noticeId;
+    private final Long userId;
+    private String userName;
+    private final String title;
+    private final String content;
+    private final Integer viewCount;
+    private final Boolean deleted;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime modifiedAt;
+    private final Boolean owner;
 
-    /** 제목 */
-    private String title;
+    /**
+     * userId 포함 변환 (owner = true/false)
+     */
+    public static NoticeResponseDto of(Notice notice, Long userId) {
+        boolean isOwner = notice.getUser() != null &&
+                notice.getUser().getUserId().equals(userId);
 
-    /** 내용 */
-    private String content;
+        return NoticeResponseDto.builder()
+                .noticeId(notice.getNoticeId())
+                .userId(notice.getUser().getUserId())
+                .userName(notice.getUser().getName())
+                .title(notice.getTitle())
+                .content(notice.getContent())
+                .viewCount(notice.getViewCount())
+                .deleted(notice.getDeleted())
+                .createdAt(notice.getCreatedAt())
+                .modifiedAt(notice.getModifiedAt())
+                .owner(isOwner)
+                .build();
+    }
 
-    /** 조회수 */
-    private Integer viewCount;
-
-    /** 삭제 여부 */
-    private Boolean deleted;
-
-    /** 생성 시각 */
-    private LocalDateTime createdAt;
-
-    /** 수정 시각 */
-    private LocalDateTime modifiedAt;
-
-    public static NoticeResponseDto of(Notice n) {
-        return new NoticeResponseDto(
-                n.getNoticeId(),
-                n.getUser().getUserId(),      // User 엔티티의 PK getter (getId())
-                n.getTitle(),
-                n.getContent(),
-                n.getViewCount(),
-                n.getDeleted(),
-                n.getCreatedAt(),
-                n.getModifiedAt()
-        );
+    /** owner 항상 false */
+    public static NoticeResponseDto of(Notice notice) {
+        return of(notice, null);
     }
 }

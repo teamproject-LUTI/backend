@@ -1,5 +1,7 @@
 package com.luti.auth.enums;
 
+import jakarta.annotation.PostConstruct;
+
 public enum UserTypeEnum {
     USER(1L, "USER"),
     ADMIN(2L, "ADMIN");
@@ -14,4 +16,14 @@ public enum UserTypeEnum {
 
     public Long getId() { return id; }
     public String getName() { return name; }
+
+    public static UserTypeEnum findById(Long id) {
+        for (UserTypeEnum type : values()) {
+            if (type.getId().equals(id)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
 }
