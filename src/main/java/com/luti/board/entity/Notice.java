@@ -48,6 +48,10 @@ public class Notice extends Auditable {
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
+
     @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private Boolean deleted = false;
@@ -65,13 +69,6 @@ public class Notice extends Auditable {
             orphanRemoval = true
     )
     private List<NoticeAttachment> attachments = new ArrayList<>();
-
-    /**
-     * 조회수를 1 증가
-     */
-    public void incrementViewCount() {
-        this.viewCount++;
-    }
 
     /**
      * 게시글을 삭제 상태로 표시
@@ -102,4 +99,6 @@ public class Notice extends Auditable {
         attachments.remove(attachment);
         attachment.setNotice(null);
     }
+
+
 }

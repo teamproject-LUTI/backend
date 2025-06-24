@@ -11,8 +11,8 @@ import org.springframework.util.StringUtils;
 
 import com.luti.auth.entity.User;
 import com.luti.auth.repository.UserRepository;
-import com.luti.mypage.dto.MyPageProfileResponseDto;
 import com.luti.mypage.dto.request.MyPageProfileUpdateRequestDto;
+import com.luti.mypage.dto.response.MyPageProfileResponseDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

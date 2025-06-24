@@ -8,7 +8,7 @@ import lombok.*;
 /**
  * 단일 댓글 테이블을 위한 엔티티 (Polymorphic)
  *
- * parentType: 댓글 대상 타입 (ASK 또는 REVIEW)
+ * parentType: 댓글 대상 타입 (ASK, REVIEW, NOTICE)
  * parentId  : 댓글 대상 엔티티의 PK
  */
 @Entity
@@ -25,12 +25,12 @@ public class Comment extends Auditable {
     @Column(name = "comment_id", updatable = false, nullable = false)
     private Long commentId;
 
-    /** 댓글 대상 타입: ASK 또는 REVIEW */
+    /** 댓글 대상 타입: ASK, REVIEW, NOTICE */
     @Column(name = "parent_type", length = 10, nullable = false)
     @Enumerated(EnumType.STRING)
     private ParentType parentType;
 
-    /** 댓글 대상 ID (ask_id 또는 review_no) */
+    /** 댓글 대상 ID (ask_id, review_no, notice_id) */
     @Column(name = "parent_id", nullable = false)
     private Long parentId;
 
@@ -54,6 +54,8 @@ public class Comment extends Auditable {
 
     /** 댓글 대상 타입 열거형 */
     public enum ParentType {
-        ASK, REVIEW
+        ASK,     // 문의글
+        REVIEW,  // 후기글
+        NOTICE   // 공지사항 (추가)
     }
 }
