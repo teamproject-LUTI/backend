@@ -11,16 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "route")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // 빌더가 사용할 생성자
+@Builder // 빌더 패턴 활성화
 public class Route {
 
 	@Id
@@ -29,13 +28,13 @@ public class Route {
 	private Long routeId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+	@JoinColumn(name = "user_id", referencedColumnName = "user_id")
 	private User userId;
 
 	@Column(name = "route_title")
 	private String routeTitle;
 
-	@Column(name = "route_content")
+	@Column(name = "route_content", columnDefinition = "LONGTEXT")
 	private String routeContent;
 
 }

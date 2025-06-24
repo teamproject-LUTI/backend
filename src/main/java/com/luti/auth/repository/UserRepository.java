@@ -130,6 +130,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query("SELECT COUNT(u) FROM User u WHERE u.password = 'SOCIAL_LOGIN' AND (u.withdrawYn != 'Y' OR u.withdrawYn IS NULL)")
 	long countSocialLoginUsers();
 
+	/**
+	 * 관리자 권한 체크 - 프록시 문제 해결을 위한 직접 쿼리
+	 *
+	 * @param userId 확인할 사용자 ID
+	 * @param adminTypeId 관리자 타입 ID (2L)
+	 * @return 관리자 여부
+	 */
+	@Query("SELECT COUNT(u) > 0 FROM User u WHERE u.userId = :userId AND u.userTypeId.userTypeId = :adminTypeId")
+	boolean isUserAdmin(@Param("userId") Long userId, @Param("adminTypeId") Long adminTypeId);
+
+	/**
+	 * 사용자와 권한 정보를 함께 조회 (FETCH JOIN 사용)
+	 *
+	 * @param userId 조회할 사용자 ID
+	 * @return User 엔티티 (권한 정보 포함)
+	 */
+	@Query("SELECT u FROM User u LEFT JOIN FETCH u.userTypeId WHERE u.userId = :userId")
+	User findByUserIdWithUserType(@Param("userId") Long userId);
+
+    Optional<User> findByNameAndPhoneNumber(String name, String phoneNumber);
+
+	Optional<User> findByNameAndEmail(String name, String email);
 
 	/**
 	 * 권한별 사용자 검색 (검색어 + 권한 필터 조합)

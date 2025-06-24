@@ -1,8 +1,8 @@
 package com.luti.mypage.controller;
 
 import com.luti.auth.security.JwtAuthenticationToken;
-import com.luti.mypage.dto.MyPageProfileResponseDto;
 import com.luti.mypage.dto.request.MyPageProfileUpdateRequestDto;
+import com.luti.mypage.dto.response.MyPageProfileResponseDto;
 import com.luti.mypage.dto.response.ProfileImageResponseDto;
 import com.luti.mypage.service.MyPageService;
 import com.luti.mypage.service.ProfileImageService;

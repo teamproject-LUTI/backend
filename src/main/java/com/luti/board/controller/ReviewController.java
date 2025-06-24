@@ -26,9 +26,11 @@ public class ReviewController {
     public MultiResponseDto<ReviewListDto> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam String searchType, //작성자, 제목, 여행지역 중 하나
+            @RequestParam String keyword,  //검색어
             @AuthenticationPrincipal Long userId
     ) {
-        return service.getReviews(page, size, userId);
+        return service.getReviews(page, size, userId, searchType, keyword);
     }
 
     @GetMapping("/{reviewId}")
@@ -91,11 +93,6 @@ public class ReviewController {
     @GetMapping("/myreviews/likes")
     public ResponseEntity<Long> getMyLikeCount(@AuthenticationPrincipal Long userId) {
         return ResponseEntity.ok(service.getTotalLikeCount(userId));
-    }
-    /* 내 리뷰 조회수 조회 */
-    @GetMapping("/{id}")
-    public ReviewResponseDto read(@PathVariable Long id) {
-        return service.readAndCount(id);
     }
 
 

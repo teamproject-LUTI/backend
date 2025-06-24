@@ -1,4 +1,4 @@
-package com.luti.mypage.dto;
+package com.luti.mypage.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;
