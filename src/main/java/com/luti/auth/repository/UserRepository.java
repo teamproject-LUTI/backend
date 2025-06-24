@@ -148,4 +148,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 */
 	@Query("SELECT u FROM User u LEFT JOIN FETCH u.userTypeId WHERE u.userId = :userId")
 	User findByUserIdWithUserType(@Param("userId") Long userId);
+
+    Optional<User> findByNameAndPhoneNumber(String name, String phoneNumber);
+
+	Optional<User> findByNameAndEmail(String name, String email);
 }
