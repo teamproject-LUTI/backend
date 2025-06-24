@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +34,37 @@ public class ReviewService {
     private final LikeRepository   likeRepo;
     private final UserRepository   userRepo;
 
-    /** 1. 페이징된 목록 조회 */
-    public MultiResponseDto<ReviewListDto> getReviews(int page, int size, Long currentUserId) {
-        Page<Review> reviews = reviewRepo.findAll(PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+    /** 1. 페이징된 목록 조회 + 검색 */
+    public MultiResponseDto<ReviewListDto> getReviews(int page, int size, Long currentUserId, String searchType, String keyword) {
+
+        // 1) Specification 초기화 : 아무 조건이 없는 상태로 시작
+        Specification<Review> spec = Specification.allOf();
+
+        // 2) 검색어(keyword)가 존재하면 검색조건(searchType)에 따라 동적 조건 추가
+        if (keyword != null && !keyword.isBlank()) {
+            switch (searchType) {
+                case "author":
+                    spec = spec.and((root, query, cb) ->
+                            cb.like(root.get("user").get("nickname"), "%" + keyword + "%"));
+                    break;
+                case "title":
+                    spec = spec.and((root, query, cb) ->
+                            cb.like(root.get("title"), "%" + keyword + "%"));
+                    break;
+                case "travelRegion":
+                    spec = spec.and((root, query, cb) ->
+                            cb.like(root.get("travelRegion"), "%" + keyword + "%"));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown searchType: " + searchType);
+            }
+        }
+
+        //페이징, 정렬 : 최신순(내림차순)
+        //spac과 페이징,정렬 정보를 한번에 넘겨서 조회
+        Page<Review> reviews = reviewRepo.findAll(spec, PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        //엔티티 -> DTO변환
         List<ReviewListDto> dtos = reviews.stream()
                 .map(r -> ReviewListDto.builder()
                         .reviewId(r.getReviewId())
@@ -49,7 +79,7 @@ public class ReviewService {
 
         return new MultiResponseDto<>(dtos, reviews);
     }
-    
+
     /** 1-1. 페이징된 나의 리뷰 목록 조회 */
     public MultiResponseDto<ReviewListDto> getMyReviews(int page, int size, Long currentUserId) {
         Page<Review> reviews = reviewRepo.findByUserUserId(
