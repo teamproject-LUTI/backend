@@ -3,6 +3,8 @@ package com.luti.board.entity;
 import com.luti.audit.Auditable;
 import lombok.*;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "ask_attachment")
@@ -27,12 +29,8 @@ public class AskAttachment extends Auditable {
      * </p>
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "ask_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_ASK_ATTACHMENT_ASK",
-                    foreignKeyDefinition = "FOREIGN KEY (ask_id) REFERENCES ask(ask_id) ON DELETE CASCADE")
-    )
+    @JoinColumn(name = "ask_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)        // ← Hibernate will generate ON DELETE CASCADE
     private Ask ask;
 
     /** 원본 파일명 */

@@ -100,4 +100,40 @@ public class AskController {
 		return askService.getMyAsks(userId, searchDto);
 	}
 
+	/**
+	 * 문의글 답변 상태를 수동으로 변경 (관리자용)
+	 *
+	 * @param askId 문의글 ID
+	 * @param answered 답변 상태 (true: 답변완료, false: 답변대기)
+	 */
+	@PatchMapping("/{askId}/answer-status")
+	@ResponseStatus(HttpStatus.OK)
+	public void updateAnswerStatus(
+			@AuthenticationPrincipal Long userId,
+			@PathVariable Long askId,
+			@RequestParam boolean answered) {
+
+		log.info("문의글 답변 상태 수동 변경 요청 - 사용자 ID: {}, askId: {}, answered: {}",
+				userId, askId, answered);
+
+		// TODO: 관리자 권한 체크 로직 추가
+		// if (!isAdmin(userId)) {
+		//     throw new IllegalArgumentException("관리자만 답변 상태를 변경할 수 있습니다.");
+		// }
+
+		askService.updateAnswerStatus(askId, answered);
+	}
+
+	/**
+	 * 문의글을 답변 완료로 표시 (댓글 생성 시 자동 호출용)
+	 *
+	 * @param askId 문의글 ID
+	 */
+	@PostMapping("/{askId}/mark-answered")
+	@ResponseStatus(HttpStatus.OK)
+	public void markAsAnswered(@PathVariable Long askId) {
+		log.info("문의글 답변 완료 표시 - askId: {}", askId);
+		askService.markAsAnswered(askId);
+	}
+
 }
