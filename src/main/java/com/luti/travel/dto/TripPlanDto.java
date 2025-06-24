@@ -6,7 +6,7 @@ public record TripPlanDto(
         String cityCode,
         String checkInDate,
         String checkOutDate,
-        int    adults,
+        int adults,
         String offerId,
         JsonArray guests,
         JsonArray payments,

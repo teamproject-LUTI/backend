@@ -14,7 +14,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "accomodation_detail")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class AccomodationDetail {
 
     @Id
