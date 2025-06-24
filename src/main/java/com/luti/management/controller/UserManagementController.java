@@ -1,5 +1,6 @@
 package com.luti.management.controller;
 
+import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
 import com.luti.management.dto.UserManagementRequestDto;
 import com.luti.management.dto.UserManagementResponseDto;
@@ -7,13 +8,13 @@ import com.luti.management.service.AdminPermissionService;
 import com.luti.management.service.UserManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -37,38 +38,14 @@ public class UserManagementController {
     }
 
     /**
-     * 표준화된 페이징 응답 생성 헬퍼 메서드
-     */
-    private Map<String, Object> createPaginatedResponse(
-            Page<UserManagementResponseDto> users,
-            String message,
-            Map<String, Object> additionalData) {
-
-        Map<String, Object> response = new java.util.HashMap<>();
-        response.put("success", true);
-        response.put("users", users.getContent());
-        response.put("currentPage", users.getNumber());
-        response.put("totalPages", users.getTotalPages());
-        response.put("totalElements", users.getTotalElements());
-        response.put("pageSize", users.getSize());
-        response.put("message", message);
-
-        if (additionalData != null) {
-            response.putAll(additionalData);
-        }
-
-        return response;
-    }
-
-    /**
-     * 전체 사용자 목록 조회 (관리자 전용)
+     * 전체 사용자 목록 조회 (관리자 전용) - MultiResponseDto 직접 반환
      * GET /api/admin/users
-     * @return 사용자 목록과 통계 정보
+     * @return MultiResponseDto<UserManagementResponseDto>
      */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllUsers(
+    public ResponseEntity<MultiResponseDto<UserManagementResponseDto>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         try {
@@ -79,32 +56,22 @@ public class UserManagementController {
                     Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
             Pageable pageable = PageRequest.of(page, size, sort);
 
-            SingleResponseDto<Page<UserManagementResponseDto>> response =
+            MultiResponseDto<UserManagementResponseDto> response =
                     userManagementService.getAllUsers(pageable);
 
-            Page<UserManagementResponseDto> users = response.getData();
+            return ResponseEntity.ok(response);
 
-            // 통계 정보 조회
-            Map<String, Object> statistics = userManagementService.getUserStatistics().getData();
-
-            return ResponseEntity.ok(createPaginatedResponse(
-                    users,
-                    "사용자 목록 조회 성공",
-                    Map.of("statistics", statistics)
-            ));
-
+        } catch (SecurityException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         } catch (Exception e) {
             log.error("❌ 사용자 목록 조회 중 오류 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(
-                            "success", false,
-                            "error", "사용자 목록 조회 중 오류가 발생했습니다."
-                    ));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "사용자 목록 조회 중 오류가 발생했습니다.");
         }
     }
 
     /**
-     * 사용자 권한 변경 (관리자 전용)
+     * 사용자 권한 변경 (관리자 전용) - SingleResponseDto 유지
      * POST /api/admin/users/{userId}/role
      * @param userId 권한을 변경할 사용자 ID
      * @param requestData 권한 변경 요청 데이터
@@ -165,18 +132,18 @@ public class UserManagementController {
     }
 
     /**
-     * 권한별 사용자 목록 조회 (관리자 전용)
+     * 권한별 사용자 목록 조회 (관리자 전용) - MultiResponseDto 직접 반환
      * GET /api/admin/users/by-role?role={admin|user}
      * @param role 조회할 권한 (admin 또는 user)
-     * @param page 페이지 번호 (기본값: 0)
-     * @param size 페이지 크기 (기본값: 20)
-     * @return 권한별 사용자 목록
+     * @param page 페이지 번호 (기본값: 0) - 0-based
+     * @param size 페이지 크기 (기본값: 10)
+     * @return MultiResponseDto<UserManagementResponseDto>
      */
     @GetMapping("/by-role")
-    public ResponseEntity<Map<String, Object>> getUsersByRole(
+    public ResponseEntity<MultiResponseDto<UserManagementResponseDto>> getUsersByRole(
             @RequestParam String role,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         try {
@@ -191,70 +158,51 @@ public class UserManagementController {
             } else if ("user".equalsIgnoreCase(role)) {
                 isAdmin = false;
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of(
-                                "success", false,
-                                "error", "올바르지 않은 권한 값입니다. (admin 또는 user)"
-                        ));
+                throw new IllegalArgumentException("올바르지 않은 권한 값입니다. (admin 또는 user)");
             }
 
             Sort sort = sortDir.equalsIgnoreCase("desc") ?
                     Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
             Pageable pageable = PageRequest.of(page, size, sort);
 
-            SingleResponseDto<Page<UserManagementResponseDto>> response =
+            MultiResponseDto<UserManagementResponseDto> response =
                     userManagementService.getUsersByRole(isAdmin, pageable);
 
-            Page<UserManagementResponseDto> users = response.getData();
-
-            return ResponseEntity.ok(createPaginatedResponse(
-                    users,
-                    role + " 권한 사용자 목록 조회 성공",
-                    Map.of("role", role)
-            ));
+            return ResponseEntity.ok(response);
 
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of(
-                            "success", false,
-                            "error", e.getMessage()
-                    ));
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             log.error("❌ 권한별 사용자 목록 조회 중 오류 발생 - 권한: {}", role, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(
-                            "success", false,
-                            "error", "사용자 목록 조회 중 오류가 발생했습니다."
-                    ));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "사용자 목록 조회 중 오류가 발생했습니다.");
         }
     }
 
     /**
-     * 사용자 검색 (관리자 전용)
+     * 사용자 검색 (관리자 전용) - MultiResponseDto 직접 반환
      * GET /api/admin/users/search?keyword={keyword}
      * @param keyword 검색 키워드
      * @param role 권한 필터 (선택사항)
-     * @param page 페이지 번호 (기본값: 0)
-     * @param size 페이지 크기 (기본값: 20)
-     * @return 검색된 사용자 목록
+     * @param page 페이지 번호 (기본값: 0) - 0-based
+     * @param size 페이지 크기 (기본값: 10)
+     * @return MultiResponseDto<UserManagementResponseDto>
      */
     @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchUsers(
+    public ResponseEntity<MultiResponseDto<UserManagementResponseDto>> searchUsers(
             @RequestParam String keyword,
             @RequestParam(required = false) String role,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         try {
             validateAdminPermission();
 
             if (keyword == null || keyword.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of(
-                                "success", false,
-                                "error", "검색 키워드가 필요합니다."
-                        ));
+                throw new IllegalArgumentException("검색 키워드가 필요합니다.");
             }
 
             log.info("🔍 사용자 검색 요청 - 키워드: {}, 권한: {}, 관리자 ID: {}",
@@ -264,7 +212,7 @@ public class UserManagementController {
                     Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
             Pageable pageable = PageRequest.of(page, size, sort);
 
-            SingleResponseDto<Page<UserManagementResponseDto>> response;
+            MultiResponseDto<UserManagementResponseDto> response;
 
             // 권한 필터가 있는 경우
             if (role != null && !role.equals("all")) {
@@ -274,49 +222,28 @@ public class UserManagementController {
                 } else if ("user".equalsIgnoreCase(role)) {
                     isAdmin = false;
                 } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of(
-                                    "success", false,
-                                    "error", "올바르지 않은 권한 값입니다. (admin 또는 user)"
-                            ));
+                    throw new IllegalArgumentException("올바르지 않은 권한 값입니다. (admin 또는 user)");
                 }
                 response = userManagementService.searchUsersByRole(keyword.trim(), isAdmin, pageable);
             } else {
                 response = userManagementService.searchUsers(keyword.trim(), pageable);
             }
 
-            Page<UserManagementResponseDto> users = response.getData();
-
-            Map<String, Object> additionalData = new java.util.HashMap<>();
-            additionalData.put("keyword", keyword);
-            if (role != null) {
-                additionalData.put("role", role);
-            }
-
-            return ResponseEntity.ok(createPaginatedResponse(
-                    users,
-                    "사용자 검색 완료",
-                    additionalData
-            ));
+            return ResponseEntity.ok(response);
 
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of(
-                            "success", false,
-                            "error", e.getMessage()
-                    ));
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             log.error("❌ 사용자 검색 중 오류 발생 - 키워드: {}", keyword, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(
-                            "success", false,
-                            "error", "사용자 검색 중 오류가 발생했습니다."
-                    ));
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "사용자 검색 중 오류가 발생했습니다.");
         }
     }
 
     /**
-     * 사용자 통계 정보 조회 (관리자 전용)
+     * 사용자 통계 정보 조회 (관리자 전용) - SingleResponseDto 유지
      * GET /api/admin/users/statistics
      * @return 사용자 통계 정보
      */
