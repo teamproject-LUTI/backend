@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.luti.auth.entity.User;
 import com.luti.auth.repository.RefreshTokenRepository;
 import com.luti.auth.repository.UserRepository;
-import com.luti.mypage.repository.BookmarkRepository;
 import com.luti.mypage.repository.RouteRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,6 @@ public class WithdrawScheduler {
 	private final UserRepository userRepository;
 
 	private final RefreshTokenRepository refreshTokenRepository;
-
-	private final BookmarkRepository bookmarkRepository;
 
 	private final RouteRepository routeRepository;
 
@@ -88,19 +85,15 @@ public class WithdrawScheduler {
 
 		log.debug("사용자 완전 삭제 시작 - ID: {}", userId);
 
-		// 1. Bookmark의 user_id를 NULL로 변경 (콘텐츠는 보존)
-		int updatedBookmarks = bookmarkRepository.setUserIdToNull(userId);
-		log.debug("Bookmark user_id NULL 처리 완료 - 대상 수: {}", updatedBookmarks);
-
-		// 2. Route의 user_id를 NULL로 변경 (콘텐츠는 보존)
+		// 1. Route의 user_id를 NULL로 변경 (콘텐츠는 보존)
 		int updatedRoutes = routeRepository.setUserIdToNull(userId);
 		log.debug("Route user_id NULL 처리 완료 - 대상 수: {}", updatedRoutes);
 
-		// 3. RefreshToken 삭제
+		// 2. RefreshToken 삭제
 		int deletedTokens = refreshTokenRepository.deleteByUserId(userId);
 		log.debug("RefreshToken 삭제 완료 - 대상 수: {}", deletedTokens);
 
-		// 4. User 삭제
+		// 3. User 삭제
 		userRepository.delete(user);
 		log.debug("User 삭제 완료 - ID: {}", userId);
 	}

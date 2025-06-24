@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 @Service
@@ -46,9 +48,12 @@ public class ChatgptService {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-        // 현재 한국 시간
-        LocalDate today = LocalDate.now();
+        // 한국 시간 기준으로 현재 날짜 가져오기
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         String todayStr = today.toString();
+
+        // 최소 체크인 날짜 (오늘 + 3일)
+        String minCheckInDate = today.plusDays(3).toString();
 
         /*  1. 여행 패키지 생성 함수 정의  */
         String toolsJson = String.format("""
@@ -64,14 +69,14 @@ public class ChatgptService {
                           "type": "object",
                           "properties": {
                             "cityCode": {"type": "string", "description": "IATA 3글자 도시 코드"},
-                            "checkInDate": {"type": "string", "description": "YYYY-MM-DD 형식"},
+                            "checkInDate": {"type": "string", "description": "YYYY-MM-DD 형식, %s 이후"},
                             "checkOutDate": {"type": "string", "description": "YYYY-MM-DD 형식"},
                             "adults": {"type": "integer", "description": "성인 여행자 수"}
                           }
                         },
                         "packages": {
                           "type": "array",
-                          "description": "3-4개의 다양한 여행 패키지 옵션",
+                          "description": "3~4개의 다양한 여행 패키지 옵션",
                           "items": {
                             "type": "object",
                             "properties": {
@@ -83,6 +88,7 @@ public class ChatgptService {
                               "currency": {"type": "string", "description": "화폐 단위"},
                               "hotel": {
                                 "type": "object",
+                                "description": "당일치기가 아닌 경우에만 필요",
                                 "properties": {
                                   "name": {"type": "string", "description": "호텔명"},
                                   "category": {"type": "string", "description": "호텔 등급 (3성/4성/5성)"},
@@ -98,7 +104,7 @@ public class ChatgptService {
                                   "type": "object",
                                   "properties": {
                                     "day": {"type": "integer"},
-                                    "date": {"type": "string"},
+                                    "date": {"type": "string", "description": "YYYY-MM-DD 형식"},
                                     "title": {"type": "string"},
                                     "activities": {
                                       "type": "array",
@@ -134,45 +140,39 @@ public class ChatgptService {
                       "required": ["searchInfo", "packages"]
                     }
                   }
-                }]""", todayStr);
+                }]""", minCheckInDate);
 
         /*  2. 시스템 프롬프트  */
         String systemContent = String.format("""
             당신은 전문 여행 루트 기획자입니다. 사용자의 요청에 따라 호텔과 상세한 일정이 포함된 여행 루트 옵션들을 만들어주세요.
     
-    여행 루트 생성 가이드라인:
-    
-    루트 다양성:
-    - 가성비 루트: 저렴한 호텔 + 무료/저렴한 관광지 중심
-    - 균형형 루트: 중급 호텔 + 인기 관광지와 현지 체험
-    - 프리미엄 루트: 고급 호텔 + 특별 체험과 VIP 투어
-    - 테마 특화 루트: 힐링, 문화, 미식, 쇼핑 등 특정 테마 중심
-    
-    숙박 판단:
-    - "당일치기", "데이트리", "하루" 등이 포함된 요청은 숙박 없는 당일 여행
-    - 당일치기의 경우: checkInDate와 checkOutDate를 같은 날짜로 설정
-    - 당일치기의 경우: hotel 객체를 아예 생성하지 마세요
-    - 숙박이 포함된 경우: 각 루트마다 적절한 등급의 호텔 정보
-    - 숙박이 포함된 경우: 위치, 시설, 1박 요금 정보 포함
-    
-    일정 구성 및 상세:
-    - 당일치기는 하루 일정만 생성(day1)
-    - 당일치기에서는 "호텔 체크인", "호텔 체크아웃" 활동을 절대 포함하지 마세요
-    - 요청된 기간이 있을 경우 일수에 맞게 생성
-    - 시간별 구체적인 활동 계획
-    - 이동 경로와 교통편 고려
-    - 식사, 관광, 휴식 시간 균형 배치
-    - 각 활동의 소요시간과 비용 안내
-    
-    
-    비용 계산:
-    - 호텔, 식사, 교통, 입장료 등 총 비용
-    - 한국 원화 기준으로 정확한 가격 산정
-    - 당일치기는 교통비, 식사비, 입장료 등 만 포함
-    - 숙박 여행은 호텔 비용 포함
-    
-    반드시 3-4개의 서로 다른 여행 루트를 만들고 create_travel_packages 함수만 호출하세요.
-    """, todayStr);
+            중요한 규칙:
+            - 오늘 날짜: %s (한국시간)
+            - 체크인 날짜는 반드시 %s 이후여야 합니다
+            - 모든 날짜는 YYYY-MM-DD 형식으로 작성
+            - currency 화폐단위는 원화로 환산
+            - 최소 3개 이상의 추천 루트 생성
+            
+            숙박 판단 기준:
+            - "당일치기", "데이트리", "하루", "일일" 등이 포함된 요청 → 당일 여행
+            - 당일치기의 경우: checkInDate와 checkOutDate를 같은 날짜로 설정
+            - 당일치기의 경우: hotel 객체를 생성하지 마세요
+            - "1박2일", "2박3일" 등 숙박이 명시된 경우 → 숙박 여행
+            
+            여행 기간 계산:
+            - "1박2일" = checkInDate부터 1박 → checkOutDate는 checkInDate + 1일
+            - "2박3일" = checkInDate부터 2박 → checkOutDate는 checkInDate + 2일
+            - "1주일" = 6박7일로 계산
+            
+            일정 구성:
+            - 당일치기: 하루 일정만 생성 (day: 1)
+            - 숙박 여행: 박수 + 1일만큼 일정 생성
+            - 각 일정에는 반드시 activities 배열이 있어야 함
+            - activities는 비어있으면 안 됨
+            - 당일치기에서는 "호텔 체크인/체크아웃" 활동 절대 포함 금지
+            
+            반드시 3~4개의 서로 다른 여행 루트를 만들고 create_travel_packages 함수만 호출하세요.
+            """, todayStr, minCheckInDate);
 
         /*  3. 사용자 메시지  */
         String userMessage = String.format("""
@@ -180,34 +180,21 @@ public class ChatgptService {
             
             요청: %s
             
-            각 패키지는 다음을 포함해야 합니다:
-            - 서로 다른 가격대의 호텔
-            - 상세한 일정 (시간, 장소, 활동)
-            - 포함사항과 불포함사항 명시
-            - 패키지별 특색과 하이라이트
-            - 현실적인 총 비용 (한국 원화)
-            
-            패키지 유형 예시:
-            1. 가성비 패키지 (저렴한 호텔 + 기본 일정)
-            2. 추천 패키지 (중급 호텔 + 균형잡힌 일정)
-            3. 프리미엄 패키지 (고급 호텔 + 특별 경험)
-            4. 테마 특화 패키지 (특정 테마 중심)
-            """, userPrompt);
+            중요 사항:
+            - 체크인 날짜는 %s 이후여야 합니다
+            - 일정의 각 day마다 반드시 activities 배열을 포함해야 합니다
+            - activities는 비어있으면 안 됩니다
+            - 당일치기인 경우 hotel 객체를 만들지 마세요
+            - 날짜는 모두 YYYY-MM-DD 형식으로 작성해주세요
+            """, userPrompt, minCheckInDate);
 
         /*  4. GPT 요청 바디 생성  */
         String requestBody = String.format("""
                 {
                   "model": "gpt-4o-mini",
                   "messages": [
-<<<<<<< HEAD
                     {"role":"system", "content":%s},
                     {"role":"user", "content":%s}
-=======
-                    {"role":"system",
-                     "content":"너는 한국어 여행 플래너야. 반드시 JSON 한 개만 출력해. \
-                     checkInDate, checkOutDate 는 오늘(한국시간) 이후여야 한다. 일정을 JSON 으로, 설명은 comment 필드에 한국어 텍스트로 넣어라"},
-                    {"role":"user","content":"%s"}
->>>>>>> 2072445ae649c0d62adaef39aae331f6c2d7a3ee
                   ],
                   "tools": %s,
                   "tool_choice": {"type": "function", "function": {"name": "create_travel_packages"}},
@@ -260,8 +247,64 @@ public class ChatgptService {
             }
         }
 
+        // 날짜 검증 및 보정
+        validateAndFixDates(result, today);
+
         log.debug("생성된 여행 패키지: {}", result.toString());
         return result.toString();
+    }
+
+    /**
+     * 날짜 검증 및 보정
+     */
+    private void validateAndFixDates(ObjectNode result, LocalDate today) {
+        JsonNode searchInfo = result.path("searchInfo");
+        if (searchInfo.has("checkInDate")) {
+            String checkInDateStr = searchInfo.path("checkInDate").asText();
+            String checkOutDateStr = searchInfo.path("checkOutDate").asText();
+
+            try {
+                LocalDate checkInDate = LocalDate.parse(checkInDateStr);
+                LocalDate checkOutDate = LocalDate.parse(checkOutDateStr);
+
+                // 체크인 날짜가 과거인 경우 보정
+                if (!checkInDate.isAfter(today.plusDays(2))) {
+                    LocalDate newCheckIn = today.plusDays(3);
+                    long nights = java.time.temporal.ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+                    LocalDate newCheckOut = newCheckIn.plusDays(nights);
+
+                    ((ObjectNode) searchInfo).put("checkInDate", newCheckIn.toString());
+                    ((ObjectNode) searchInfo).put("checkOutDate", newCheckOut.toString());
+
+                    log.debug("날짜 보정: {} → {}, {} → {}",
+                            checkInDateStr, newCheckIn, checkOutDateStr, newCheckOut);
+
+                    // 패키지들의 일정 날짜도 업데이트
+                    updatePackagesDates(result, newCheckIn);
+                }
+            } catch (Exception e) {
+                log.warn("날짜 파싱 실패: {}", e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 패키지들의 일정 날짜 업데이트
+     */
+    private void updatePackagesDates(ObjectNode result, LocalDate newCheckIn) {
+        JsonNode packages = result.path("packages");
+        if (packages.isArray()) {
+            for (JsonNode packageNode : packages) {
+                JsonNode itinerary = packageNode.path("itinerary");
+                if (itinerary.isArray()) {
+                    for (int i = 0; i < itinerary.size(); i++) {
+                        ObjectNode dayNode = (ObjectNode) itinerary.get(i);
+                        LocalDate dayDate = newCheckIn.plusDays(i);
+                        dayNode.put("date", dayDate.toString());
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -288,13 +331,17 @@ public class ChatgptService {
                 if (packagesArray.isArray()) {
                     for (int i = 0; i < Math.min(packagesArray.size(), realHotels.length); i++) {
                         ObjectNode packageNode = (ObjectNode) packagesArray.get(i);
-                        ObjectNode hotelNode = (ObjectNode) packageNode.path("hotel");
+                        JsonNode hotelNode = packageNode.path("hotel");
 
-                        HotelOfferSearch realHotel = realHotels[i];
-                        hotelNode.put("realHotelId", realHotel.getHotel().getHotelId());
-                        hotelNode.put("realOfferId", realHotel.getOffers()[0].getId());
-                        hotelNode.put("actualPrice", realHotel.getOffers()[0].getPrice().getTotal());
-                        hotelNode.put("actualCurrency", realHotel.getOffers()[0].getPrice().getCurrency());
+                        // 당일치기인 경우 호텔 정보가 없을 수 있음
+                        if (!hotelNode.isMissingNode() && hotelNode.isObject()) {
+                            ObjectNode hotelObj = (ObjectNode) hotelNode;
+                            HotelOfferSearch realHotel = realHotels[i];
+                            hotelObj.put("realHotelId", realHotel.getHotel().getHotelId());
+                            hotelObj.put("realOfferId", realHotel.getOffers()[0].getId());
+                            hotelObj.put("actualPrice", realHotel.getOffers()[0].getPrice().getTotal());
+                            hotelObj.put("actualCurrency", realHotel.getOffers()[0].getPrice().getCurrency());
+                        }
                     }
                 }
             }
@@ -315,7 +362,7 @@ public class ChatgptService {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         String todayStr = today.toString();
 
         String toolsJson = String.format("""
@@ -342,12 +389,12 @@ public class ChatgptService {
             
             📅 날짜 규칙:
             - 오늘: %s (한국시간)  
-            - 체크인은 반드시 오늘 이후
+            - 체크인은 반드시 오늘 + 3일 이후
             - "2박3일"이면 정확히 2일 차이
             - "1주일"이면 6박7일로 계산
             
             🏙️ 도시코드:
-            - 파리=PAR, 서울=SEL, 도쿄=TYO, 방콕=BKK
+            - 파리=PAR, 서울=SEL, 도쿄=TYO, 방콕=BKK, 제주=CJU
             - 반드시 정확한 IATA 3글자 도시 코드 사용
             
             반드시 find_hotels 함수만 호출해.
@@ -396,14 +443,12 @@ public class ChatgptService {
             log.debug("cityCode 보정: {} → {}", original, resolved);
         }
 
-
         // 날짜 보정
         LocalDate checkInDate = LocalDate.parse(obj.path("checkInDate").asText());
-        if (!checkInDate.isAfter(today)) {
+        if (!checkInDate.isAfter(today.plusDays(2))) {
             int nights = extractNightsFromPrompt(userPrompt);
-            checkInDate = today.plusDays(7);
+            checkInDate = today.plusDays(3);
             LocalDate checkOutDate = checkInDate.plusDays(nights);
-
 
             obj.put("checkInDate", checkInDate.toString());
             obj.put("checkOutDate", checkOutDate.toString());
@@ -415,12 +460,11 @@ public class ChatgptService {
         return obj.toString();
     }
 
-
     /**
      * 사용자 프롬프트에서 박수 추출
      */
     private int extractNightsFromPrompt(String prompt) {
-        if (prompt == null) return 2;
+        if (prompt == null) return 1;
 
         String p = prompt.toLowerCase();
 
@@ -456,7 +500,7 @@ public class ChatgptService {
             }
         }
 
-        return 2; // 기본값
+        return 1; // 기본값을 1박으로 변경
     }
 
     /**

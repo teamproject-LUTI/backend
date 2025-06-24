@@ -33,7 +33,7 @@ public class AmadeusHotelService {
     private final Amadeus amadeus;
 
     // 한 번에 요청할 최대 호텔 수 (URL 길이 제한 고려)
-    private static final int MAX_HOTELS_PER_REQUEST = 10;
+    private static final int MAX_HOTELS_PER_REQUEST = 20;
     // 전체 검색할 최대 호텔 수 (성능 고려)
     private static final int MAX_TOTAL_HOTELS = 30;
 
@@ -159,7 +159,7 @@ public class AmadeusHotelService {
                         return 0;
                     }
                 })
-                .limit(10) // 최대 50개 호텔만 반환
+                .limit(30) // 최대 30개 호텔만 반환
                 .collect(Collectors.toList());
 
         log.debug("호텔 검색 완료 - 최종 결과: {} 개", sortedResults.size());
