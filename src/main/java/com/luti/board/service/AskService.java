@@ -92,8 +92,8 @@ public class AskService {
 	 */
 	@Transactional
 	public SingleResponseDto<AskResponseDto> updateAsk(Long askId,
-			AskRequestDto dto,
-			Long userId) {
+													   AskRequestDto dto,
+													   Long userId) {
 		Ask ask = askRepository.findById(askId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의글입니다. id=" + askId));
 
@@ -149,6 +149,44 @@ public class AskService {
 				.collect(Collectors.toList());
 
 		return new MultiResponseDto<>(dtos, askPage);
+	}
+
+	/**
+	 * 문의글에 댓글이 달렸을 때 답변 상태를 "답변 완료"로 변경
+	 *
+	 * @param askId 문의글 ID
+	 */
+	@Transactional
+	public void markAsAnswered(Long askId) {
+		log.info("문의글 답변 상태 업데이트 - askId: {}", askId);
+
+		Ask ask = askRepository.findById(askId)
+				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의글입니다. id=" + askId));
+
+		// 이미 답변 완료 상태가 아닌 경우에만 업데이트
+		if (!ask.getAnswered()) {
+			ask.markAnswered();
+			log.info("문의글 답변 상태가 '답변 완료'로 변경되었습니다. askId: {}", askId);
+		} else {
+			log.info("문의글이 이미 답변 완료 상태입니다. askId: {}", askId);
+		}
+	}
+
+	/**
+	 * 문의글 답변 상태를 수동으로 변경 (관리자용)
+	 *
+	 * @param askId 문의글 ID
+	 * @param answered 답변 상태 (true: 답변완료, false: 답변대기)
+	 */
+	@Transactional
+	public void updateAnswerStatus(Long askId, boolean answered) {
+		log.info("문의글 답변 상태 수동 변경 - askId: {}, answered: {}", askId, answered);
+
+		Ask ask = askRepository.findById(askId)
+				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의글입니다. id=" + askId));
+
+		ask.setAnswered(answered);
+		log.info("문의글 답변 상태가 변경되었습니다. askId: {}, answered: {}", askId, answered);
 	}
 
 	/**
