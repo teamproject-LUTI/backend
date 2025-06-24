@@ -82,7 +82,7 @@ public class EmailService {
     public void sendTempPassword(String email, String tempPassword) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
-
+        message.setSubject("[LUTI] 임시 비밀번호 발급 안내", "utf-8");
         String body = "<div style='font-family: Arial, sans-serif; padding: 20px;'>"
                 + "<h2>임시 비밀번호 발급</h2>"
                 + "<p>아래 임시 비밀번호로 로그인 후, 반드시 비밀번호를 변경해주세요.</p>"
