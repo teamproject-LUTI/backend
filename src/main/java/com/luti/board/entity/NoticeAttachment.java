@@ -3,6 +3,8 @@ package com.luti.board.entity;
 import com.luti.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.List;
 
@@ -25,11 +27,8 @@ public class NoticeAttachment extends Auditable {
      * - notice 테이블의 PK 컬럼은 notice_no 입니다.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "notice_no",                 // ← DB 컬럼명에 맞춰 변경
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_NOTICE_ATTACHMENT_NOTICE")
-    )
+    @JoinColumn(name = "notice_no", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Notice notice;
 
     /** 원본 파일명 */

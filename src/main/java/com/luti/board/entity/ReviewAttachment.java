@@ -3,6 +3,8 @@ package com.luti.board.entity;
 import com.luti.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * 후기(Review) 첨부파일 엔티티
@@ -27,11 +29,8 @@ public class ReviewAttachment extends Auditable {
      * - optional=false: 반드시 후기글과 연관
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "review_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_REVIEW_ATTACHMENT_REVIEW")
-    )
+    @JoinColumn(name = "review_id",nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ToString.Exclude  // 순환 참조 방지
     private Review review;
 
