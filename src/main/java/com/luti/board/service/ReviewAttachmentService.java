@@ -1,7 +1,10 @@
 package com.luti.board.service;
 
+import com.luti.board.dto.AskAttachmentRequestDto;
 import com.luti.board.dto.ReviewAttachmentRequestDto;
 import com.luti.board.dto.ReviewAttachmentResponseDto;
+import com.luti.board.entity.Ask;
+import com.luti.board.entity.AskAttachment;
 import com.luti.board.entity.Review;
 import com.luti.board.entity.ReviewAttachment;
 import com.luti.board.repository.ReviewAttachmentRepository;
@@ -147,6 +150,27 @@ public class ReviewAttachmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + fileNo));
         // 2) 엔티티를 DTO로 변환하여 반환
         return ReviewAttachmentResponseDto.fromEntity(att);
+    }
+
+    /**
+     * 첨부파일 등록 (메타데이터 방식 - 기존 유지)
+     */
+    @Transactional
+    public Long saveAttachment(Long reviewId, ReviewAttachmentRequestDto req) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("후기글을 찾을 수 없습니다. reviewId=" + reviewId));
+
+        ReviewAttachment attachment = ReviewAttachment.builder()
+                .fileName(req.getFileName())
+                .physicalPath(req.getPhysicalPath())
+                .logicalPath(req.getLogicalPath())
+                .extension(req.getExtension())
+                .size(req.getSize())
+                .build();
+        attachment.linkToReview(review);
+
+        attachmentRepository.save(attachment);
+        return attachment.getReviewAttachmentId();
     }
 
     /**
