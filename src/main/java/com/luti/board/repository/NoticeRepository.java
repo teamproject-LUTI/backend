@@ -5,10 +5,15 @@ import com.luti.auth.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Notice 엔티티에 대한 JPA Repository
+ * JpaSpecificationExecutor 추가로 동적 검색 기능 지원
+ */
 @Repository
-public interface NoticeRepository extends JpaRepository<Notice, Long> {
+public interface NoticeRepository extends JpaRepository<Notice, Long>, JpaSpecificationExecutor<Notice> {
 
     /**
      * 특정 사용자가 작성한 공지글을 페이지 단위로 조회
