@@ -8,7 +8,7 @@ import com.luti.payment.repository.PaymentListRepository;
 import com.luti.travel.dto.HotelBookingDto;
 import com.luti.travel.entity.AccomodationDetail;
 import com.luti.travel.entity.AccomodationInformation;
-import com.luti.travel.repository.AccomoDetailRepository;
+import com.luti.travel.repository.AccomodationDetailRepository;
 import com.luti.travel.repository.AccomoInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class HotelBookingService {
 
-    private final AccomoDetailRepository accomoDetailRepository;
+    private final AccomodationDetailRepository accomodationDetailRepository;
     private final AccomoInfoRepository accomoInfoRepository;
     private final UserRepository userRepository;
     private final PaymentListRepository paymentListRepository;
@@ -91,7 +91,7 @@ public class HotelBookingService {
                 .bookingStatus("PENDING") // 결제 대기 상태
                 .build();
 
-        AccomodationDetail savedDetail = accomoDetailRepository.save(accomoDetail);
+        AccomodationDetail savedDetail = accomodationDetailRepository.save(accomoDetail);
 
         log.info("예약 정보 임시 저장 완료: bookingId={}, user={}(ID: {})",
                 savedDetail.getAccomodationDetailId(), currentUser.getEmail(), currentUser.getUserId());
@@ -105,7 +105,7 @@ public class HotelBookingService {
     public void confirmBooking(Long bookingId, Long paymentId) {
         User currentUser = getCurrentUser();
 
-        AccomodationDetail booking = accomoDetailRepository.findById(bookingId)
+        AccomodationDetail booking = accomodationDetailRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("예약 정보를 찾을 수 없습니다."));
 
         // 본인의 예약인지 확인
@@ -122,7 +122,7 @@ public class HotelBookingService {
         // booking.setBookingStatus("CONFIRMED");
         booking.setBookingStatus("CONFIRMED"); // 예약 확정 상태로 변경
 
-        accomoDetailRepository.save(booking);
+        accomodationDetailRepository.save(booking);
 
         log.info("예약 확정 완료: bookingId={}, paymentId={}, user={}(ID: {})",
                 bookingId, paymentId, currentUser.getEmail(), currentUser.getUserId());
@@ -134,7 +134,7 @@ public class HotelBookingService {
     public void cancelPendingBooking(Long bookingId) {
         User currentUser = getCurrentUser();
 
-        AccomodationDetail booking = accomoDetailRepository.findById(bookingId)
+        AccomodationDetail booking = accomodationDetailRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("예약 정보를 찾을 수 없습니다."));
 
         // 본인의 예약인지 확인
@@ -144,7 +144,7 @@ public class HotelBookingService {
 
         // 결제가 연결되지 않은 임시 예약만 삭제 가능
         if (booking.getPaymentId() == null) {
-            accomoDetailRepository.delete(booking);
+            accomodationDetailRepository.delete(booking);
             log.info("임시 예약 삭제 완료: bookingId={}, user={}(ID: {})",
                     bookingId, currentUser.getEmail(), currentUser.getUserId());
         } else {
@@ -159,7 +159,7 @@ public class HotelBookingService {
     public HotelBookingDto.BookingDetailResponse getBookingDetail(Long bookingId) {
         User currentUser = getCurrentUser();
 
-        AccomodationDetail booking = accomoDetailRepository.findById(bookingId)
+        AccomodationDetail booking = accomodationDetailRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("예약 정보를 찾을 수 없습니다."));
 
         // 본인의 예약인지 확인
@@ -199,7 +199,7 @@ public class HotelBookingService {
     public List<HotelBookingDto.BookingListResponse> getUserBookings() {
         User currentUser = getCurrentUser();
 
-        List<AccomodationDetail> bookings = accomoDetailRepository.findByUserIdOrderByAccomoStartDesc(currentUser);
+        List<AccomodationDetail> bookings = accomodationDetailRepository.findByUserIdOrderByAccomoStartDesc(currentUser);
 
         return bookings.stream()
                 .map(booking -> HotelBookingDto.BookingListResponse.builder()
