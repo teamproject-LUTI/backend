@@ -16,8 +16,8 @@ import java.util.UUID;
 public class ReviewImageUploadController {
 
     //강사님 pc 드라이브
-//    @Value("${file.upload.general.dir}")
-//    private String uploadDir;
+    @Value("${file.upload.general.dir}")
+    private String uploadDir;
 
     @PostMapping("/image")
     @ResponseStatus(HttpStatus.CREATED)
@@ -28,7 +28,7 @@ public class ReviewImageUploadController {
         }
 
         // 프로젝트 루트 경로에 uploads 폴더 생성
-        String uploadDir = System.getProperty("user.dir") + "/uploads";
+//        String uploadDir = System.getProperty("user.dir") + "/uploads";
 
         String ext = image.getOriginalFilename().substring(image.getOriginalFilename().lastIndexOf('.') + 1);
         String uuid = UUID.randomUUID().toString();
