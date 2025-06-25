@@ -25,6 +25,7 @@ import com.luti.auth.security.OAuth2AuthenticationFailureHandler;
 import com.luti.auth.security.OAuth2AuthenticationSuccessHandler;
 import com.luti.auth.service.CustomOAuth2UserService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -136,8 +137,13 @@ public class SecurityConfig {
                 // 로그아웃 설정
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout") // 로그아웃을 처리할 URL
-                        .logoutSuccessUrl("/") // 로그아웃 성공 시 리다이렉션될 URL
-                        .deleteCookies("accessToken", "refreshToken", "JSESSIONID") // 로그아웃 시 삭제할 쿠키
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            // 리다이렉트 대신 JSON 응답
+                            response.setStatus(HttpServletResponse.SC_OK);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"success\": true, \"message\": \"로그아웃 성공\"}");
+                        })
+                        .deleteCookies("accessToken", "refreshToken", "JSESSIONID")
                         .invalidateHttpSession(true) // HTTP 세션 무효화
                         .clearAuthentication(true) // SecurityContextHolder의 인증 정보 삭제
                 )

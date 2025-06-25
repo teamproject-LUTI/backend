@@ -54,8 +54,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 					.getUserInfoEndpoint()
 					.getUserNameAttributeName();
 
-			log.info("OAuth2 제공자: {}, 사용자명 속성: {}", registrationId, userNameAttributeName);
-
 			// 3. 팩토리를 통해 제공자별 DTO 생성
 			OAuth2UserInfo userInfo;
 			try {
@@ -66,10 +64,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 						createOAuth2Error("UNSUPPORTED_PROVIDER", e.getMessage())
 				);
 			}
-
-			log.info("OAuth2 사용자 정보 파싱 완료 - 이메일: {}, 이름: {}, 닉네임: {}, 제공자: {}, 더미이메일: {}",
-					userInfo.getEmail(), userInfo.getName(), userInfo.getNickname(),
-					userInfo.getProvider(), userInfo.isDummyEmail());
 
 			// 4. 사용자 정보를 데이터베이스에 저장하거나 업데이트
 			User user = saveOrUpdateUser(userInfo);
@@ -105,7 +99,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 			if (user != null) {
 				// 기존 소셜 사용자 정보 업데이트
-				log.info("기존 {} 사용자 정보 업데이트 - 사용자 ID: {}", userInfo.getProvider(), user.getUserId());
 				updateExistingSocialUser(user, userInfo);
 				return userRepository.save(user);
 			}
@@ -117,8 +110,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 				if (user != null) {
 					if (user.isSocialUser()) {
 						// 다른 소셜 제공자로 로그인 시도
-						log.info("기존 소셜 사용자가 다른 제공자로 로그인 시도 - 기존: {}, 새로운: {}",
-								user.getProvider(), userInfo.getProvider());
 						user.setSocialProvider(userInfo.getProvider(), userInfo.getProviderId());
 						updateExistingSocialUser(user, userInfo);
 					} else {
@@ -133,7 +124,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			}
 
 			// 3. 새로운 소셜 사용자 생성
-			log.info("새로운 {} 사용자 생성", userInfo.getProvider());
 			return createNewSocialUser(userInfo);
 
 		} catch (OAuth2AuthenticationException e) {
@@ -198,7 +188,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			if (!userInfo.isDummyEmail() && isDummyEmail(user.getEmail())) {
 				if (!userRepository.existsByEmail(userInfo.getEmail())) {
 					user.setEmail(userInfo.getEmail());
-					log.info("카카오 사용자 더미 이메일을 실제 이메일로 업데이트: {}", userInfo.getEmail());
 				}
 			}
 		}
@@ -226,7 +215,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			user.setSocialProvider(userInfo.getProvider(), userInfo.getProviderId());
 
 			User savedUser = userRepository.save(user);
-			log.info("새로운 {} 사용자 생성 완료 - 사용자 ID: {}", userInfo.getProvider(), savedUser.getUserId());
 
 			return savedUser;
 

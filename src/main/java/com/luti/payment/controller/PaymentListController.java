@@ -2,6 +2,7 @@ package com.luti.payment.controller;
 
 import com.luti.payment.dto.PaymentListRequestDTO;
 import com.luti.payment.dto.PaymentListResponseDTO;
+import com.luti.payment.dto.PaymentWithReservationDTO;
 import com.luti.payment.service.PaymentListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -91,5 +92,13 @@ public class PaymentListController {
             return ResponseEntity.ok(paymentListService.findByPaymentState(state));
         }
     }
+
+    // 결제 + 예약 정보 함께 저장
+    @PostMapping("/with-reservation")
+    public ResponseEntity<PaymentListResponseDTO> saveWithReservation(@RequestBody PaymentWithReservationDTO dto) {
+        PaymentListResponseDTO saved = paymentListService.savePaymentWithReservation(dto);
+        return ResponseEntity.ok(saved);
+    }
+
 
 }
