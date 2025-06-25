@@ -32,13 +32,15 @@ public class AskController {
 
 	private final AskService askService;
 
-	/** 문의글 목록 조회 (페이징) */
+	/** 문의글 목록 조회 (페이징 + 검색) */
 	@GetMapping
 	public MultiResponseDto<AskResponseDto> listAsks(
 			@AuthenticationPrincipal Long userId,
 			@RequestParam(defaultValue = "1") int page,
-			@RequestParam(defaultValue = "10") int size) {
-		return askService.getAsks(page, size, userId);
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(defaultValue = "title") String searchType, // 작성자, 제목, 내용 중 하나
+			@RequestParam(defaultValue = "") String keyword) { // 검색어
+		return askService.getAsks(page, size, userId, searchType, keyword);
 	}
 
 	/** 단일 문의글 조회 */

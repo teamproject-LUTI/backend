@@ -5,15 +5,17 @@ import com.luti.board.entity.Ask;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
  * Ask 엔티티에 대한 JPA Repository
+ * JpaSpecificationExecutor 추가로 동적 검색 기능 지원
  */
 @Repository
-public interface AskRepository extends JpaRepository<Ask, Long> {
+public interface AskRepository extends JpaRepository<Ask, Long>, JpaSpecificationExecutor<Ask> {
 
 	/**
 	 * 기본 조회

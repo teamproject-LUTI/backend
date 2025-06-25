@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,13 +42,6 @@ public class NoticeService {
         Long currentUserId = adminPermissionService.getCurrentUserId();
         User user = userRepository.findByUserIdWithUserType(currentUserId);
 
-//        User u = userRepository.findByUserId(userId);
-//        if (u==null) throw new EntityNotFoundException();
-        // 여기서 프록시 초기화 없이도 user.getUserTypeId().getUserTypeId() 호출로 숫자 비교 가능
-//        if (!u.getUserTypeId().getUserTypeId().equals(ADMIN_TYPE_ID)) {
-//            throw new SecurityException("관리자만 가능합니다.");
-//        }
-
         Notice notice = Notice.builder()
                 .user(user)
                 .title(dto.getTitle())
@@ -58,12 +52,38 @@ public class NoticeService {
         return new SingleResponseDto<>(NoticeResponseDto.of(saved, currentUserId));
     }
 
-    /** 목록 조회 (누구나 가능) */
-    public MultiResponseDto<NoticeResponseDto> getNotices(int page, int size, Long currentUserId) {
+    /** 목록 조회 (누구나 가능 + 검색) */
+    public MultiResponseDto<NoticeResponseDto> getNotices(int page, int size, Long currentUserId, String searchType, String keyword) {
+        // 1) Specification 초기화 : 아무 조건이 없는 상태로 시작
+        Specification<Notice> spec = Specification.allOf();
+
+        // 2) 검색어(keyword)가 존재하면 검색조건(searchType)에 따라 동적 조건 추가
+        if (keyword != null && !keyword.isBlank()) {
+            switch (searchType) {
+                case "author":
+                    spec = spec.and((root, query, cb) ->
+                            cb.like(root.get("user").get("nickname"), "%" + keyword + "%"));
+                    break;
+                case "title":
+                    spec = spec.and((root, query, cb) ->
+                            cb.like(root.get("title"), "%" + keyword + "%"));
+                    break;
+                case "content":
+                    spec = spec.and((root, query, cb) ->
+                            cb.like(root.get("content"), "%" + keyword + "%"));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown searchType: " + searchType);
+            }
+        }
+
+        //페이징, 정렬 : 최신순(내림차순)
+        //spec과 페이징,정렬 정보를 한번에 넘겨서 조회
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<NoticeResponseDto> dtoPage = noticeRepository
-                .findAll(pageRequest)
-                .map(n -> NoticeResponseDto.of(n, currentUserId));
+        Page<Notice> notices = noticeRepository.findAll(spec, pageRequest);
+
+        //엔티티 -> DTO변환
+        Page<NoticeResponseDto> dtoPage = notices.map(n -> NoticeResponseDto.of(n, currentUserId));
 
         return new MultiResponseDto<>(dtoPage.getContent(), dtoPage);
     }

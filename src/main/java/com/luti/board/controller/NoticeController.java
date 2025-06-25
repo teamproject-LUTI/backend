@@ -29,13 +29,15 @@ public class NoticeController {
         return noticeService.createNotice(userId, dto);
     }
 
-    /** 공지 목록 (누구나) */
+    /** 공지 목록 (누구나 + 검색) */
     @GetMapping
     public MultiResponseDto<NoticeResponseDto> list(
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return noticeService.getNotices(page, size, userId);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String searchType, // 작성자, 제목, 내용 중 하나
+            @RequestParam(defaultValue = "") String keyword) { // 검색어
+        return noticeService.getNotices(page, size, userId, searchType, keyword);
     }
 
     /** 공지 상세 (누구나) */
