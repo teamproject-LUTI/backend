@@ -1,6 +1,6 @@
 package com.luti.payment.dto;
 
-import com.luti.travel.dto.AccomodationDetailRequestDTO;
+import com.luti.travel.dto.HotelBookingDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,5 +13,6 @@ import lombok.Setter;
 public class PaymentWithReservationDTO {
 
     private PaymentListRequestDTO payment;
-    private AccomodationDetailRequestDTO reservation;
+    private HotelBookingDto.CreateBookingRequest reservation;
+
 }

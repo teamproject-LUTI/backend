@@ -1,16 +1,15 @@
 package com.luti.travel.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "accomodation_Information")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // 빌더가 사용할 생성자
+@Builder // 빌더 패턴 활성화
 public class AccomodationInformation {
 
 	@Id
