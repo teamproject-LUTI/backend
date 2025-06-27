@@ -1,18 +1,20 @@
 package com.luti.payment.dto;
 
 import com.luti.travel.dto.HotelBookingDto;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * 결제 + 숙소 예약 정보를 통합적으로 받기 위한 DTO
- * 프론트에서 두 정보를 한 번에 전송하기 위해 사용
- */
+import java.util.Map;
+
+@Data
 @Getter
 @Setter
 public class PaymentWithReservationDTO {
-
     private PaymentListRequestDTO payment;
     private HotelBookingDto.CreateBookingRequest reservation;
 
+    // ✅ 새로 추가된 필드들
+    private Map<String, Object> fullTravelPlan;  // 전체 여행 계획 데이터 (selectedRoute)
+    private Map<String, Object> searchInfo;      // 검색 조건 정보
 }
