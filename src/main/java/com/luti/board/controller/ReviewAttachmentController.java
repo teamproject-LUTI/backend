@@ -1,11 +1,15 @@
 package com.luti.board.controller;
 
+import com.luti.board.dto.AskAttachmentRequestDto;
+import com.luti.board.dto.AskAttachmentResponseDto;
 import com.luti.board.dto.ReviewAttachmentRequestDto;
 import com.luti.board.dto.ReviewAttachmentResponseDto;
 import com.luti.board.service.ReviewAttachmentService;
 import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -46,6 +50,17 @@ public class ReviewAttachmentController {
             @RequestParam ("files") List<MultipartFile> files) {
         // 서비스 계층에서 MultipartFile 리스트 처리하도록 구현
         return service.addAttachmentFiles(reviewId, files);
+    }
+
+    /** 첨부파일 등록 (메타데이터 방식 - 기존 유지) */
+    @PostMapping("/metadata")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SingleResponseDto<ReviewAttachmentResponseDto> create(
+            @PathVariable Long reviewId,
+            @RequestBody @Valid ReviewAttachmentRequestDto dto) {
+        Long id = service.saveAttachment(reviewId, dto);
+        ReviewAttachmentResponseDto resp = service.getAttachmentDto(id);
+        return new SingleResponseDto<>(resp);
     }
 
     /** 4) 첨부파일 다운로드 (PDF, Excel 등) */

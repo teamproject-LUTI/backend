@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,15 +31,42 @@ public class AskService {
 	private final UserRepository userRepository;
 
 	/**
-	 * 문의글 목록 조회 (페이징)
+	 * 문의글 목록 조회 (페이징 + 검색)
 	 *
 	 * @param page            1-based page 번호
 	 * @param size            페이지 사이즈
 	 * @param userId   현재 로그인된 사용자의 ID
+	 * @param searchType      검색 타입 (author, title, content)
+	 * @param keyword         검색어
 	 */
-	public MultiResponseDto<AskResponseDto> getAsks(int page, int size, Long userId) {
-		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
-		Page<Ask> asks = askRepository.findAll(pageable);
+	public MultiResponseDto<AskResponseDto> getAsks(int page, int size, Long userId, String searchType, String keyword) {
+		// 1) Specification 초기화 : 아무 조건이 없는 상태로 시작
+		Specification<Ask> spec = Specification.allOf();
+
+		// 2) 검색어(keyword)가 존재하면 검색조건(searchType)에 따라 동적 조건 추가
+		if (keyword != null && !keyword.isBlank()) {
+			switch (searchType) {
+				case "author":
+					spec = spec.and((root, query, cb) ->
+							cb.like(root.get("user").get("nickname"), "%" + keyword + "%"));
+					break;
+				case "title":
+					spec = spec.and((root, query, cb) ->
+							cb.like(root.get("title"), "%" + keyword + "%"));
+					break;
+				case "content":
+					spec = spec.and((root, query, cb) ->
+							cb.like(root.get("content"), "%" + keyword + "%"));
+					break;
+				default:
+					throw new IllegalArgumentException("Unknown searchType: " + searchType);
+			}
+		}
+
+		//페이징, 정렬 : 최신순(내림차순)
+		//spec과 페이징,정렬 정보를 한번에 넘겨서 조회
+		Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Page<Ask> asks = askRepository.findAll(spec, pageable);
 
 		// owner 플래그를 셋팅하면서 DTO 변환
 		var dtos = asks.stream()
@@ -54,9 +82,13 @@ public class AskService {
 	 * @param askId           조회할 문의글 ID
 	 * @param userId   현재 로그인된 사용자의 ID
 	 */
+	@Transactional
 	public SingleResponseDto<AskResponseDto> getAsk(Long askId, Long userId) {
 		Ask ask = askRepository.findById(askId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의글입니다. id=" + askId));
+
+		// 조회수 증가 (Ask 엔티티에 viewCount 필드가 있다면)
+		// ask.incrementViewCount();
 
 		return new SingleResponseDto<>(AskResponseDto.of(ask, userId));
 	}

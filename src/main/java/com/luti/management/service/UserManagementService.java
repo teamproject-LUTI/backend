@@ -1,10 +1,11 @@
 package com.luti.management.service;
 
 import com.luti.auth.entity.User;
-import com.luti.auth.entity.UserType; // Assuming this entity exists
+import com.luti.auth.entity.UserType;
 import com.luti.auth.enums.UserTypeEnum;
 import com.luti.auth.repository.UserRepository;
-import com.luti.auth.repository.UserTypeRepository; // Assuming this repository exists
+import com.luti.auth.repository.UserTypeRepository;
+import com.luti.dto.MultiResponseDto;
 import com.luti.dto.SingleResponseDto;
 import com.luti.management.dto.UserManagementRequestDto;
 import com.luti.management.dto.UserManagementResponseDto;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,17 +29,16 @@ public class UserManagementService {
     private final UserTypeRepository userTypeRepository;
 
     /**
-     * 모든 사용자 목록 조회 (페이징)
+     * 모든 사용자 목록 조회 (페이징) - MultiResponseDto 사용
      */
-    public SingleResponseDto<Page<UserManagementResponseDto>> getAllUsers(Pageable pageable) {
+    public MultiResponseDto<UserManagementResponseDto> getAllUsers(Pageable pageable) {
         adminPermissionService.requireAdminPermission("사용자 목록 조회");
 
         try {
             Page<User> users = userRepository.findAllActiveUsers(pageable);
-
             Page<UserManagementResponseDto> userDtos = users.map(UserManagementResponseDto::fromEntity);
 
-            return new SingleResponseDto<>(userDtos);
+            return new MultiResponseDto<>(userDtos.getContent(), userDtos);
 
         } catch (Exception e) {
             log.error("❌ 사용자 목록 조회 실패", e);
@@ -48,7 +47,7 @@ public class UserManagementService {
     }
 
     /**
-     * 사용자 권한 변경 - 유일한 수정 가능 기능
+     * 사용자 권한 변경 - 유일한 수정 가능 기능 (SingleResponseDto 유지)
      */
     @Transactional
     public SingleResponseDto<UserManagementResponseDto> updateUserRole(Long userId, UserManagementRequestDto requestDto) {
@@ -128,19 +127,17 @@ public class UserManagementService {
     }
 
     /**
-     * 권한별 사용자 목록 조회
+     * 권한별 사용자 목록 조회 - MultiResponseDto 사용
      */
-    public SingleResponseDto<Page<UserManagementResponseDto>> getUsersByRole(boolean isAdmin, Pageable pageable) {
+    public MultiResponseDto<UserManagementResponseDto> getUsersByRole(boolean isAdmin, Pageable pageable) {
         adminPermissionService.requireAdminPermission("권한별 사용자 조회");
 
         try {
-
             Long targetUserTypeId = isAdmin ? UserTypeEnum.ADMIN.getId() : UserTypeEnum.USER.getId();
             Page<User> users = userRepository.findByUserTypeIdAndNotWithdrawn(targetUserTypeId, pageable);
-
             Page<UserManagementResponseDto> userDtos = users.map(UserManagementResponseDto::fromEntity);
 
-            return new SingleResponseDto<>(userDtos);
+            return new MultiResponseDto<>(userDtos.getContent(), userDtos);
 
         } catch (Exception e) {
             log.error("❌ 권한별 사용자 목록 조회 실패 - 권한: {}", isAdmin ? "관리자" : "일반사용자", e);
@@ -149,17 +146,16 @@ public class UserManagementService {
     }
 
     /**
-     * 사용자 검색
+     * 사용자 검색 - MultiResponseDto 사용
      */
-    public SingleResponseDto<Page<UserManagementResponseDto>> searchUsers(String keyword, Pageable pageable) {
+    public MultiResponseDto<UserManagementResponseDto> searchUsers(String keyword, Pageable pageable) {
         adminPermissionService.requireAdminPermission("사용자 검색");
 
         try {
-
             Page<User> users = userRepository.searchActiveUsers(keyword, pageable);
             Page<UserManagementResponseDto> userDtos = users.map(UserManagementResponseDto::fromEntity);
 
-            return new SingleResponseDto<>(userDtos);
+            return new MultiResponseDto<>(userDtos.getContent(), userDtos);
 
         } catch (Exception e) {
             log.error("❌ 사용자 검색 실패 - 키워드: {}", keyword, e);
@@ -168,13 +164,31 @@ public class UserManagementService {
     }
 
     /**
-     * 사용자 통계 정보 조회
+     * 권한별 사용자 검색 - MultiResponseDto 사용
+     */
+    public MultiResponseDto<UserManagementResponseDto> searchUsersByRole(String keyword, boolean isAdmin, Pageable pageable) {
+        adminPermissionService.requireAdminPermission("권한별 사용자 검색");
+
+        try {
+            Long targetUserTypeId = isAdmin ? UserTypeEnum.ADMIN.getId() : UserTypeEnum.USER.getId();
+            Page<User> users = userRepository.searchUsersByRole(keyword, targetUserTypeId, pageable);
+            Page<UserManagementResponseDto> userDtos = users.map(UserManagementResponseDto::fromEntity);
+
+            return new MultiResponseDto<>(userDtos.getContent(), userDtos);
+
+        } catch (Exception e) {
+            log.error("❌ 권한별 사용자 검색 실패 - 키워드: {}, 권한: {}", keyword, isAdmin ? "관리자" : "일반사용자", e);
+            throw new RuntimeException("사용자 검색 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 사용자 통계 정보 조회 (SingleResponseDto 유지)
      */
     public SingleResponseDto<Map<String, Object>> getUserStatistics() {
         adminPermissionService.requireAdminPermission("사용자 통계 조회");
 
         try {
-
             // 전체 사용자 수 (탈퇴자 제외)
             long totalUsers = userRepository.countActiveUsers();
 
@@ -197,7 +211,6 @@ public class UserManagementService {
                     "activeUserCount", activeUserCount,
                     "socialLoginCount", socialLoginCount
             );
-
 
             return new SingleResponseDto<>(statistics);
 

@@ -429,6 +429,9 @@ public class NavigationMenuService {
             Integer oldOrder = menu.getMenuOrder();
             Long currentParentId = menu.getParentId();
 
+            log.info("🔄 메뉴 순서 변경 시작 - 메뉴: {}, 기존순서: {}, 새순서: {}, 기존부모: {}, 새부모: {}",
+                    menu.getName(), oldOrder, newOrder, currentParentId, parentId);
+
             // 부모 변경과 순서 변경이 동시에 일어나는 경우
             if (!java.util.Objects.equals(currentParentId, parentId)) {
                 handleParentChangeWithReorder(menu, parentId, newOrder);
@@ -476,6 +479,8 @@ public class NavigationMenuService {
         updateParentHasChildren(oldParentId);
         updateParentHasChildren(newParentId);
 
+        log.info("✅ 부모 변경 완료 - 메뉴: {}, {}→{}, 순서: {}",
+                menu.getName(), oldParentId, newParentId, finalOrder);
     }
 
     /**
@@ -486,11 +491,16 @@ public class NavigationMenuService {
         Integer oldOrder = menu.getMenuOrder();
 
         if (oldOrder.equals(newOrder)) {
+            log.info("⏭️ 순서 변경 없음 - 메뉴: {}, 순서: {}", menu.getName(), oldOrder);
             return;
         }
 
         // 같은 부모의 형제 메뉴들 조회
         List<NavigationMenu> siblings = menuRepository.findByParentIdOrderByMenuOrderAsc(parentId);
+
+        log.info("📋 형제 메뉴들: {}", siblings.stream()
+                .map(s -> s.getName() + "(" + s.getMenuOrder() + ")")
+                .collect(Collectors.joining(", ")));
 
         // 새로운 순서가 유효한 범위인지 확인
         int maxOrder = siblings.size();
@@ -502,6 +512,8 @@ public class NavigationMenuService {
         // 순서 재정렬 실행
         reorderSiblingsForMove(siblings, menu, newOrder);
 
+        log.info("✅ 같은 부모 내 순서 변경 완료 - 메뉴: {}, {}→{}",
+                menu.getName(), oldOrder, newOrder);
     }
 
     /**
@@ -531,6 +543,8 @@ public class NavigationMenuService {
      */
     private void reorderSiblingsForMove(List<NavigationMenu> siblings, NavigationMenu movedMenu, Integer newOrder) {
         Integer oldOrder = movedMenu.getMenuOrder();
+
+        log.info("🔄 형제 순서 재정렬 - 메뉴: {}, {}→{}", movedMenu.getName(), oldOrder, newOrder);
 
         // 이동 방향에 따라 다른 처리
         if (oldOrder < newOrder) {
@@ -573,6 +587,7 @@ public class NavigationMenuService {
         movedMenu.setUpdatedBy(adminPermissionService.getCurrentUserId());
         menuRepository.save(movedMenu);
 
+        log.info("✅ 형제 순서 재정렬 완료");
     }
 
 }

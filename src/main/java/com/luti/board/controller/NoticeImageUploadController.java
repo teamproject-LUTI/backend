@@ -14,8 +14,8 @@ import java.util.UUID;
  * TOAST UI 에디터용 문의(Ask) 첨부 이미지 업로드 컨트롤러
  */
 @RestController
-@RequestMapping("/api/ask-attachments")
-public class AskImageUploadController {
+@RequestMapping("/api/notice-attachments")
+public class NoticeImageUploadController {
 
     //강사님 pc 드라이브
     @Value("${file.upload.general.dir}")

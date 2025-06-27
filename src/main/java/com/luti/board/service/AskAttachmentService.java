@@ -8,6 +8,7 @@ import com.luti.board.repository.AskAttachmentRepository;
 import com.luti.board.repository.AskRepository;
 import com.luti.dto.SingleResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +34,11 @@ public class AskAttachmentService {
     private final AskRepository askRepository;
 
     // 기본 업로드 경로 (프로젝트 루트 기준)
-    private static final String UPLOAD_DIR = "uploads/asks";
+//    private static final String UPLOAD_DIR = "uploads/asks";
+
+    // 기본 업로드 경로 (강사님 PC 드라이브 기준)
+    @Value("${file.upload.general.dir}")
+    private String uploadDir;
 
     /**
      * 문의글에 첨부파일을 추가합니다. (MultipartFile 처리)
@@ -59,8 +64,19 @@ public class AskAttachmentService {
             String storedName = uuid + "." + ext;
 
             // 업로드 디렉터리 확인 및 생성
-            File dir = new File(UPLOAD_DIR);
-            if (!dir.exists()) dir.mkdirs();
+//            File dir = new File(UPLOAD_DIR);
+//            if (!dir.exists()) dir.mkdirs();
+//            Path path = dir.toPath().resolve(storedName);
+
+            // 업로드 디렉터리 확인 및 생성(강사님 PC 드라이브 경로)
+            // 공용 DB 업로드 디렉터리 확인 및 생성
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                boolean created = dir.mkdirs();
+                if (!created) {
+                    throw new RuntimeException("Failed to create upload directory: " + uploadDir);
+                }
+            }
             Path path = dir.toPath().resolve(storedName);
 
             // 파일 저장
