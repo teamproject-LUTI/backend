@@ -84,9 +84,6 @@ public class SecurityConfig {
                                     "/login/oauth2/**",        // OAuth2 로그인 리다이렉션
                                     "/",                       // 루트 경로
                                     "/api/auth/login",         // 로그인 페이지
-                                    "/api/signup",             // 회원가입 페이지
-                                    "/api/signup/email",       // 회원가입 이메일 인증코드 전송
-                                    "/api/signup/verify-code", // 회원가입 이메일 인증코드 검증
                                     "/api/account/**",         // 가입된 계정의 아이디, 비밀번호 찾기
                                     "/public/**",              // 공개 리소스
                                     "/files/**",
