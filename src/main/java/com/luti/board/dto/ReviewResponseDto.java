@@ -49,4 +49,7 @@ public class ReviewResponseDto {
 
     /**  썸네일 경로 필드 추가  */
     private final String  thumbnailPath;
+
+    /** 관리자 여부 */
+    private final boolean isAdmin;
 }

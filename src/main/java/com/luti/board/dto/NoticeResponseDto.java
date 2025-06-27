@@ -24,9 +24,10 @@ public class NoticeResponseDto {
     private final LocalDateTime createdAt;
     private final LocalDateTime modifiedAt;
     private final Boolean owner;
+    private final Boolean isAdmin;  // 관리자 여부 필드 추가
 
     /**
-     * userId 포함 변환 (owner = true/false)
+     * userId 포함 변환 (owner = true/false, isAdmin 계산)
      */
     public static NoticeResponseDto of(Notice notice, Long userId) {
         boolean isOwner = notice.getUser() != null &&
@@ -43,6 +44,29 @@ public class NoticeResponseDto {
                 .createdAt(notice.getCreatedAt())
                 .modifiedAt(notice.getModifiedAt())
                 .owner(isOwner)
+                .isAdmin(false)  // 기본값, Service에서 별도 설정
+                .build();
+    }
+
+    /**
+     * 관리자 여부를 포함한 변환 메서드
+     */
+    public static NoticeResponseDto of(Notice notice, Long userId, boolean isAdmin) {
+        boolean isOwner = notice.getUser() != null &&
+                notice.getUser().getUserId().equals(userId);
+
+        return NoticeResponseDto.builder()
+                .noticeId(notice.getNoticeId())
+                .userId(notice.getUser().getUserId())
+                .userName(notice.getUser().getName())
+                .title(notice.getTitle())
+                .content(notice.getContent())
+                .viewCount(notice.getViewCount())
+                .deleted(notice.getDeleted())
+                .createdAt(notice.getCreatedAt())
+                .modifiedAt(notice.getModifiedAt())
+                .owner(isOwner)
+                .isAdmin(isAdmin)
                 .build();
     }
 

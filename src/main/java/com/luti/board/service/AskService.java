@@ -1,6 +1,7 @@
 package com.luti.board.service;
 
 import com.luti.auth.entity.User;
+import com.luti.auth.enums.UserTypeEnum;
 import com.luti.auth.repository.UserRepository;
 import com.luti.board.dto.AskRequestDto;
 import com.luti.board.dto.AskResponseDto;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +29,21 @@ import java.util.stream.Collectors;
 public class AskService {
 
 	private final AskRepository askRepository;
-
 	private final UserRepository userRepository;
+
+	/**
+	 * 권한 체크 유틸리티 메서드
+	 * 작성자이거나 관리자인지 확인합니다.
+	 */
+	private boolean hasPermissionToModify(Ask ask, Long userId) {
+		// 작성자인지 확인
+		if (ask.getUser().getUserId().equals(userId)) {
+			return true;
+		}
+
+		// 관리자인지 확인
+		return userRepository.isUserAdmin(userId, UserTypeEnum.ADMIN.getId());
+	}
 
 	/**
 	 * 문의글 목록 조회 (페이징 + 검색)
@@ -68,9 +83,12 @@ public class AskService {
 		Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		Page<Ask> asks = askRepository.findAll(spec, pageable);
 
+		// 관리자 여부 확인
+		boolean isAdmin = userId != null && userRepository.isUserAdmin(userId, UserTypeEnum.ADMIN.getId());
+
 		// owner 플래그를 셋팅하면서 DTO 변환
 		var dtos = asks.stream()
-				.map(ask -> AskResponseDto.of(ask, userId))
+				.map(ask -> AskResponseDto.of(ask, userId, isAdmin))
 				.collect(Collectors.toList());
 
 		return new MultiResponseDto<>(dtos, asks);
@@ -90,7 +108,10 @@ public class AskService {
 		// 조회수 증가 (Ask 엔티티에 viewCount 필드가 있다면)
 		// ask.incrementViewCount();
 
-		return new SingleResponseDto<>(AskResponseDto.of(ask, userId));
+		// 관리자 여부 확인
+		boolean isAdmin = userId != null && userRepository.isUserAdmin(userId, UserTypeEnum.ADMIN.getId());
+
+		return new SingleResponseDto<>(AskResponseDto.of(ask, userId, isAdmin));
 	}
 
 	/**
@@ -111,8 +132,12 @@ public class AskService {
 				.build();
 
 		Ask saved = askRepository.save(ask);
+
+		// 관리자 여부 확인
+		boolean isAdmin = userRepository.isUserAdmin(userId, UserTypeEnum.ADMIN.getId());
+
 		// 등록 후에도 본인이 작성자이므로 owner=true
-		return new SingleResponseDto<>(AskResponseDto.of(saved, userId));
+		return new SingleResponseDto<>(AskResponseDto.of(saved, userId, isAdmin));
 	}
 
 	/**
@@ -129,16 +154,19 @@ public class AskService {
 		Ask ask = askRepository.findById(askId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의글입니다. id=" + askId));
 
-		// (권한 체크는 컨트롤러나 AOP로 분리하셔도 좋습니다)
-		if (!ask.getUser().getUserId().equals(userId)) {
-			throw new IllegalArgumentException("본인 글만 수정할 수 있습니다.");
+		// 권한 체크: 작성자이거나 관리자인지 확인
+		if (!hasPermissionToModify(ask, userId)) {
+			throw new AccessDeniedException("Access denied: Only author or admin can modify this ask");
 		}
 
 		ask.setTitle(dto.getTitle());
 		ask.setContent(dto.getContent());
 		// Auditable이 자동으로 modifiedAt 갱신
 
-		return new SingleResponseDto<>(AskResponseDto.of(ask, userId));
+		// 관리자 여부 확인
+		boolean isAdmin = userRepository.isUserAdmin(userId, UserTypeEnum.ADMIN.getId());
+
+		return new SingleResponseDto<>(AskResponseDto.of(ask, userId, isAdmin));
 	}
 
 	/**
@@ -152,8 +180,9 @@ public class AskService {
 		Ask ask = askRepository.findById(askId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의글입니다. id=" + askId));
 
-		if (!ask.getUser().getUserId().equals(userId)) {
-			throw new IllegalArgumentException("본인 글만 삭제할 수 있습니다.");
+		// 권한 체크: 작성자이거나 관리자인지 확인
+		if (!hasPermissionToModify(ask, userId)) {
+			throw new AccessDeniedException("Access denied: Only author or admin can delete this ask");
 		}
 
 		askRepository.delete(ask);
@@ -175,9 +204,12 @@ public class AskService {
 		// 검색 조건에 따라 적절한 Repository 메서드 호출
 		Page<Ask> askPage = findAsksByCondition(userId, searchDto, pageable);
 
+		// 관리자 여부 확인
+		boolean isAdmin = userRepository.isUserAdmin(userId, UserTypeEnum.ADMIN.getId());
+
 		// Ask 엔티티를 AskResponseDto로 변환
 		var dtos = askPage.stream()
-				.map(ask -> AskResponseDto.of(ask, userId)) // owner는 항상 true
+				.map(ask -> AskResponseDto.of(ask, userId, isAdmin)) // owner는 항상 true
 				.collect(Collectors.toList());
 
 		return new MultiResponseDto<>(dtos, askPage);
@@ -246,5 +278,4 @@ public class AskService {
 			return askRepository.findByUserUserIdAndAnsweredOrderByCreatedAtDesc(userId, answered, pageable);
 		}
 	}
-
 }

@@ -36,8 +36,11 @@ public class AskResponseDto {
     /** 본인 작성 여부 */
     private Boolean owner;
 
+    /** 관리자 여부 */
+    private Boolean isAdmin;
+
     /**
-     * Entity → DTO 변환
+     * Entity → DTO 변환 (기본 메서드)
      *
      * @param ask              변환할 Ask 엔티티
      * @param userId    현재 로그인한 사용자 ID (SecurityContext 에서 꺼내온 값)
@@ -54,7 +57,32 @@ public class AskResponseDto {
                 ask.getAnswered(),
                 ask.getCreatedAt(),
                 ask.getModifiedAt(),
-                isOwner
+                isOwner,
+                false  // 기본값, Service에서 별도 설정
+        );
+    }
+
+    /**
+     * Entity → DTO 변환 (관리자 여부 포함)
+     *
+     * @param ask              변환할 Ask 엔티티
+     * @param userId    현재 로그인한 사용자 ID
+     * @param isAdmin   관리자 여부
+     * @return AskResponseDto 인스턴스
+     */
+    public static AskResponseDto of(Ask ask, Long userId, boolean isAdmin) {
+        boolean isOwner = ask.getUser().getUserId().equals(userId);
+        return new AskResponseDto(
+                ask.getAskId(),
+                ask.getUser().getUserId(),
+                ask.getUser().getName(),
+                ask.getTitle(),
+                ask.getContent(),
+                ask.getAnswered(),
+                ask.getCreatedAt(),
+                ask.getModifiedAt(),
+                isOwner,
+                isAdmin
         );
     }
 }
