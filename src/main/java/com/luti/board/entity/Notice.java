@@ -38,9 +38,9 @@ public class Notice extends Auditable {
     @Column(name = "title", length = 100, nullable = false)
     private String title;
 
-    /** 게시글 본문 (Lob: 대용량 텍스트) */
+    /** 본문 (HTML 등 긴 문자열 저장) */
     @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
     /** 조회수 (기본값 0) */
