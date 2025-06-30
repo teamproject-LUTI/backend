@@ -40,9 +40,9 @@ public class Comment extends Auditable {
             foreignKey = @ForeignKey(name = "FK_COMMENT_USER"))
     private User user;
 
-    /** 댓글 본문 */
+    /** 본문 (HTML 등 긴 문자열 저장) */
     @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
     /**

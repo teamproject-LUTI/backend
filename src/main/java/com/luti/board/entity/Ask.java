@@ -40,7 +40,7 @@ public class Ask extends Auditable {
 
     /** 문의글 내용 (Lob: 대용량 텍스트) */
     @Lob
-    @Column(name = "qna_content", nullable = false)
+    @Column(name = "qna_content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
     /**

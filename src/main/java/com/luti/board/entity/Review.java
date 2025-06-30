@@ -38,7 +38,7 @@ public class Review extends Auditable {
 
     /** 후기 게시글 내용 */
     @Lob
-    @Column(name = "content", length = 5000, nullable = false)
+    @Column(name = "content", length = 5000, columnDefinition = "TEXT", nullable = false)
     private String content;
 
     /** 조회수 */
